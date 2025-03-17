@@ -10,9 +10,9 @@ import {
     UnauthenticatedSession,
 } from "@/types/auth";
 import { ApiResponse } from "@/types/response";
-import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { api } from "./axios";
+import * as jose from "jose";
 
 export async function createSession(accessToken: string, refreshToken: string) {
     const accessTokenPayload = await getDataFromToken(accessToken);
@@ -55,10 +55,14 @@ export async function getDataFromToken(token: string) {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET, {
+        const secretKey = new TextEncoder().encode(JWT_SECRET);
+
+        // Verify and decode the token
+        const { payload } = await jose.jwtVerify(token, secretKey, {
             algorithms: ["HS256"],
-        }) as AccessTokenJWTPayload;
-        return decoded;
+        });
+
+        return payload as AccessTokenJWTPayload;
     } catch (error) {
         console.error("Error verifying JWT:", error);
         return null;
@@ -72,12 +76,16 @@ export async function getSession(): Promise<Session> {
     const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE_NAME);
 
     if (!accessToken) {
-        return UnauthenticatedSession;
+        return {
+            ...UnauthenticatedSession,
+            refreshToken: refreshToken?.value ?? null,
+        };
     }
 
     const payload = await getDataFromToken(accessToken.value);
 
     if (!payload) {
+        cookieStore.delete(ACCESS_TOKEN_COOKIE_NAME);
         return {
             ...UnauthenticatedSession,
             refreshToken: refreshToken?.value ?? null,
@@ -108,7 +116,6 @@ export async function logout() {
 export async function refreshJWTToken(
     refreshToken: string
 ): Promise<Tokens | null> {
-    console.log("Refreshing session");
     try {
         const response = await api.post<
             ApiResponse<{

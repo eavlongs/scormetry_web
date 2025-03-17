@@ -50,6 +50,7 @@ export const ACCESS_TOKEN_COOKIE_NAME = "access_token";
 export const REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 export const JWT_SECRET = process.env.JWT_SECRET || "";
 
+// export const ACCESS_TOKEN_LIFETIME = 1000 * 10; // 10 seconds, for testing
 export const ACCESS_TOKEN_LIFETIME = 1000 * 60 * 60 * 12; // 12 hours
 export const REFRESH_TOKEN_LIFETIME = 1000 * 60 * 60 * 24 * 7; // 7 days
 // export const REFRESH_TOKEN_LIFETIME = 1000 * 60; // 1 minute, for testing

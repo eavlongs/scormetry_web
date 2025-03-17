@@ -94,6 +94,8 @@ export async function GET(request: Request): Promise<Response> {
 
     const redirectUrl = cookieStore.get(REDIRECT_URL_COOKIE_NAME)?.value ?? "/";
     cookieStore.delete("redirect_url");
+    cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME);
+    cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME);
 
     return new Response(null, {
         status: 302,
