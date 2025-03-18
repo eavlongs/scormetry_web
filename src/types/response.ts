@@ -3,3 +3,9 @@ export type ApiResponse<T = any> = {
     message: string;
     data: T;
 };
+
+export type ActionResponse = {
+    success: boolean;
+    message: string;
+    error?: any;
+};

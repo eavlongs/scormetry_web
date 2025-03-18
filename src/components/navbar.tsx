@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -9,13 +8,19 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { LogOut, Plus } from "lucide-react";
+import useSession from "@/hooks/useSession";
+import { logout } from "@/lib/session";
+import { LogOut } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { CreateClassroomDialog } from "../app/(with_navbar)/create-classroom-dialog";
 
 export function Navbar() {
+    const session = useSession();
+
     return (
         <header className='sticky top-0 z-40 w-full border-b bg-background'>
-            <div className='container flex h-16 items-center justify-between px-4 md:px-6'>
+            <div className='flex h-16 items-center justify-between px-4 md:px-6'>
                 <div className='flex items-center gap-2'>
                     <SidebarTrigger className='h-9 w-9 p-0' />
                     <Link href='/' className='flex items-center gap-2'>
@@ -24,14 +29,7 @@ export function Navbar() {
                 </div>
 
                 <div className='flex items-center gap-4'>
-                    <Button className='hidden md:flex'>
-                        <Plus className='mr-2 h-4 w-4' />
-                        Class
-                    </Button>
-                    <Button variant='outline' size='icon' className='md:hidden'>
-                        <Plus className='h-5 w-5' />
-                        <span className='sr-only'>Add class</span>
-                    </Button>
+                    <CreateClassroomDialog />
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -40,17 +38,33 @@ export function Navbar() {
                                 size='icon'
                                 className='rounded-full'
                             >
-                                <Avatar className='h-8 w-8'>
-                                    <AvatarImage
-                                        src='/placeholder.svg?height=32&width=32'
-                                        alt='User'
-                                    />
-                                    <AvatarFallback>U</AvatarFallback>
-                                </Avatar>
+                                <div className='relative h-8 w-8 cursor-pointer'>
+                                    {session.user ? (
+                                        <Image
+                                            src={session.user.profile_picture}
+                                            alt='@profilePicture'
+                                            fill
+                                            className='rounded-full'
+                                        />
+                                    ) : (
+                                        <Image
+                                            src='/user_placeholder.png'
+                                            alt='User'
+                                            fill
+                                            className='rounded-full'
+                                        />
+                                    )}
+                                </div>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='center' className='mt-2'>
-                            <DropdownMenuItem className='cursor-pointer p-2'>
+                            <DropdownMenuItem
+                                className='cursor-pointer p-2'
+                                onClick={async () => {
+                                    await logout();
+                                    window.location.href = "/login";
+                                }}
+                            >
                                 <LogOut className='mx-2 h-4 w-4' color='red' />
                                 <span>Log out</span>
                             </DropdownMenuItem>

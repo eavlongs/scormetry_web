@@ -13,21 +13,37 @@ import {
 } from "@/types/auth";
 import { createContext, ReactNode, useEffect, useState } from "react";
 
-export const AuthContext = createContext<Session>(UnauthenticatedSession);
+export type AuthContextType = Session & {
+    loading: boolean;
+};
+
+const authContextDefaultValue = {
+    ...UnauthenticatedSession,
+    loading: true,
+};
+
+export const AuthContext = createContext<AuthContextType>(
+    authContextDefaultValue
+);
 
 export default function AuthProvider({
     children,
 }: {
     children: Readonly<ReactNode>;
 }) {
-    const [session, setSession] = useState<Session>(UnauthenticatedSession);
+    const [session, setSession] = useState<AuthContextType>(
+        authContextDefaultValue
+    );
     const [sessionFetched, setSessionFetched] = useState(false);
 
     useEffect(() => {
         async function fetchSession() {
             if (!sessionFetched) {
                 const session = await getSession();
-                setSession(session);
+                setSession({
+                    ...session,
+                    loading: false,
+                });
                 setSessionFetched(true);
             }
         }
@@ -56,14 +72,13 @@ export default function AuthProvider({
                 const refreshTokenExpiry = new Date(refreshToken.exp * 1000);
                 // if the refresh token expiry is less than half of its lifetime
 
-                console.log(
-                    "Refreshing because refresh token expiry is less than half of its lifetime"
-                );
-
                 if (
                     refreshTokenExpiry <
                     new Date(new Date().getTime() + REFRESH_TOKEN_LIFETIME / 2)
                 ) {
+                    console.log(
+                        "Refreshing because refresh token expiry is less than half of its lifetime"
+                    );
                     // then we should refresh the token
                     refreshSession();
                 }

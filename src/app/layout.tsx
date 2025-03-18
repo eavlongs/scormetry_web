@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import type React from "react";
 import AuthProvider from "./AuthProvider";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 // const tmp = Roboto({ subsets: ["latin"] });
 // const tmp = Poppins({ subsets: ["latin"], weight: "400" });
@@ -24,6 +25,7 @@ export default function RootLayout({
         <html lang='en'>
             <body className={fontToDisplay.className}>
                 <AuthProvider>{children}</AuthProvider>
+                <Toaster richColors />
             </body>
         </html>
     );

@@ -5,44 +5,51 @@ import {
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
-    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BookOpen, Home, Settings, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Classroom, colorMap } from "@/types/classroom";
 import Link from "next/link";
 
-const sidebarLinks = [
-    { name: "Dashboard", href: "/", icon: Home },
-    { name: "Students", href: "/students", icon: Users },
-    { name: "Classes", href: "/classes", icon: BookOpen },
-    { name: "Settings", href: "/settings", icon: Settings },
-];
-
-export function AppSidebar() {
+export function AppSidebar({ classrooms }: { classrooms: Classroom[] }) {
     return (
         <Sidebar>
             <SidebarHeader>
-                <div className='flex h-14 items-center px-4 font-semibold'>
+                <Link
+                    href='/'
+                    className='flex h-14 items-center px-4 font-semibold'
+                >
                     Scormetry
-                </div>
+                </Link>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className='overflow-x-clip px-2'>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu>
-                            {sidebarLinks.map((link) => (
-                                <SidebarMenuItem key={link.href}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={link.href === "/"}
-                                    >
-                                        <Link href={link.href}>
-                                            <link.icon className='h-4 w-4' />
-                                            <span>{link.name}</span>
+                        <SidebarMenu className='gap-0'>
+                            {classrooms.map((classroom) => (
+                                <SidebarMenuItem
+                                    key={classroom.id}
+                                    className='px-0'
+                                >
+                                    <SidebarMenuButton asChild>
+                                        <Link
+                                            href={`/classroom/${classroom.id}`}
+                                            className='px-0 py-6'
+                                        >
+                                            <span
+                                                className={cn(
+                                                    "rounded-full text-white px-2 py-1",
+                                                    colorMap[classroom.color]
+                                                )}
+                                            >
+                                                {classroom.name[0].toUpperCase()}
+                                            </span>
+                                            <span className='!font-bold'>
+                                                {classroom.name}
+                                            </span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>

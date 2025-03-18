@@ -1,4 +1,4 @@
-import LoginWithGoogle from "@/components/LoginWithGoogle";
+import LoginWithGoogle from "@/components/login-with-google";
 
 export default function Page() {
     return (
