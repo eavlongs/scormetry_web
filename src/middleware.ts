@@ -1,26 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "./lib/server-session";
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from './lib/server-session'
 
 export async function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
-    const session = await getServerSession();
+    const { pathname } = request.nextUrl
+    const session = await getServerSession()
 
     if (
         !session.isAuthenticated &&
         !session.refreshToken &&
-        !pathname.startsWith("/login")
+        !pathname.startsWith('/login')
     ) {
-        return NextResponse.redirect(new URL("/login", request.url));
+        return NextResponse.redirect(new URL('/login', request.url))
     }
 
     if (
-        pathname === "/login" &&
+        pathname === '/login' &&
         (session.isAuthenticated || session.refreshToken)
     ) {
-        return NextResponse.redirect(new URL("/", request.url));
+        return NextResponse.redirect(new URL('/', request.url))
     }
 
-    return NextResponse.next();
+    return NextResponse.next()
 }
 
 export const config = {
@@ -32,6 +32,6 @@ export const config = {
          * - _next/image (image optimization files)
          * - favicon.ico, sitemap.xml, robots.txt (metadata files)
          */
-        "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+        '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
     ],
-};
+}

@@ -1,14 +1,14 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { Navbar } from "@/components/navbar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getClassrooms } from "./actions";
+import { AppSidebar } from '@/components/app-sidebar'
+import { Navbar } from '@/components/navbar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { getClassrooms } from './actions'
 
 export default async function Layout({
     children,
 }: {
-    children: React.ReactNode;
+    children: React.ReactNode
 }) {
-    const classrooms = await getClassrooms();
+    const classrooms = await getClassrooms()
     return (
         <SidebarProvider>
             <AppSidebar classrooms={classrooms} />
@@ -17,5 +17,5 @@ export default async function Layout({
                 {children}
             </SidebarInset>
         </SidebarProvider>
-    );
+    )
 }

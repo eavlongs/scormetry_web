@@ -1,4 +1,4 @@
-"use server";
+'use server'
 
 import {
     ACCESS_TOKEN_COOKIE_NAME,
@@ -8,88 +8,88 @@ import {
     Session,
     Tokens,
     UnauthenticatedSession,
-} from "@/types/auth";
-import { ApiResponse } from "@/types/response";
-import { cookies } from "next/headers";
-import { api } from "./axios";
-import * as jose from "jose";
+} from '@/types/auth'
+import { ApiResponse } from '@/types/response'
+import { cookies } from 'next/headers'
+import { api } from './axios'
+import * as jose from 'jose'
 
 export async function createSession(accessToken: string, refreshToken: string) {
-    const accessTokenPayload = await getDataFromToken(accessToken);
-    const refreshTokenPayload = await getDataFromToken(refreshToken);
+    const accessTokenPayload = await getDataFromToken(accessToken)
+    const refreshTokenPayload = await getDataFromToken(refreshToken)
 
     if (accessTokenPayload === null || refreshTokenPayload === null) {
-        throw new Error("Invalid access or refresh token");
+        throw new Error('Invalid access or refresh token')
     }
 
-    const cookieStore = await cookies();
+    const cookieStore = await cookies()
 
     const accessTokenMaxAge =
-        accessTokenPayload.exp - Math.floor(Date.now() / 1000);
+        accessTokenPayload.exp - Math.floor(Date.now() / 1000)
     const refreshTokenMaxAge =
-        refreshTokenPayload.exp - Math.floor(Date.now() / 1000);
+        refreshTokenPayload.exp - Math.floor(Date.now() / 1000)
 
     cookieStore.set(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-        path: "/",
+        path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === 'production',
         maxAge: accessTokenMaxAge,
-        sameSite: "lax",
-    });
+        sameSite: 'lax',
+    })
 
     cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-        path: "/",
+        path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === 'production',
         maxAge: refreshTokenMaxAge,
-        sameSite: "lax",
-    });
+        sameSite: 'lax',
+    })
 }
 
 export async function getDataFromToken(token: string) {
-    if (JWT_SECRET === "") {
+    if (JWT_SECRET === '') {
         if (window !== undefined) {
-            throw new Error("getDataFromToken can only be used server-side");
+            throw new Error('getDataFromToken can only be used server-side')
         }
-        throw new Error("JWT_SECRET environment variable is not set");
+        throw new Error('JWT_SECRET environment variable is not set')
     }
 
     try {
-        const secretKey = new TextEncoder().encode(JWT_SECRET);
+        const secretKey = new TextEncoder().encode(JWT_SECRET)
 
         // Verify and decode the token
         const { payload } = await jose.jwtVerify(token, secretKey, {
-            algorithms: ["HS256"],
-        });
+            algorithms: ['HS256'],
+        })
 
-        return payload as AccessTokenJWTPayload;
+        return payload as AccessTokenJWTPayload
     } catch (error) {
-        console.error("Error verifying JWT:", error);
-        return null;
+        console.error('Error verifying JWT:', error)
+        return null
     }
 }
 
 export async function getSession(): Promise<Session> {
-    const cookieStore = await cookies();
+    const cookieStore = await cookies()
 
-    const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE_NAME);
-    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE_NAME);
+    const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE_NAME)
+    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)
 
     if (!accessToken) {
         return {
             ...UnauthenticatedSession,
             refreshToken: refreshToken?.value ?? null,
-        };
+        }
     }
 
-    const payload = await getDataFromToken(accessToken.value);
+    const payload = await getDataFromToken(accessToken.value)
 
     if (!payload) {
-        cookieStore.delete(ACCESS_TOKEN_COOKIE_NAME);
+        cookieStore.delete(ACCESS_TOKEN_COOKIE_NAME)
         return {
             ...UnauthenticatedSession,
             refreshToken: refreshToken?.value ?? null,
-        };
+        }
     }
 
     return {
@@ -104,13 +104,13 @@ export async function getSession(): Promise<Session> {
         },
         accessToken: accessToken.value,
         refreshToken: refreshToken?.value ?? null,
-    };
+    }
 }
 
 export async function logout() {
-    const cookieStore = await cookies();
-    cookieStore.delete(ACCESS_TOKEN_COOKIE_NAME);
-    cookieStore.delete(REFRESH_TOKEN_COOKIE_NAME);
+    const cookieStore = await cookies()
+    cookieStore.delete(ACCESS_TOKEN_COOKIE_NAME)
+    cookieStore.delete(REFRESH_TOKEN_COOKIE_NAME)
 }
 
 export async function refreshJWTToken(
@@ -120,25 +120,25 @@ export async function refreshJWTToken(
         const response = await api.post<
             ApiResponse<{
                 tokens: {
-                    access_token: string;
-                    refresh_token: string;
-                };
+                    access_token: string
+                    refresh_token: string
+                }
             }>
-        >("/auth/refresh-token", {
+        >('/auth/refresh-token', {
             refresh_token: refreshToken,
-        });
+        })
 
-        const { access_token, refresh_token } = response.data.data.tokens;
+        const { access_token, refresh_token } = response.data.data.tokens
 
-        await createSession(access_token, refresh_token);
+        await createSession(access_token, refresh_token)
 
         return {
             accessToken: access_token,
             refreshToken: refresh_token,
-        };
+        }
     } catch (e) {
         // if we cannot refresh the token, we should let the token expire
-        console.error("Error refreshing JWT token:", e);
-        return null;
+        console.error('Error refreshing JWT token:', e)
+        return null
     }
 }
