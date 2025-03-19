@@ -1,5 +1,6 @@
 'use client'
 
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
     Sidebar,
     SidebarContent,
@@ -73,18 +74,20 @@ export function AppSidebar({
                                                         href={`/classroom/${classroom.id}`}
                                                         className="px-0 py-6"
                                                     >
-                                                        <span
-                                                            className={cn(
-                                                                'rounded-full text-white px-2 py-1',
-                                                                colorMap[
-                                                                    classroom
-                                                                        .color
-                                                                ]
-                                                            )}
-                                                        >
-                                                            {classroom.name[0].toUpperCase()}
-                                                        </span>
-                                                        <span className="!font-bold">
+                                                        <Avatar>
+                                                            <AvatarFallback
+                                                                className={cn(
+                                                                    'text-white px-2 py-1',
+                                                                    colorMap[
+                                                                        classroom
+                                                                            .color
+                                                                    ]
+                                                                )}
+                                                            >
+                                                                {classroom.name[0].toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span>
                                                             {classroom.name}
                                                         </span>
                                                     </Link>

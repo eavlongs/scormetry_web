@@ -1,4 +1,3 @@
-import { createClassroom } from '@/app/(with_navbar)/actions'
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -6,7 +5,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,20 +18,42 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { cn, getRandomColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { colorMap, ColorType } from '@/types/classroom'
-import { Plus } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { editClassroom, GetClassroomResponse } from './actions'
 
-export function CreateClassroomDialog() {
-    const [open, setOpen] = useState(false)
+export default function EditClassroomDialog({
+    classroom,
+    open,
+    setOpen,
+}: {
+    classroom: GetClassroomResponse
+    open: boolean
+    setOpen: Dispatch<SetStateAction<boolean>>
+}) {
     const nameRef = useRef<HTMLInputElement>(null)
-    const [color, setColor] = useState<ColorType>(getRandomColor())
+    const [color, setColor] = useState<ColorType>(classroom.classroom.color)
+
+    useEffect(() => {
+        if (!open) {
+            if (nameRef.current) {
+                nameRef.current.value = classroom.classroom.name
+            }
+            setColor(classroom.classroom.color)
+        } else {
+            if (nameRef.current) nameRef.current.focus()
+        }
+    }, [open])
 
     async function handleSubmit() {
         if (nameRef.current?.value) {
-            const response = await createClassroom(nameRef.current.value, color)
+            const response = await editClassroom(
+                classroom.classroom.id,
+                nameRef.current.value,
+                color
+            )
 
             if (response.success) {
                 toast.success(response.message)
@@ -44,30 +64,21 @@ export function CreateClassroomDialog() {
         }
     }
 
-    useEffect(() => {
-        // generate random color when dialog is closed, so that the color won't twitch when renderring the dialog
-        if (!open) {
-            setColor(getRandomColor())
-        }
-    }, [open])
-
     return (
         <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogTrigger asChild>
-                <Button className="flex items-center py-1">
-                    <Plus className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Class</span>
-                    <span className="sr-only md:hidden">Add class</span>
-                </Button>
-            </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Create Class</AlertDialogTitle>
+                    <AlertDialogTitle>Edit Class</AlertDialogTitle>
                 </AlertDialogHeader>
                 <div className="w-full">
                     <div className="flex flex-col gap-y-2 mb-4">
                         <Label htmlFor="name">Class Name</Label>
-                        <Input id="name" ref={nameRef} className="w-full" />
+                        <Input
+                            id="name"
+                            ref={nameRef}
+                            className="w-full"
+                            defaultValue={classroom.classroom.name}
+                        />
                     </div>
                     <div className="flex gap-x-4 mb-4">
                         <Label htmlFor="color">Color</Label>
@@ -106,7 +117,7 @@ export function CreateClassroomDialog() {
                 </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button onClick={handleSubmit}>Create</Button>
+                    <Button onClick={handleSubmit}>Update</Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
