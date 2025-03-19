@@ -29,16 +29,26 @@ export async function createClassroom(
     }
 }
 
-export async function getClassrooms(): Promise<Classroom[]> {
+export async function getClassrooms(): Promise<{
+    teaching_classrooms: Classroom[]
+    studying_classrooms: Classroom[]
+    judging_classrooms: Classroom[]
+}> {
     try {
         const response = await apiWithAuth.get<
             ApiResponse<{
-                classrooms: Classroom[]
+                teaching_classrooms: Classroom[]
+                studying_classrooms: Classroom[]
+                judging_classrooms: Classroom[]
             }>
         >('/classroom')
 
-        return response.data.data.classrooms
+        return { ...response.data.data }
     } catch (e: any) {
-        return []
+        return {
+            teaching_classrooms: [],
+            studying_classrooms: [],
+            judging_classrooms: [],
+        }
     }
 }
