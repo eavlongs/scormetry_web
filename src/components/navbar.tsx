@@ -8,6 +8,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import useAppContext from '@/hooks/useAppContext'
 import useSession from '@/hooks/useSession'
 import { logout } from '@/lib/session'
 import { LogOut } from 'lucide-react'
@@ -17,6 +18,8 @@ import { CreateClassroomDialog } from '../app/(with_navbar)/create-classroom-dia
 
 export function Navbar() {
     const session = useSession()
+    const { createClassroomDialogOpen, setCreateClassroomDialog } =
+        useAppContext()
 
     return (
         <header className="sticky top-0 z-40 w-full border-b bg-background">
@@ -29,7 +32,10 @@ export function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <CreateClassroomDialog />
+                    <CreateClassroomDialog
+                        open={createClassroomDialogOpen}
+                        setOpen={setCreateClassroomDialog}
+                    />
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

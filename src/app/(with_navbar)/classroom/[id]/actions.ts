@@ -4,6 +4,7 @@ import { apiWithAuth } from '@/lib/axios'
 import { Classroom, ClassroomRole, ColorType } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export type GetClassroomResponse = {
     classroom: Classroom

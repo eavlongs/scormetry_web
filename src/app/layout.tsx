@@ -1,9 +1,10 @@
+import { Toaster } from '@/components/ui/sonner'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import type React from 'react'
+import AppProvider from './AppProvider'
 import AuthProvider from './AuthProvider'
 import './globals.css'
-import { Toaster } from '@/components/ui/sonner'
 
 // const tmp = Roboto({ subsets: ["latin"] });
 // const tmp = Poppins({ subsets: ["latin"], weight: "400" });
@@ -24,7 +25,9 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={fontToDisplay.className}>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider>
+                    <AppProvider>{children}</AppProvider>
+                </AuthProvider>
                 <Toaster richColors />
             </body>
         </html>

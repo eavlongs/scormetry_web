@@ -26,8 +26,13 @@ import { Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-export function CreateClassroomDialog() {
-    const [open, setOpen] = useState(false)
+export function CreateClassroomDialog({
+    open,
+    setOpen,
+}: {
+    open: boolean
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>
+}) {
     const nameRef = useRef<HTMLInputElement>(null)
     const [color, setColor] = useState<ColorType>(getRandomColor())
 
@@ -45,8 +50,7 @@ export function CreateClassroomDialog() {
     }
 
     useEffect(() => {
-        // generate random color when dialog is closed, so that the color won't twitch when renderring the dialog
-        if (!open) {
+        if (open) {
             setColor(getRandomColor())
         }
     }, [open])
