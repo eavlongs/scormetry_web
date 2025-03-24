@@ -1,7 +1,16 @@
+import { ClassroomUserDetail } from './auth'
+
 export type Classroom = {
     id: string
     name: string
     color: ColorType
+}
+
+export type ClassroomUsersResponse = {
+    owner: ClassroomUserDetail
+    teachers: ClassroomUserDetail[]
+    judges: ClassroomUserDetail[]
+    students: ClassroomUserDetail[]
 }
 
 export const colorMap = {
@@ -20,4 +29,17 @@ export type ColorType = keyof typeof colorMap
 export const classroomRelations = ['teaching', 'studying', 'judging']
 export type ClassroomRelationType = 'teaching' | 'studying' | 'judging'
 
-export type ClassroomRole = 'teacher' | 'student' | 'judge'
+export const CLASSROOM_ROLE_TEACHER = 'teacher'
+export const CLASSROOM_ROLE_STUDENT = 'student'
+export const CLASSROOM_ROLE_JUDGE = 'judge'
+
+export const ALL_CLASSROOM_ROLES = [
+    CLASSROOM_ROLE_TEACHER,
+    CLASSROOM_ROLE_JUDGE,
+    CLASSROOM_ROLE_STUDENT,
+]
+
+export type ClassroomRole =
+    | typeof CLASSROOM_ROLE_TEACHER
+    | typeof CLASSROOM_ROLE_JUDGE
+    | typeof CLASSROOM_ROLE_STUDENT

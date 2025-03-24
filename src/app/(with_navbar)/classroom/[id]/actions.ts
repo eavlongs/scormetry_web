@@ -1,14 +1,19 @@
 'use server'
 
 import { apiWithAuth } from '@/lib/axios'
-import { Classroom, ClassroomRole, ColorType } from '@/types/classroom'
+import {
+    Classroom,
+    ClassroomRole,
+    ClassroomUsersResponse,
+    ColorType,
+} from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 export type GetClassroomResponse = {
     classroom: Classroom
     role: ClassroomRole
+    people: ClassroomUsersResponse
 }
 
 export async function getClassroom(

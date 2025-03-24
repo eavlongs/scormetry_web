@@ -46,6 +46,22 @@ export type Tokens = {
     refreshToken: string
 }
 
+export type UserEssentialDetail = {
+    id: string
+    first_name: string
+    last_name: string
+    email: string
+    profile_picture: string
+}
+
+export type ClassroomUserDetail = {
+    id: string
+    first_name?: string
+    last_name?: string
+    email: string
+    profile_picture?: string
+}
+
 export const ACCESS_TOKEN_COOKIE_NAME = 'access_token'
 export const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token'
 export const JWT_SECRET = process.env.JWT_SECRET || ''

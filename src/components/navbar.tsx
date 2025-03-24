@@ -48,7 +48,11 @@ export function Navbar() {
                                     {session.user ? (
                                         <Image
                                             src={session.user.profile_picture}
-                                            alt="@profilePicture"
+                                            alt={
+                                                session.user.first_name +
+                                                ' ' +
+                                                session.user.last_name
+                                            }
                                             fill
                                             className="rounded-full"
                                         />
