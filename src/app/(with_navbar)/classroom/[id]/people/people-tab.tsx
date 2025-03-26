@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import useSession from '@/hooks/useSession'
 import { ClassroomUserDetail } from '@/types/auth'
 import {
     CLASSROOM_ROLE_JUDGE,
@@ -21,11 +22,12 @@ import {
     CLASSROOM_ROLE_TEACHER,
     ClassroomRole,
 } from '@/types/classroom'
-import { UserPlus } from 'lucide-react'
+import { Trash2, UserPlus } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { GetClassroomResponse, inviteUsersToClassroom } from './actions'
+import { GetClassroomResponse, inviteUsersToClassroom } from '../actions'
+import DeleteClassroomUserDialog from './delete-classroom-user-dialog'
 
 export default function PeopleTab({
     classroom,
@@ -36,6 +38,9 @@ export default function PeopleTab({
     const teachers = classroom.people.teachers
     const judges = classroom.people.judges
     const students = classroom.people.students
+    const [userToDelete, setUserToDelete] =
+        useState<ClassroomUserDetail | null>(null)
+    const session = useSession()
 
     const [inviteRole, setInviteRole] = useState<ClassroomRole>(
         CLASSROOM_ROLE_STUDENT
@@ -228,12 +233,23 @@ export default function PeopleTab({
                         )}
                     </div>
                     <div className="space-y-2">
-                        <PersonRow person={owner} />
+                        <PersonRow
+                            person={owner}
+                            showDeleteButton={false}
+                            setUserToDelete={setUserToDelete}
+                        />
                         {teachers.length > 0
                             ? teachers.map((teacher) => (
                                   <PersonRow
                                       key={teacher.id || teacher.email}
                                       person={teacher}
+                                      showDeleteButton={
+                                          session.user
+                                              ? session.user.id ==
+                                                classroom.classroom.owned_by
+                                              : false
+                                      }
+                                      setUserToDelete={setUserToDelete}
                                   />
                               ))
                             : null}
@@ -264,6 +280,10 @@ export default function PeopleTab({
                                 <PersonRow
                                     key={judge.id || judge.email}
                                     person={judge}
+                                    showDeleteButton={
+                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                                    }
+                                    setUserToDelete={setUserToDelete}
                                 />
                             ))
                         ) : (
@@ -298,6 +318,10 @@ export default function PeopleTab({
                                 <PersonRow
                                     key={student.id || student.email}
                                     person={student}
+                                    showDeleteButton={
+                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                                    }
+                                    setUserToDelete={setUserToDelete}
                                 />
                             ))
                         ) : (
@@ -409,13 +433,29 @@ export default function PeopleTab({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <DeleteClassroomUserDialog
+                classroom={classroom}
+                user={userToDelete}
+                setUser={setUserToDelete}
+            />
         </Card>
     )
 }
 
-function PersonRow({ person }: { person: ClassroomUserDetail }) {
+function PersonRow({
+    person,
+    showDeleteButton,
+    setUserToDelete,
+}: {
+    person: ClassroomUserDetail
+    showDeleteButton: boolean
+    setUserToDelete: React.Dispatch<
+        React.SetStateAction<ClassroomUserDetail | null>
+    >
+}) {
     // If the person only has an email (invited but not registered)
-    const isInvited = !person.first_name && !person.last_name
+    const isInvited = !person.first_name
 
     return (
         <div className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
@@ -457,6 +497,18 @@ function PersonRow({ person }: { person: ClassroomUserDetail }) {
                     )}
                 </div>
             </div>
+
+            {showDeleteButton && (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                    onClick={() => setUserToDelete(person)}
+                >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Remove user</span>
+                </Button>
+            )}
         </div>
     )
 }

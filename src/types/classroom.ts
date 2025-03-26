@@ -5,6 +5,7 @@ export type Classroom = {
     name: string
     color: ColorType
     code: string
+    owned_by: string
 }
 
 export type ClassroomUsersResponse = {

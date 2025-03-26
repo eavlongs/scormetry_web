@@ -1,7 +1,7 @@
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
 import ClassroomNotFound from '../classroom-not-found'
-import PeopleTab from '../people-tab'
+import PeopleTab from './people-tab'
 
 export default async function Page({
     params,
