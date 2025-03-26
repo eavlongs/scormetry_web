@@ -4,14 +4,13 @@ import { cookies } from 'next/headers'
 
 import { api } from '@/lib/axios'
 import { createSession } from '@/lib/session'
-import { User } from '@/types/auth'
-import { ApiResponse } from '@/types/response'
-import type { OAuth2Tokens } from 'arctic'
 import {
     GOOGLE_CODE_VERIFIER_COOKIE_NAME,
     GOOGLE_OAUTH_STATE_COOKIE_NAME,
     REDIRECT_URL_COOKIE_NAME,
-} from '../route'
+} from '@/types/auth'
+import { ApiResponse } from '@/types/response'
+import type { OAuth2Tokens } from 'arctic'
 
 export async function GET(request: Request): Promise<Response> {
     const url = new URL(request.url)
@@ -92,7 +91,9 @@ export async function GET(request: Request): Promise<Response> {
         })
     }
 
+    console.log({ cookieStore: cookieStore.getAll() })
     const redirectUrl = cookieStore.get(REDIRECT_URL_COOKIE_NAME)?.value ?? '/'
+    console.log({ redirectUrl })
     cookieStore.delete('redirect_url')
     cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
     cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)

@@ -8,9 +8,17 @@ import { revalidatePath } from 'next/cache'
 export async function createClassroom(
     name: string,
     color: ColorType
-): Promise<ActionResponse> {
+): Promise<
+    ActionResponse<{
+        classroom: Classroom
+    }>
+> {
     try {
-        const response = await apiWithAuth.post<ApiResponse>('/classroom', {
+        const response = await apiWithAuth.post<
+            ApiResponse<{
+                classroom: Classroom
+            }>
+        >('/classroom', {
             name,
             color,
         })
@@ -20,6 +28,7 @@ export async function createClassroom(
         return {
             success: true,
             message: response.data.message,
+            data: response.data.data,
         }
     } catch (e: any) {
         return {
@@ -51,4 +60,8 @@ export async function getClassrooms(): Promise<{
             judging_classrooms: [],
         }
     }
+}
+
+export async function revalidateData(path: string) {
+    revalidatePath(path)
 }

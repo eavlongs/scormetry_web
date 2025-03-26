@@ -1,9 +1,14 @@
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import {
+    CLASSROOM_ROLE_JUDGE,
+    CLASSROOM_ROLE_STUDENT,
+    CLASSROOM_ROLE_TEACHER,
+    ClassroomRole,
+    colorMap,
+} from '@/types/classroom'
 import Link from 'next/link'
 import { getClassrooms } from './actions'
 import CreateClassroomButton from './classroom/[id]/create-classroom-button'
-import { colorMap } from '@/types/classroom'
 
 export default async function Page() {
     const classrooms = await getClassrooms()
@@ -23,25 +28,25 @@ export default async function Page() {
                 <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
                     {allClassrooms.map((classroom) => {
                         // Determine role label
-                        let roleType = ''
+                        let roleType: ClassroomRole = CLASSROOM_ROLE_STUDENT
                         if (
                             classrooms.teaching_classrooms.some(
                                 (c) => c.id === classroom.id
                             )
                         ) {
-                            roleType = 'Teaching'
+                            roleType = CLASSROOM_ROLE_TEACHER
                         } else if (
                             classrooms.studying_classrooms.some(
                                 (c) => c.id === classroom.id
                             )
                         ) {
-                            roleType = 'Student'
+                            roleType = CLASSROOM_ROLE_STUDENT
                         } else if (
                             classrooms.judging_classrooms.some(
                                 (c) => c.id === classroom.id
                             )
                         ) {
-                            roleType = 'Judge'
+                            roleType = CLASSROOM_ROLE_JUDGE
                         }
 
                         return (
@@ -70,7 +75,7 @@ export default async function Page() {
 
                                         {roleType && (
                                             <div className="flex items-center justify-between mt-4">
-                                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                                                <span className="capitalize text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                                                     {roleType}
                                                 </span>
                                             </div>

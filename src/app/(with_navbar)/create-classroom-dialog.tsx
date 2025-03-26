@@ -6,7 +6,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,7 +21,7 @@ import {
 } from '@/components/ui/select'
 import { cn, getRandomColor } from '@/lib/utils'
 import { colorMap, ColorType } from '@/types/classroom'
-import { Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -35,6 +34,7 @@ export function CreateClassroomDialog({
 }) {
     const nameRef = useRef<HTMLInputElement>(null)
     const [color, setColor] = useState<ColorType>(getRandomColor())
+    const router = useRouter()
 
     async function handleSubmit() {
         if (nameRef.current?.value) {
@@ -43,6 +43,8 @@ export function CreateClassroomDialog({
             if (response.success) {
                 toast.success(response.message)
                 setOpen(false)
+                if (response.data)
+                    router.push(`/classroom/${response.data.classroom.id}`)
                 return
             }
             toast.error(response.message)
@@ -57,13 +59,6 @@ export function CreateClassroomDialog({
 
     return (
         <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogTrigger asChild>
-                <Button className="flex items-center py-1">
-                    <Plus className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Class</span>
-                    <span className="sr-only md:hidden">Add class</span>
-                </Button>
-            </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Create Class</AlertDialogTitle>

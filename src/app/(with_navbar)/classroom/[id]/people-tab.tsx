@@ -24,7 +24,8 @@ import {
 import { UserPlus } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
-import { GetClassroomResponse } from './actions'
+import { toast } from 'sonner'
+import { GetClassroomResponse, inviteUsersToClassroom } from './actions'
 
 export default function PeopleTab({
     classroom,
@@ -46,23 +47,29 @@ export default function PeopleTab({
     const [validationError, setValidationError] = useState('') // New state for validation errors
 
     // Email validation regex
-    const validateEmail = (email: string) => {
+    function validateEmail(email: string) {
         const re =
             /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
         return re.test(String(email).toLowerCase())
     }
 
     // Function to check if email is already in the classroom
-    const isEmailInClassroom = (email: string) => {
-        const allEmails = [
-            ...teachers.map((t) => t.email),
-            ...judges.map((j) => j.email),
-            ...students.map((s) => s.email),
-        ]
-        return allEmails.includes(email)
+    function isEmailInClassroom(email: string) {
+        const usersAlreadyInClassroom = [
+            owner,
+            ...teachers,
+            ...judges,
+            ...students,
+        ].filter((u) => u.first_name && u.last_name)
+
+        const allEmails = usersAlreadyInClassroom.map((u) =>
+            u.email.toLowerCase()
+        )
+
+        return allEmails.includes(email.toLowerCase())
     }
 
-    const handleOpenDialog = (role: ClassroomRole) => {
+    function handleOpenDialog(role: ClassroomRole) {
         setInviteRole(role)
         setEmailTags([])
         setInvalidEmails([])
@@ -70,54 +77,66 @@ export default function PeopleTab({
         setIsDialogOpen(true)
     }
 
-    const addEmailTag = (email: string) => {
+    function addEmailTag(email: string): boolean {
         email = email.trim()
 
         // Clear previous validation errors
         setValidationError('')
 
         // Don't add empty emails
-        if (!email) return
+        if (!email) return false
 
         // Check if email is valid using regex
         if (!validateEmail(email)) {
             setValidationError(`"${email}" is not a valid email address`)
-            return
+            return false
         }
 
         // Check if email is already added as a tag
         if (emailTags.includes(email)) {
             setValidationError(`"${email}" has already been added`)
-            return
+            return false
+        }
+
+        if (isEmailInClassroom(email)) {
+            setValidationError(`"${email}" is already in the classroom`)
+            return false
         }
 
         // Add valid email as a tag
         setEmailTags([...emailTags, email])
         setCurrentInput('')
+        return true
     }
 
-    const removeEmailTag = (indexToRemove: number) => {
+    function removeEmailTag(indexToRemove: number) {
         setEmailTags(emailTags.filter((_, index) => index !== indexToRemove))
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         // Add tag when space, comma, or Enter is pressed
         if ([' ', ',', 'Enter'].includes(e.key)) {
             e.preventDefault()
-            if (currentInput) {
-                addEmailTag(currentInput)
-            }
+            handleAddEmailToTag()
+            return
         }
 
-        // Delete last tag when backspace is pressed with empty input
-        if (e.key === 'Backspace' && !currentInput && emailTags.length > 0) {
-            const newTags = [...emailTags]
-            newTags.pop()
-            setEmailTags(newTags)
+        if (e.key === 'Backspace') {
+            if (currentInput.length === 0) {
+                setEmailTags(emailTags.slice(0, -1))
+            }
         }
     }
 
-    const handleInvite = () => {
+    function handleAddEmailToTag(): boolean {
+        if (currentInput) {
+            return addEmailTag(currentInput)
+        }
+
+        return true
+    }
+
+    async function handleInvite() {
         // Check for existing emails
         const invalid = emailTags.filter((email) => isEmailInClassroom(email))
         setInvalidEmails(invalid)
@@ -126,8 +145,27 @@ export default function PeopleTab({
             return // Don't proceed if there are invalid emails
         }
 
-        // Here you would handle the actual invitation process
-        console.log(`Inviting ${emailTags.length} people as ${inviteRole}`)
+        // Make sure all inputs are in tags
+        const ok = handleAddEmailToTag()
+
+        if (!ok) return
+
+        const usersToInvite = emailTags.map((email) => ({
+            email,
+            role: inviteRole,
+        }))
+
+        const response = await inviteUsersToClassroom(
+            classroom.classroom.id,
+            usersToInvite
+        )
+
+        if (!response.success) {
+            toast.error(response.message)
+            return
+        }
+
+        toast.success(response.message)
 
         // Close the dialog and reset state
         setIsDialogOpen(false)
@@ -178,29 +216,27 @@ export default function PeopleTab({
                             Teachers ({teachers.length + 1}){' '}
                             {/* +1 for owner */}
                         </h3>
-                        <Button
-                            variant="outline"
-                            onClick={() =>
-                                handleOpenDialog(CLASSROOM_ROLE_TEACHER)
-                            }
-                        >
-                            <UserPlus className="h-4 w-4" />
-                        </Button>
+                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    handleOpenDialog(CLASSROOM_ROLE_TEACHER)
+                                }
+                            >
+                                <UserPlus className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                     <div className="space-y-2">
                         <PersonRow person={owner} />
-                        {teachers.length > 0 ? (
-                            teachers.map((teacher) => (
-                                <PersonRow
-                                    key={teacher.id || teacher.email}
-                                    person={teacher}
-                                />
-                            ))
-                        ) : (
-                            <p className="text-muted-foreground text-sm py-2">
-                                No teachers assigned
-                            </p>
-                        )}
+                        {teachers.length > 0
+                            ? teachers.map((teacher) => (
+                                  <PersonRow
+                                      key={teacher.id || teacher.email}
+                                      person={teacher}
+                                  />
+                              ))
+                            : null}
                     </div>
                 </section>
 
@@ -211,14 +247,16 @@ export default function PeopleTab({
                         <h3 className="text-lg font-semibold mb-2">
                             Judges ({judges.length})
                         </h3>
-                        <Button
-                            variant="outline"
-                            onClick={() =>
-                                handleOpenDialog(CLASSROOM_ROLE_JUDGE)
-                            }
-                        >
-                            <UserPlus className="h-4 w-4" />
-                        </Button>
+                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    handleOpenDialog(CLASSROOM_ROLE_JUDGE)
+                                }
+                            >
+                                <UserPlus className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                     <div className="space-y-2">
                         {judges.length > 0 ? (
@@ -243,14 +281,16 @@ export default function PeopleTab({
                         <h3 className="text-lg font-semibold mb-2">
                             Students ({students.length})
                         </h3>
-                        <Button
-                            variant="outline"
-                            onClick={() =>
-                                handleOpenDialog(CLASSROOM_ROLE_STUDENT)
-                            }
-                        >
-                            <UserPlus className="h-4 w-4" />
-                        </Button>
+                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    handleOpenDialog(CLASSROOM_ROLE_STUDENT)
+                                }
+                            >
+                                <UserPlus className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                     <div className="space-y-2">
                         {students.length > 0 ? (
@@ -290,7 +330,7 @@ export default function PeopleTab({
                                 {emailTags.map((tag, index) => (
                                     <div
                                         key={index}
-                                        className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md flex items-center gap-1 text-sm"
+                                        className="bg-paragon text-white px-2 py-1 rounded-md flex items-center gap-1 text-sm"
                                     >
                                         {tag}
                                         <button
@@ -298,7 +338,7 @@ export default function PeopleTab({
                                             onClick={() =>
                                                 removeEmailTag(index)
                                             }
-                                            className="text-secondary-foreground/70 hover:text-secondary-foreground focus:outline-none"
+                                            className="cursor-pointer border-paragon border-1 hover:border-white rounded-full p-0.5 text-white focus:outline-none"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"

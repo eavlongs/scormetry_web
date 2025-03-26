@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -8,10 +10,34 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { CalendarIcon, Clock, FileTextIcon, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
-export default function ActivitiesTab({ classroom }) {
+export default function ActivitiesTab({
+    classroom,
+    successMessage,
+    errorMessage,
+}: {
+    classroom: any
+    successMessage: Readonly<string>
+    errorMessage: Readonly<string>
+}) {
     // Assuming classroom has an activities array
     const activities = classroom.activities || []
+    const [showedSuccessMessage, setShowedSuccessMessage] = useState(false)
+    const [showedErrorMessage, setShowedErrorMessage] = useState(false)
+
+    useEffect(() => {
+        if (successMessage && !showedSuccessMessage) {
+            toast.success(successMessage)
+            setShowedSuccessMessage(true)
+        }
+
+        if (errorMessage && !showedErrorMessage) {
+            toast.error(errorMessage)
+            setShowedErrorMessage(true)
+        }
+    }, [successMessage, errorMessage, showedSuccessMessage, showedErrorMessage])
 
     return (
         <div className="space-y-4">

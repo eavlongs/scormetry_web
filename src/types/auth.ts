@@ -62,6 +62,11 @@ export type ClassroomUserDetail = {
     profile_picture?: string
 }
 
+export const GOOGLE_OAUTH_STATE_COOKIE_NAME = 'google_oauth_state'
+export const GOOGLE_CODE_VERIFIER_COOKIE_NAME = 'google_code_verifier'
+export const REDIRECT_URL_COOKIE_NAME = 'redirect_url'
+export const REDIRECT_URL_NAME = 'redirect_url'
+
 export const ACCESS_TOKEN_COOKIE_NAME = 'access_token'
 export const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token'
 export const JWT_SECRET = process.env.JWT_SECRET || ''

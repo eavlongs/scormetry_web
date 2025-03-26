@@ -1,17 +1,26 @@
 // app/login/google/route.ts
 import { google } from '@/lib/auth'
+import {
+    GOOGLE_CODE_VERIFIER_COOKIE_NAME,
+    GOOGLE_OAUTH_STATE_COOKIE_NAME,
+    REDIRECT_URL_COOKIE_NAME,
+    REDIRECT_URL_NAME,
+} from '@/types/auth'
 import { generateCodeVerifier, generateState } from 'arctic'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 
-export const GOOGLE_OAUTH_STATE_COOKIE_NAME = 'google_oauth_state'
-export const GOOGLE_CODE_VERIFIER_COOKIE_NAME = 'google_code_verifier'
-export const REDIRECT_URL_COOKIE_NAME = 'redirect_url'
-
 export async function GET(request: NextRequest): Promise<Response> {
     const state = generateState()
     const codeVerifier = generateCodeVerifier()
-    const redirectUrl = request.nextUrl.searchParams.get('redirect_url') ?? '/'
+
+    console.log({ searchParams: request.nextUrl.searchParams })
+    const redirectUrl =
+        request.nextUrl.searchParams.get(REDIRECT_URL_NAME) ?? '/'
+
+    console.log('here')
+    console.log(redirectUrl)
+    console.log('here')
 
     const url = google.createAuthorizationURL(state, codeVerifier, [
         'openid',

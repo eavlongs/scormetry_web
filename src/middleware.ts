@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from './lib/server-session'
+import { REDIRECT_URL_NAME } from '@/types/auth'
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
@@ -10,7 +11,9 @@ export async function middleware(request: NextRequest) {
         !session.refreshToken &&
         !pathname.startsWith('/login')
     ) {
-        return NextResponse.redirect(new URL('/login', request.url))
+        const loginUrl = new URL('/login', request.url)
+        loginUrl.searchParams.set(REDIRECT_URL_NAME, request.url)
+        return NextResponse.redirect(loginUrl)
     }
 
     if (

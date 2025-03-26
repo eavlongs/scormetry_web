@@ -12,7 +12,14 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { Classroom, classroomRelations, colorMap } from '@/types/classroom'
+import {
+    Classroom,
+    ClassroomRelationJudge,
+    classroomRelations,
+    ClassroomRelationStudent,
+    ClassroomRelationTeacher,
+    colorMap,
+} from '@/types/classroom'
 import Link from 'next/link'
 import { Fragment } from 'react'
 
@@ -43,24 +50,24 @@ export function AppSidebar({
                                 let classroomsToRender: Classroom[] = []
 
                                 switch (relation) {
-                                    case 'teaching':
+                                    case ClassroomRelationTeacher:
                                         classroomsToRender =
                                             classrooms.teaching_classrooms
                                         break
-                                    case 'studying':
-                                        classroomsToRender =
-                                            classrooms.studying_classrooms
-                                        break
-                                    case 'judging':
+                                    case ClassroomRelationJudge:
                                         classroomsToRender =
                                             classrooms.judging_classrooms
+                                        break
+                                    case ClassroomRelationStudent:
+                                        classroomsToRender =
+                                            classrooms.studying_classrooms
                                         break
                                 }
 
                                 return (
                                     <Fragment key={relation}>
                                         {classroomsToRender.length > 0 && (
-                                            <span className="capitalize font-bold my-2 text-base">
+                                            <span className="font-bold my-2 text-base">
                                                 {relation}
                                             </span>
                                         )}

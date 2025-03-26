@@ -4,6 +4,7 @@ export type Classroom = {
     id: string
     name: string
     color: ColorType
+    code: string
 }
 
 export type ClassroomUsersResponse = {
@@ -26,8 +27,19 @@ export const classroomColors = Object.keys(colorMap) as ColorType[]
 
 export type ColorType = keyof typeof colorMap
 
-export const classroomRelations = ['teaching', 'studying', 'judging']
-export type ClassroomRelationType = 'teaching' | 'studying' | 'judging'
+export const ClassroomRelationTeacher = 'As a Teacher'
+export const ClassroomRelationStudent = 'As a Student'
+export const ClassroomRelationJudge = 'As a Judge'
+
+export const classroomRelations = [
+    ClassroomRelationTeacher,
+    ClassroomRelationJudge,
+    ClassroomRelationStudent,
+]
+export type ClassroomRelationType =
+    | typeof ClassroomRelationTeacher
+    | typeof ClassroomRelationStudent
+    | typeof ClassroomRelationJudge
 
 export const CLASSROOM_ROLE_TEACHER = 'teacher'
 export const CLASSROOM_ROLE_STUDENT = 'student'

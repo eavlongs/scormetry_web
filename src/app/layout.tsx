@@ -25,10 +25,10 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={fontToDisplay.className}>
+                <Toaster richColors />
                 <AuthProvider>
                     <AppProvider>{children}</AppProvider>
                 </AuthProvider>
-                <Toaster richColors />
             </body>
         </html>
     )

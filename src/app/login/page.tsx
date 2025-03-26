@@ -1,6 +1,14 @@
 import LoginWithGoogle from '@/components/login-with-google'
+import { REDIRECT_URL_NAME } from '@/types/auth'
 
-export default function Page() {
+export default async function Page({
+    searchParams,
+}: {
+    searchParams: {
+        [REDIRECT_URL_NAME]: string
+    }
+}) {
+    const { [REDIRECT_URL_NAME]: redirectUrl } = await searchParams
     return (
         <div className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]">
             <div className="text-center mb-8">
@@ -9,7 +17,7 @@ export default function Page() {
                     Sign in to continue to Scormetry
                 </p>
             </div>
-            <LoginWithGoogle />
+            <LoginWithGoogle redirectUrl={redirectUrl ?? '/'} />
         </div>
     )
 }
