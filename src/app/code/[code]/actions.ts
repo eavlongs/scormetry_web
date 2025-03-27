@@ -5,25 +5,15 @@ import { Classroom } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 
 export async function joinClassroomByCode(code: string): Promise<
-    ActionResponse<
-        {
-            classroom: Classroom
-        },
-        {
-            type: string
-        }
-    >
+    ActionResponse<{
+        classroom: Classroom
+    }>
 > {
     try {
         const response = await apiWithAuth.post<
-            ApiResponse<
-                {
-                    classroom: Classroom
-                },
-                {
-                    type: string
-                }
-            >
+            ApiResponse<{
+                classroom: Classroom
+            }>
         >(`/classroom/code/${code}`)
 
         return {
@@ -37,6 +27,7 @@ export async function joinClassroomByCode(code: string): Promise<
             message: e.response.data.message,
             error: e.response.data.error,
             data: e.response.data.data,
+            error_type: e.response.data.error_type,
         }
     }
 }

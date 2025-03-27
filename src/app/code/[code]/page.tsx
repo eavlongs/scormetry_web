@@ -18,7 +18,7 @@ export default async function Page({ params }: { params: { code: string } }) {
         )
     }
 
-    if (response.error?.type === KEYOF_ERR_USER_ALREADY_IN_CLASSROOM) {
+    if (response.error_type === KEYOF_ERR_USER_ALREADY_IN_CLASSROOM) {
         redirect(
             response.data
                 ? `/classroom/${response.data.classroom.id}`

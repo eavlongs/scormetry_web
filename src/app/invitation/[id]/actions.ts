@@ -5,25 +5,15 @@ import { Classroom } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 
 export async function acceptInvitation(id: string): Promise<
-    ActionResponse<
-        {
-            classroom: Classroom
-        },
-        {
-            type: string
-        }
-    >
+    ActionResponse<{
+        classroom: Classroom
+    }>
 > {
     try {
         const response = await apiWithAuth.get<
-            ApiResponse<
-                {
-                    classroom: Classroom
-                },
-                {
-                    type: string
-                }
-            >
+            ApiResponse<{
+                classroom: Classroom
+            }>
         >(`/classroom/invitation/${id}`)
 
         return {
@@ -37,6 +27,7 @@ export async function acceptInvitation(id: string): Promise<
             success: false,
             message: e.response.data.message,
             error: e.response.data.error,
+            error_type: e.response.data.error_type,
         }
     }
 }

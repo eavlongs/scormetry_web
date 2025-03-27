@@ -55,7 +55,7 @@ export function JoinClassroomDialog({
                 toast.success(response.message)
             }
         } else {
-            if (response.error?.type === KEYOF_ERR_USER_ALREADY_IN_CLASSROOM) {
+            if (response.error_type === KEYOF_ERR_USER_ALREADY_IN_CLASSROOM) {
                 if (
                     response.data &&
                     !pathname.startsWith(
