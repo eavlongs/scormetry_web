@@ -1,14 +1,18 @@
-import { classroomColors } from '@/types/classroom'
+import { classroomColorsWithType } from '@/types/classroom'
+import { ValidationError } from '@/types/response'
 import { clsx, type ClassValue } from 'clsx'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
+import { ZodError, ZodFormattedError } from 'zod'
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
 export function getRandomColor() {
-    return classroomColors[Math.floor(Math.random() * classroomColors.length)]
+    return classroomColorsWithType[
+        Math.floor(Math.random() * classroomColorsWithType.length)
+    ]
 }
 
 /**
@@ -31,4 +35,65 @@ export async function copyUrlToClipboard(path: string) {
     } catch (err) {
         toast.error('Failed to copy')
     }
+}
+
+// export function convertZodErrorToValidationError<T>(
+//     err: ZodError<T>
+// ): ValidationError[] {
+//     if (!(err instanceof ZodError && isZodError<T>(err))) return []
+
+//     const formattedErrors = err.format()
+
+//     return Object.keys(formattedErrors)
+//         .filter((key) => key !== '_errors')
+//         .map((key) => {
+//             return {
+//                 field: key,
+//                 message: formattedErrors[key]._errors,
+//             }
+//         })
+// }
+
+export function convertZodErrorToValidationError<T>(
+    err: ZodError<T>
+): ValidationError[] {
+    if (!(err instanceof ZodError)) return []
+
+    const formattedErrors = err.format()
+    const validationErrors: ValidationError[] = []
+
+    // Handle root level errors
+    for (const key in formattedErrors) {
+        if (key === '_errors') continue
+
+        const fieldError = formattedErrors[key as keyof typeof formattedErrors]
+
+        // Check if fieldError is an object first before using 'in' operator
+        if (
+            fieldError &&
+            typeof fieldError === 'object' &&
+            fieldError !== null &&
+            '_errors' in fieldError &&
+            Array.isArray(fieldError._errors) &&
+            fieldError._errors.length > 0
+        ) {
+            validationErrors.push({
+                field: key,
+                message: fieldError._errors[0] || 'Invalid input',
+            })
+        }
+    }
+
+    return validationErrors
+}
+
+export function getErrorMessageFromValidationError(
+    e: ValidationError[],
+    key: string
+): string {
+    const error = e.find((error) => error.field === key)
+    if (error) {
+        return error.message
+    }
+    return ''
 }

@@ -1,9 +1,17 @@
 'use server'
 
 import { apiWithAuth } from '@/lib/axios'
+import { convertZodErrorToValidationError } from '@/lib/utils'
+import { ClassroomSchema } from '@/schema'
 import { Classroom, ColorType } from '@/types/classroom'
-import { ActionResponse, ApiResponse } from '@/types/response'
+import {
+    ActionResponse,
+    ApiResponse,
+    VALIDATION_ERROR,
+    VALIDATION_ERROR_MESSAGE,
+} from '@/types/response'
 import { revalidatePath } from 'next/cache'
+import { ZodError } from 'zod'
 
 export async function createClassroom(
     name: string,
@@ -14,14 +22,16 @@ export async function createClassroom(
     }>
 > {
     try {
+        const data = ClassroomSchema.parse({
+            name,
+            color,
+        })
+
         const response = await apiWithAuth.post<
             ApiResponse<{
                 classroom: Classroom
             }>
-        >('/classroom', {
-            name,
-            color,
-        })
+        >('/classroom', data)
 
         revalidatePath('/')
 
@@ -31,9 +41,19 @@ export async function createClassroom(
             data: response.data.data,
         }
     } catch (e: any) {
+        if (e instanceof ZodError) {
+            return {
+                success: false,
+                message: VALIDATION_ERROR_MESSAGE,
+                error: convertZodErrorToValidationError(e),
+                error_type: VALIDATION_ERROR,
+            }
+        }
+
         return {
             success: false,
             message: e.response.data.message,
+            error: e.response?.data?.error,
         }
     }
 }
@@ -52,7 +72,7 @@ export async function getClassrooms(): Promise<{
             }>
         >('/classroom')
 
-        return { ...response.data.data }
+        return { ...response.data.data! }
     } catch (e: any) {
         return {
             teaching_classrooms: [],

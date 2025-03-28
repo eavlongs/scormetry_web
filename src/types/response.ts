@@ -1,4 +1,4 @@
-export type ApiResponse<T = any, U = any> = {
+export type ApiResponse<T = any, U = ValidationError[]> = {
     success: boolean
     message: string
     error?: U
@@ -6,7 +6,15 @@ export type ApiResponse<T = any, U = any> = {
     error_type?: string
 }
 
-export type ActionResponse<T = any, U = any> = {
+export type ValidationError = {
+    field: string
+    message: string
+}
+
+export const VALIDATION_ERROR = 'validation'
+export const VALIDATION_ERROR_MESSAGE = 'Validation Error'
+
+export type ActionResponse<T = any, U = ValidationError[]> = {
     success: boolean
     message: string
     data?: T

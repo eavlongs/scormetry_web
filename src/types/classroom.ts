@@ -15,7 +15,18 @@ export type ClassroomUsersResponse = {
     students: ClassroomUserDetail[]
 }
 
-export const colorMap = {
+export const CLASSROOM_COLORS = [
+    'red',
+    'blue',
+    'purple',
+    'green',
+    'gray',
+    'brown',
+] as const
+
+export type ColorType = (typeof CLASSROOM_COLORS)[number]
+
+export const colorMap: Record<ColorType, string> = {
     red: 'bg-red-700',
     blue: 'bg-paragon',
     purple: 'bg-purple-900',
@@ -24,9 +35,7 @@ export const colorMap = {
     brown: 'bg-amber-900',
 }
 
-export const classroomColors = Object.keys(colorMap) as ColorType[]
-
-export type ColorType = keyof typeof colorMap
+export const classroomColorsWithType = Object.keys(colorMap) as ColorType[]
 
 export const ClassroomRelationTeacher = 'As a Teacher'
 export const ClassroomRelationStudent = 'As a Student'
@@ -50,7 +59,7 @@ export const ALL_CLASSROOM_ROLES = [
     CLASSROOM_ROLE_TEACHER,
     CLASSROOM_ROLE_JUDGE,
     CLASSROOM_ROLE_STUDENT,
-]
+] as const
 
 export type ClassroomRole =
     | typeof CLASSROOM_ROLE_TEACHER
