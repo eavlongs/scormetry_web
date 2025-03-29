@@ -3,16 +3,6 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import useSession from '@/hooks/useSession'
 import { ClassroomUserDetail } from '@/types/auth'
@@ -25,9 +15,9 @@ import {
 import { Trash2, UserPlus } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
-import { toast } from 'sonner'
-import { GetClassroomResponse, inviteUsersToClassroom } from '../actions'
+import { GetClassroomResponse } from '../actions'
 import DeleteClassroomUserDialog from './delete-classroom-user-dialog'
+import { InviteUsersToClassroomDialog } from './invite-users-to-classroom-dialog'
 
 export default function PeopleTab({
     classroom,
@@ -41,143 +31,8 @@ export default function PeopleTab({
     const [userToDelete, setUserToDelete] =
         useState<ClassroomUserDetail | null>(null)
     const session = useSession()
-
-    const [inviteRole, setInviteRole] = useState<ClassroomRole>(
-        CLASSROOM_ROLE_STUDENT
-    )
-    const [emailTags, setEmailTags] = useState<string[]>([])
-    const [currentInput, setCurrentInput] = useState('')
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [invalidEmails, setInvalidEmails] = useState<string[]>([])
-    const [validationError, setValidationError] = useState('') // New state for validation errors
-
-    // Email validation regex
-    function validateEmail(email: string) {
-        const re =
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        return re.test(String(email).toLowerCase())
-    }
-
-    // Function to check if email is already in the classroom
-    function isEmailInClassroom(email: string) {
-        const usersAlreadyInClassroom = [
-            owner,
-            ...teachers,
-            ...judges,
-            ...students,
-        ].filter((u) => u.first_name && u.last_name)
-
-        const allEmails = usersAlreadyInClassroom.map((u) =>
-            u.email.toLowerCase()
-        )
-
-        return allEmails.includes(email.toLowerCase())
-    }
-
-    function handleOpenDialog(role: ClassroomRole) {
-        setInviteRole(role)
-        setEmailTags([])
-        setInvalidEmails([])
-        setValidationError('') // Clear validation errors
-        setIsDialogOpen(true)
-    }
-
-    function addEmailTag(email: string): boolean {
-        email = email.trim()
-
-        // Clear previous validation errors
-        setValidationError('')
-
-        // Don't add empty emails
-        if (!email) return false
-
-        // Check if email is valid using regex
-        if (!validateEmail(email)) {
-            setValidationError(`"${email}" is not a valid email address`)
-            return false
-        }
-
-        // Check if email is already added as a tag
-        if (emailTags.includes(email)) {
-            setValidationError(`"${email}" has already been added`)
-            return false
-        }
-
-        if (isEmailInClassroom(email)) {
-            setValidationError(`"${email}" is already in the classroom`)
-            return false
-        }
-
-        // Add valid email as a tag
-        setEmailTags([...emailTags, email])
-        setCurrentInput('')
-        return true
-    }
-
-    function removeEmailTag(indexToRemove: number) {
-        setEmailTags(emailTags.filter((_, index) => index !== indexToRemove))
-    }
-
-    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        // Add tag when space, comma, or Enter is pressed
-        if ([' ', ',', 'Enter'].includes(e.key)) {
-            e.preventDefault()
-            handleAddEmailToTag()
-            return
-        }
-
-        if (e.key === 'Backspace') {
-            if (currentInput.length === 0) {
-                setEmailTags(emailTags.slice(0, -1))
-            }
-        }
-    }
-
-    function handleAddEmailToTag(): boolean {
-        if (currentInput) {
-            return addEmailTag(currentInput)
-        }
-
-        return true
-    }
-
-    async function handleInvite() {
-        // Check for existing emails
-        const invalid = emailTags.filter((email) => isEmailInClassroom(email))
-        setInvalidEmails(invalid)
-
-        if (invalid.length > 0) {
-            return // Don't proceed if there are invalid emails
-        }
-
-        // Make sure all inputs are in tags
-        const ok = handleAddEmailToTag()
-
-        if (!ok) return
-
-        const usersToInvite = emailTags.map((email) => ({
-            email,
-            role: inviteRole,
-        }))
-
-        const response = await inviteUsersToClassroom(
-            classroom.classroom.id,
-            usersToInvite
-        )
-
-        if (!response.success) {
-            toast.error(response.message)
-            return
-        }
-
-        toast.success(response.message)
-
-        // Close the dialog and reset state
-        setIsDialogOpen(false)
-        setEmailTags([])
-        setCurrentInput('')
-        setValidationError('')
-    }
+    const [inviteUserDialogRole, setInviteUserDialogRole] =
+        useState<ClassroomRole | null>(null)
 
     return (
         <Card>
@@ -225,7 +80,9 @@ export default function PeopleTab({
                             <Button
                                 variant="outline"
                                 onClick={() =>
-                                    handleOpenDialog(CLASSROOM_ROLE_TEACHER)
+                                    setInviteUserDialogRole(
+                                        CLASSROOM_ROLE_TEACHER
+                                    )
                                 }
                             >
                                 <UserPlus className="h-4 w-4" />
@@ -267,7 +124,9 @@ export default function PeopleTab({
                             <Button
                                 variant="outline"
                                 onClick={() =>
-                                    handleOpenDialog(CLASSROOM_ROLE_JUDGE)
+                                    setInviteUserDialogRole(
+                                        CLASSROOM_ROLE_JUDGE
+                                    )
                                 }
                             >
                                 <UserPlus className="h-4 w-4" />
@@ -305,7 +164,9 @@ export default function PeopleTab({
                             <Button
                                 variant="outline"
                                 onClick={() =>
-                                    handleOpenDialog(CLASSROOM_ROLE_STUDENT)
+                                    setInviteUserDialogRole(
+                                        CLASSROOM_ROLE_STUDENT
+                                    )
                                 }
                             >
                                 <UserPlus className="h-4 w-4" />
@@ -333,106 +194,11 @@ export default function PeopleTab({
                 </section>
             </CardContent>
 
-            {/* Invite Dialog */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Invite {inviteRole}s</DialogTitle>
-                        <DialogDescription>
-                            Type an email address and press space or comma to
-                            add it
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="role">Role</Label>
-                            <Input id="role" value={inviteRole} disabled />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="emails">Email Addresses</Label>
-                            <div className="flex flex-wrap gap-1 p-2 border rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                                {emailTags.map((tag, index) => (
-                                    <div
-                                        key={index}
-                                        className="bg-paragon text-white px-2 py-1 rounded-md flex items-center gap-1 text-sm"
-                                    >
-                                        {tag}
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                removeEmailTag(index)
-                                            }
-                                            className="cursor-pointer border-paragon border-1 hover:border-white rounded-full p-0.5 text-white focus:outline-none"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            >
-                                                <path d="M18 6 6 18"></path>
-                                                <path d="m6 6 12 12"></path>
-                                            </svg>
-                                            <span className="sr-only">
-                                                Remove
-                                            </span>
-                                        </button>
-                                    </div>
-                                ))}
-                                <input
-                                    id="email-input"
-                                    type="text"
-                                    className="flex-1 outline-none bg-transparent min-w-[120px]"
-                                    placeholder={
-                                        emailTags.length === 0
-                                            ? 'example@email.com'
-                                            : ''
-                                    }
-                                    value={currentInput}
-                                    onChange={(e) => {
-                                        setCurrentInput(e.target.value)
-                                        setValidationError('') // Clear validation error when typing
-                                    }}
-                                    onKeyDown={handleKeyDown}
-                                    onBlur={() =>
-                                        currentInput &&
-                                        addEmailTag(currentInput)
-                                    }
-                                />
-                            </div>
-
-                            {/* Email validation error message */}
-                            {validationError && (
-                                <div className="text-red-500 text-sm">
-                                    {validationError}
-                                </div>
-                            )}
-
-                            {invalidEmails.length > 0 && (
-                                <div className="text-red-500 text-sm">
-                                    <p>
-                                        These emails are already in the
-                                        classroom:
-                                    </p>
-                                    <ul className="list-disc pl-5">
-                                        {invalidEmails.map((email) => (
-                                            <li key={email}>{email}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={handleInvite}>Send Invitations</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <InviteUsersToClassroomDialog
+                classroom={classroom}
+                roleOfUserToInvite={inviteUserDialogRole}
+                setRoleOfUserToInvite={setInviteUserDialogRole}
+            />
 
             <DeleteClassroomUserDialog
                 classroom={classroom}

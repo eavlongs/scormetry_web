@@ -27,7 +27,6 @@ export async function joinClassroomByCode(code: string): Promise<
             message: e.response.data.message,
             error: e.response.data.error,
             data: e.response.data.data,
-            error_type: e.response.data.error_type,
         }
     }
 }

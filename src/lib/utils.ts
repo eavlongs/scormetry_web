@@ -1,9 +1,14 @@
 import { classroomColorsWithType } from '@/types/classroom'
-import { ValidationError } from '@/types/response'
+import {
+    ActionResponse,
+    VALIDATION_ERROR,
+    VALIDATION_ERROR_MESSAGE,
+    ValidationError,
+} from '@/types/response'
 import { clsx, type ClassValue } from 'clsx'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { ZodError, ZodFormattedError } from 'zod'
+import { ZodError } from 'zod'
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -36,23 +41,6 @@ export async function copyUrlToClipboard(path: string) {
         toast.error('Failed to copy')
     }
 }
-
-// export function convertZodErrorToValidationError<T>(
-//     err: ZodError<T>
-// ): ValidationError[] {
-//     if (!(err instanceof ZodError && isZodError<T>(err))) return []
-
-//     const formattedErrors = err.format()
-
-//     return Object.keys(formattedErrors)
-//         .filter((key) => key !== '_errors')
-//         .map((key) => {
-//             return {
-//                 field: key,
-//                 message: formattedErrors[key]._errors,
-//             }
-//         })
-// }
 
 export function convertZodErrorToValidationError<T>(
     err: ZodError<T>
@@ -89,11 +77,33 @@ export function convertZodErrorToValidationError<T>(
 
 export function getErrorMessageFromValidationError(
     e: ValidationError[],
-    key: string
+    key: string | string[]
 ): string {
+    if (Array.isArray(key)) {
+        const error = e.find((error) => key.includes(error.field))
+        if (error) {
+            return error.message
+        }
+        return ''
+    }
+
     const error = e.find((error) => error.field === key)
     if (error) {
         return error.message
     }
     return ''
+}
+
+export function getKeysFromValidationError(e: ValidationError[]): string[] {
+    return e.map((error) => error.field)
+}
+
+export function getValidationErrorActionResponse<T>(
+    err: ZodError<T>
+): ActionResponse {
+    return {
+        success: false,
+        message: VALIDATION_ERROR_MESSAGE,
+        error: convertZodErrorToValidationError(err),
+    }
 }

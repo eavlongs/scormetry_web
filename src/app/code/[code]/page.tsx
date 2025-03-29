@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { getKeysFromValidationError } from '@/lib/utils'
 import { KEYOF_ERR_USER_ALREADY_IN_CLASSROOM } from '@/types/response'
 import { XIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -18,7 +19,12 @@ export default async function Page({ params }: { params: { code: string } }) {
         )
     }
 
-    if (response.error_type === KEYOF_ERR_USER_ALREADY_IN_CLASSROOM) {
+    if (
+        response.error &&
+        getKeysFromValidationError(response.error).includes(
+            KEYOF_ERR_USER_ALREADY_IN_CLASSROOM
+        )
+    ) {
         redirect(
             response.data
                 ? `/classroom/${response.data.classroom.id}`

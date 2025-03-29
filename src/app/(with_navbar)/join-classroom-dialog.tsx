@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { getKeysFromValidationError } from '@/lib/utils'
 import { KEYOF_ERR_USER_ALREADY_IN_CLASSROOM } from '@/types/response'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -55,7 +56,12 @@ export function JoinClassroomDialog({
                 toast.success(response.message)
             }
         } else {
-            if (response.error_type === KEYOF_ERR_USER_ALREADY_IN_CLASSROOM) {
+            if (
+                response.error &&
+                getKeysFromValidationError(response.error).includes(
+                    KEYOF_ERR_USER_ALREADY_IN_CLASSROOM
+                )
+            ) {
                 if (
                     response.data &&
                     !pathname.startsWith(

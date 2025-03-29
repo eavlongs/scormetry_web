@@ -12,7 +12,9 @@ export const InviteUserToClassroomSchema = z.object({
 })
 
 export const InviteUsersToClassroomSchema = z.object({
-    users: z.array(InviteUserToClassroomSchema).min(1),
+    users: z
+        .array(InviteUserToClassroomSchema)
+        .min(1, 'Please input at least 1 email'),
 })
 
 export const customErrorMap: z.ZodErrorMap = (
@@ -21,7 +23,6 @@ export const customErrorMap: z.ZodErrorMap = (
 ) => {
     let message: string
 
-    console.log(issue)
     switch (issue.code) {
         case z.ZodIssueCode.invalid_type:
             if (issue.received === 'undefined' || issue.received === 'null') {

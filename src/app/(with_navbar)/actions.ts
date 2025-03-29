@@ -1,7 +1,10 @@
 'use server'
 
 import { apiWithAuth } from '@/lib/axios'
-import { convertZodErrorToValidationError } from '@/lib/utils'
+import {
+    convertZodErrorToValidationError,
+    getValidationErrorActionResponse,
+} from '@/lib/utils'
 import { ClassroomSchema } from '@/schema'
 import { Classroom, ColorType } from '@/types/classroom'
 import {
@@ -42,12 +45,7 @@ export async function createClassroom(
         }
     } catch (e: any) {
         if (e instanceof ZodError) {
-            return {
-                success: false,
-                message: VALIDATION_ERROR_MESSAGE,
-                error: convertZodErrorToValidationError(e),
-                error_type: VALIDATION_ERROR,
-            }
+            return getValidationErrorActionResponse(e)
         }
 
         return {

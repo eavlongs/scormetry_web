@@ -3,7 +3,6 @@ export type ApiResponse<T = any, U = ValidationError[]> = {
     message: string
     error?: U
     data?: T
-    error_type?: string
 }
 
 export type ValidationError = {
@@ -19,7 +18,6 @@ export type ActionResponse<T = any, U = ValidationError[]> = {
     message: string
     data?: T
     error?: U
-    error_type?: string
 }
 
 export const KEYOF_ERR_NOT_INTENDED_USER_FOR_INVITATION =

@@ -27,7 +27,6 @@ export async function acceptInvitation(id: string): Promise<
             success: false,
             message: e.response.data.message,
             error: e.response.data.error,
-            error_type: e.response.data.error_type,
         }
     }
 }
