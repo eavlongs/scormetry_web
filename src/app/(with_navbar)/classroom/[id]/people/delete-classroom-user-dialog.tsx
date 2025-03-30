@@ -16,7 +16,8 @@ import { GetClassroomResponse } from '../actions'
 import { deleteClassroomUser } from './actions'
 
 export default function DeleteClassroomUserDialog({
-    classroom,    user,
+    classroom,
+    user,
     setUser,
 }: {
     classroom: GetClassroomResponse
@@ -35,12 +36,12 @@ export default function DeleteClassroomUserDialog({
         const response = await deleteClassroomUser(user.id)
 
         if (!response.success) {
-            revalidateData(`/classroom/${classroom.classroom.id}`)
             toast.error(response.message)
             setUser(null)
             return
         }
 
+        await revalidateData(`/classroom/${classroom.classroom.id}/people`)
         toast.success(response.message)
         setUser(null)
     }

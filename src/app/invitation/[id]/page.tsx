@@ -5,12 +5,12 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { acceptInvitation } from './actions'
 import ChangeAccountButton from './change-account-button'
+import { getKeysFromValidationError } from '@/lib/utils'
 
 export default async function Page({ params }: { params: { id: string } }) {
     const { id } = await params
 
     const response = await acceptInvitation(id)
-    console.log(response)
 
     if (response.success) {
         if (response.data)
@@ -39,8 +39,9 @@ export default async function Page({ params }: { params: { id: string } }) {
                     </Link>
 
                     {response.error &&
-                        response.error.type ==
-                            KEYOF_ERR_NOT_INTENDED_USER_FOR_INVITATION && (
+                        getKeysFromValidationError(response.error).includes(
+                            KEYOF_ERR_NOT_INTENDED_USER_FOR_INVITATION
+                        ) && (
                             <div className="mt-4">
                                 <ChangeAccountButton />
                             </div>
