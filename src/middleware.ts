@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
         !pathname.startsWith('/login')
     ) {
         const loginUrl = new URL('/login', request.url)
-        loginUrl.searchParams.set(REDIRECT_URL_NAME, request.url)
+        loginUrl.searchParams.set(REDIRECT_URL_NAME, pathname)
         return NextResponse.redirect(loginUrl)
     }
 
