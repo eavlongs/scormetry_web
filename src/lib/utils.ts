@@ -38,6 +38,7 @@ export async function copyUrlToClipboard(path: string) {
         await navigator.clipboard.writeText(url)
         toast.success('Link copied to clipboard')
     } catch (err) {
+        console.log(err)
         toast.error('Failed to copy')
     }
 }
