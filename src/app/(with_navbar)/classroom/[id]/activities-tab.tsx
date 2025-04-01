@@ -10,6 +10,7 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { CalendarIcon, Clock, FileTextIcon, Plus } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -26,16 +27,20 @@ export default function ActivitiesTab({
     const activities = classroom.activities || []
     const [showedSuccessMessage, setShowedSuccessMessage] = useState(false)
     const [showedErrorMessage, setShowedErrorMessage] = useState(false)
+    const pathname = usePathname()
+    const router = useRouter()
 
     useEffect(() => {
         if (successMessage && !showedSuccessMessage) {
             toast.success(successMessage)
             setShowedSuccessMessage(true)
+            router.replace(pathname)
         }
 
         if (errorMessage && !showedErrorMessage) {
             toast.error(errorMessage)
             setShowedErrorMessage(true)
+            router.replace(pathname)
         }
     }, [successMessage, errorMessage, showedSuccessMessage, showedErrorMessage])
 

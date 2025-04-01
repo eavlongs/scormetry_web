@@ -32,21 +32,21 @@ export async function GET(request: NextRequest): Promise<Response> {
     cookieStore.set(GOOGLE_OAUTH_STATE_COOKIE_NAME, state, {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         maxAge: 60 * 10, // 10 minutes
         sameSite: 'lax',
     })
     cookieStore.set(GOOGLE_CODE_VERIFIER_COOKIE_NAME, codeVerifier, {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         maxAge: 60 * 10, // 10 minutes
         sameSite: 'lax',
     })
     cookieStore.set(REDIRECT_URL_COOKIE_NAME, redirectUrl, {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         maxAge: 60 * 10, // 10 minutes
         sameSite: 'lax',
     })

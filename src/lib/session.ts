@@ -32,7 +32,7 @@ export async function createSession(accessToken: string, refreshToken: string) {
     cookieStore.set(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         maxAge: accessTokenMaxAge,
         sameSite: 'lax',
     })
@@ -40,7 +40,7 @@ export async function createSession(accessToken: string, refreshToken: string) {
     cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         maxAge: refreshTokenMaxAge,
         sameSite: 'lax',
     })
@@ -127,6 +127,10 @@ export async function refreshJWTToken(
         >('/auth/refresh-token', {
             refresh_token: refreshToken,
         })
+
+        if (!response.data.data) {
+            throw new Error('No token was sent from the server')
+        }
 
         const { access_token, refresh_token } = response.data.data.tokens
 

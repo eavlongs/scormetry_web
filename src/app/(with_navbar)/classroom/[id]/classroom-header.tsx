@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
+import { cn, copyUrlToClipboard } from '@/lib/utils'
 import { colorMap } from '@/types/classroom'
 import {
     ArchiveIcon,
@@ -48,23 +48,9 @@ export default function ClassroomHeader({
     }
 
     async function copyLink() {
-        try {
-            const hostname = window.location.hostname
-            const port = window.location.port
-            const path = `/code/${classroom.classroom.code}`
+        const path = `/code/${classroom.classroom.code}`
 
-            let url = ''
-            if (port != '80' && port != '443') {
-                url = `${hostname}:${port}${path}`
-            } else {
-                url = `${hostname}${path}`
-            }
-
-            await navigator.clipboard.writeText(url)
-            toast.success('Link copied to clipboard')
-        } catch (err) {
-            toast.error('Failed to copy')
-        }
+        await copyUrlToClipboard(path)
     }
 
     async function handleRegenerateClassroomCode() {
