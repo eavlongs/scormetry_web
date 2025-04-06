@@ -1,7 +1,7 @@
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
 import ClassroomNotFound from '../classroom-not-found'
-import PeopleTab from './people-tab'
+import CategoriesTab from './categories-tab'
 
 export default async function Page({
     params,
@@ -20,10 +20,10 @@ export default async function Page({
     return (
         <div className="py-6">
             <div className="mb-4">
-                <ClassroomHeader classroom={classroom} tab="people" />
+                <ClassroomHeader classroom={classroom} tab="categories" />
             </div>
             <section className="my-4">
-                <PeopleTab classroom={classroom} />
+                <CategoriesTab classroom={classroom} />
             </section>
         </div>
     )

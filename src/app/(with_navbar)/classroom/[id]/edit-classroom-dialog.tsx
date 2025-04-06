@@ -56,8 +56,8 @@ export default function EditClassroomDialog({
             )
 
             if (response.success) {
-                toast.success(response.message)
                 setOpen(false)
+                toast.success(response.message)
                 return
             }
             toast.error(response.message)

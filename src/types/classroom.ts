@@ -65,3 +65,12 @@ export type ClassroomRole =
     | typeof CLASSROOM_ROLE_TEACHER
     | typeof CLASSROOM_ROLE_JUDGE
     | typeof CLASSROOM_ROLE_STUDENT
+
+export type Category = {
+    id: string
+    classroom_id: string
+    name: string
+    score_percentage: number
+    created_at: string
+    updated_at: string
+}

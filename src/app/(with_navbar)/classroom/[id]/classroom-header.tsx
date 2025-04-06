@@ -32,11 +32,34 @@ export default function ClassroomHeader({
     tab,
 }: {
     classroom: GetClassroomResponse
-    tab: 'activities' | 'people' | 'grades'
+    tab: 'activities' | 'people' | 'grades' | 'categories'
 }) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isRegeneratingCode, setIsRegeneratingCode] = useState(false)
+
+    const tabs = [
+        {
+            name: 'Activities',
+            value: 'activities',
+            href: `/classroom/${classroom.classroom.id}`,
+        },
+        {
+            name: 'People',
+            value: 'people',
+            href: `/classroom/${classroom.classroom.id}/people`,
+        },
+        {
+            name: 'Grades',
+            value: 'grades',
+            href: `/classroom/${classroom.classroom.id}/grades`,
+        },
+        {
+            name: 'Categories',
+            value: 'categories',
+            href: `/classroom/${classroom.classroom.id}/categories`,
+        },
+    ]
 
     async function copyCode() {
         try {
@@ -69,7 +92,7 @@ export default function ClassroomHeader({
 
     return (
         <>
-            <div className="mb-4">
+            <div className="flex items-center justify-center flex-col sm:flex-row gap-2">
                 <div className="flex items-center gap-2">
                     <Avatar>
                         <AvatarFallback
@@ -115,85 +138,67 @@ export default function ClassroomHeader({
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                </div>
 
-                    <div className="flex items-center gap-3 text-sm ml-auto">
-                        <div className="flex items-center bg-muted/30 border rounded-md px-3 py-1.5 hover:bg-muted/50 transition-colors">
-                            <span className="text-muted-foreground mr-2">
-                                Code:
-                            </span>
-                            <span className="font-mono font-medium">
-                                {classroom.classroom.code}
-                            </span>
-                            <div className="flex items-center ml-3 border-l pl-3">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 rounded-full hover:bg-background"
-                                    onClick={copyCode}
-                                    title="Copy code"
-                                >
-                                    <Copy className="h-3.5 w-3.5" />
-                                    <span className="sr-only">
-                                        Copy join code
-                                    </span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 rounded-full hover:bg-background"
-                                    onClick={copyLink}
-                                    title="Copy link"
-                                >
-                                    <Link2 className="h-3.5 w-3.5" />
-                                    <span className="sr-only">
-                                        Copy join link
-                                    </span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 rounded-full hover:bg-background ml-1"
-                                    onClick={handleRegenerateClassroomCode}
-                                    disabled={isRegeneratingCode}
-                                    title="Regenerate code"
-                                >
-                                    <RefreshCw
-                                        className={cn(
-                                            'h-3.5 w-3.5',
-                                            isRegeneratingCode && 'animate-spin'
-                                        )}
-                                    />
-                                    <span className="sr-only">
-                                        Regenerate code
-                                    </span>
-                                </Button>
-                            </div>
+                <div className="flex items-center gap-3 text-sm ml-0 sm:ml-auto mb-4 sm:mb-0">
+                    <div className="flex items-center bg-muted/30 border rounded-md px-3 py-1.5 hover:bg-muted/50 transition-colors">
+                        <span className="text-muted-foreground mr-2">
+                            Code:
+                        </span>
+                        <span className="font-mono font-medium">
+                            {classroom.classroom.code}
+                        </span>
+                        <div className="flex items-center ml-3 border-l pl-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 rounded-full hover:bg-background"
+                                onClick={copyCode}
+                                title="Copy code"
+                            >
+                                <Copy className="h-3.5 w-3.5" />
+                                <span className="sr-only">Copy join code</span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 rounded-full hover:bg-background"
+                                onClick={copyLink}
+                                title="Copy link"
+                            >
+                                <Link2 className="h-3.5 w-3.5" />
+                                <span className="sr-only">Copy join link</span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 rounded-full hover:bg-background ml-1"
+                                onClick={handleRegenerateClassroomCode}
+                                disabled={isRegeneratingCode}
+                                title="Regenerate code"
+                            >
+                                <RefreshCw
+                                    className={cn(
+                                        'h-3.5 w-3.5',
+                                        isRegeneratingCode && 'animate-spin'
+                                    )}
+                                />
+                                <span className="sr-only">Regenerate code</span>
+                            </Button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <Tabs value={tab}>
-                <TabsList className="grid grid-cols-3 mt-2">
-                    <TabsTrigger value="activities" asChild>
-                        <Link href={`/classroom/${classroom.classroom.id}`}>
-                            Activities
-                        </Link>
-                    </TabsTrigger>
-                    <TabsTrigger value="people">
-                        <Link
-                            href={`/classroom/${classroom.classroom.id}/people`}
-                        >
-                            People
-                        </Link>
-                    </TabsTrigger>
-                    <TabsTrigger value="grades">
-                        <Link
-                            href={`/classroom/${classroom.classroom.id}/grades`}
-                        >
-                            Grades
-                        </Link>
-                    </TabsTrigger>
+                <TabsList className="grid grid-cols-4 mt-2">
+                    {tabs.map((tab) => (
+                        <TabsTrigger key={tab.value} value={tab.value} asChild>
+                            <Link href={tab.href} className="px-4">
+                                {tab.name}
+                            </Link>
+                        </TabsTrigger>
+                    ))}
                 </TabsList>
             </Tabs>
 

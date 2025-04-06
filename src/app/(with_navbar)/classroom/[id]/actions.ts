@@ -9,11 +9,13 @@ import {
 } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
+import { Category } from './categories/categories-tab'
 
 export type GetClassroomResponse = {
     classroom: Classroom
     role: ClassroomRole
     people: ClassroomUsersResponse
+    categories: Category[]
 }
 
 export async function getClassroom(

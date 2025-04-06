@@ -1,7 +1,6 @@
 import { classroomColorsWithType } from '@/types/classroom'
 import {
     ActionResponse,
-    VALIDATION_ERROR,
     VALIDATION_ERROR_MESSAGE,
     ValidationError,
 } from '@/types/response'
@@ -106,5 +105,36 @@ export function getValidationErrorActionResponse<T>(
         success: false,
         message: VALIDATION_ERROR_MESSAGE,
         error: convertZodErrorToValidationError(err),
+    }
+}
+
+export function preventNonNumericInput(
+    e: React.KeyboardEvent<HTMLInputElement>
+) {
+    if (e.key === '+' || e.key === '-' || e.key === 'e' || e.key === 'E') {
+        e.preventDefault()
+        return
+    }
+}
+
+export function limitFloatInputDecimalPlaces(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    ref: React.RefObject<HTMLInputElement | null>,
+    maxDecimalPlaces: number
+) {
+    if (!ref.current) {
+        return
+    }
+
+    const input = ref.current.value
+
+    const decimalPointIndex = input.indexOf('.')
+
+    if (decimalPointIndex === -1) {
+        return
+    }
+
+    if (input.length - decimalPointIndex > maxDecimalPlaces) {
+        e.preventDefault()
     }
 }

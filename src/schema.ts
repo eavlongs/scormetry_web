@@ -17,6 +17,14 @@ export const InviteUsersToClassroomSchema = z.object({
         .min(1, 'Please input at least 1 email'),
 })
 
+export const CategorySchema = z.object({
+    name: z.string().min(1, 'Name is required').max(50),
+    score_percentage: z.coerce
+        .number()
+        .gt(0, 'This value must be greater than 0')
+        .lte(100, 'This value cannot exceed 100%'),
+})
+
 export const customErrorMap: z.ZodErrorMap = (
     issue: z.ZodIssueOptionalMessage,
     ctx: z.ErrorMapCtx

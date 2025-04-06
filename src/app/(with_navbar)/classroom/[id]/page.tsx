@@ -24,13 +24,17 @@ export default async function Page({
     }
 
     return (
-        <div className="container py-6 space-y-6">
-            <ClassroomHeader classroom={classroom} tab="activities" />
-            <ActivitiesTab
-                classroom={classroom}
-                successMessage={success_message}
-                errorMessage={error_message}
-            />
+        <div className="py-6">
+            <div className="mb-4">
+                <ClassroomHeader classroom={classroom} tab="activities" />
+            </div>
+            <section className="my-4">
+                <ActivitiesTab
+                    classroom={classroom}
+                    successMessage={success_message}
+                    errorMessage={error_message}
+                />
+            </section>
         </div>
     )
 }
