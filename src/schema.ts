@@ -25,6 +25,11 @@ export const CategorySchema = z.object({
         .lte(100, 'This value cannot exceed 100%'),
 })
 
+export const GroupingSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(50),
+    description: z.string().max(1000, 'Description is too long').nullable(),
+})
+
 export const customErrorMap: z.ZodErrorMap = (
     issue: z.ZodIssueOptionalMessage,
     ctx: z.ErrorMapCtx

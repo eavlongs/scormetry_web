@@ -2,20 +2,22 @@
 
 import { apiWithAuth } from '@/lib/axios'
 import {
+    Category,
     Classroom,
     ClassroomRole,
     ClassroomUsersResponse,
     ColorType,
+    Grouping,
 } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
-import { Category } from './categories/categories-tab'
 
 export type GetClassroomResponse = {
     classroom: Classroom
     role: ClassroomRole
     people: ClassroomUsersResponse
     categories: Category[]
+    groupings: Grouping[]
 }
 
 export async function getClassroom(

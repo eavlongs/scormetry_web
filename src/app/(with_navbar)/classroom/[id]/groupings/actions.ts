@@ -2,29 +2,32 @@
 
 import { apiWithAuth } from '@/lib/axios'
 import { getValidationErrorActionResponse } from '@/lib/utils'
-import { CategorySchema } from '@/schema'
+import { GroupingSchema } from '@/schema'
+import { Grouping } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
 import { ZodError } from 'zod'
 
-export async function createCategory(
+export async function createGrouping(
     classroom_id: string,
     name: string,
-    score_percentage: number
-): Promise<ActionResponse> {
+    description: string
+): Promise<
+    ActionResponse<{
+        grouping: Grouping
+    }>
+> {
     try {
-        const data = CategorySchema.parse({
-            name: name,
-            score_percentage: score_percentage,
+        const data = GroupingSchema.parse({
+            name,
+            description,
         })
 
-        const response = await apiWithAuth.post<ApiResponse>(
-            `/classroom/${classroom_id}/category`,
-            data
-        )
+        const response = await apiWithAuth.post<
+            ApiResponse<{ grouping: Grouping }>
+        >(`/classroom/${classroom_id}/grouping`, data)
 
-        revalidatePath(`/classroom/${classroom_id}/categories`)
-
+        revalidatePath(`/classroom/${classroom_id}/groupings`)
         return {
             success: true,
             message: response.data.message,
@@ -43,25 +46,27 @@ export async function createCategory(
     }
 }
 
-export async function updateCategory(
-    category_id: string,
+export async function updateGrouping(
+    grouping_id: string,
     name: string,
-    score_percentage: number,
+    description: string,
     classroom_id: string
-): Promise<ActionResponse> {
+): Promise<
+    ActionResponse<{
+        grouping: Grouping
+    }>
+> {
     try {
-        const data = CategorySchema.parse({
-            name: name,
-            score_percentage: score_percentage,
+        const data = GroupingSchema.parse({
+            name,
+            description,
         })
 
-        const response = await apiWithAuth.patch<ApiResponse>(
-            `/category/${category_id}`,
-            data
-        )
+        const response = await apiWithAuth.patch<
+            ApiResponse<{ grouping: Grouping }>
+        >(`/grouping/${grouping_id}`, data)
 
-        revalidatePath(`/classroom/${classroom_id}/categories`)
-
+        revalidatePath(`/classroom/${classroom_id}/groupings`)
         return {
             success: true,
             message: response.data.message,
@@ -80,21 +85,19 @@ export async function updateCategory(
     }
 }
 
-export async function deleteCategory(
-    category_id: string,
+export async function deleteGrouping(
+    grouping_id: string,
     classroom_id: string
 ): Promise<ActionResponse> {
     try {
         const response = await apiWithAuth.delete<ApiResponse>(
-            `/category/${category_id}`
+            `/grouping/${grouping_id}`
         )
 
-        revalidatePath(`/classroom/${classroom_id}/categories`)
-
+        revalidatePath(`/classroom/${classroom_id}/groupings`)
         return {
             success: true,
             message: response.data.message,
-            data: response.data.data,
         }
     } catch (e: any) {
         if (e instanceof ZodError) {

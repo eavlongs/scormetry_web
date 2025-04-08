@@ -32,7 +32,7 @@ export default function ClassroomHeader({
     tab,
 }: {
     classroom: GetClassroomResponse
-    tab: 'activities' | 'people' | 'grades' | 'categories'
+    tab: 'activities' | 'people' | 'grades' | 'categories' | 'groupings'
 }) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -58,6 +58,11 @@ export default function ClassroomHeader({
             name: 'Categories',
             value: 'categories',
             href: `/classroom/${classroom.classroom.id}/categories`,
+        },
+        {
+            name: 'Groupings',
+            value: 'groupings',
+            href: `/classroom/${classroom.classroom.id}/groupings`,
         },
     ]
 
@@ -191,7 +196,7 @@ export default function ClassroomHeader({
             </div>
 
             <Tabs value={tab}>
-                <TabsList className="grid grid-cols-4 mt-2">
+                <TabsList className="grid grid-cols-5 mt-2">
                     {tabs.map((tab) => (
                         <TabsTrigger key={tab.value} value={tab.value} asChild>
                             <Link href={tab.href} className="px-4">

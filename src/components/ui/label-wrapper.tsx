@@ -27,29 +27,36 @@ export function LabelWrapper({
     className?: string
     children: React.ReactNode
 }) {
+    const defaultOptions = {
+        required: true,
+        label_placement: 'newline',
+    }
+
+    const optionsWithDefaults = { ...defaultOptions, ...options }
+
     const requiredIconClassname =
-        options.label_placement == 'newline'
+        optionsWithDefaults.label_placement == 'newline'
             ? 'text-destructive ml-1'
             : 'text-destructive ml-1 mr-2'
 
     const labelClassName = cn(
         'text-sm font-medium gap-x-0',
-        options.label_className
+        optionsWithDefaults.label_className
     )
     return (
         <div className={cn('space-y-2', className)}>
             <div className="flex items-center justify-between">
                 <Label htmlFor={label.field} className={labelClassName}>
                     {label.text}
-                    {options.required && (
+                    {optionsWithDefaults.required && (
                         <span className={requiredIconClassname}>*</span>
                     )}
                 </Label>
 
-                {options.label_placement == 'inline' && children}
+                {optionsWithDefaults.label_placement == 'inline' && children}
             </div>
 
-            {options.label_placement == 'newline' && children}
+            {optionsWithDefaults.label_placement == 'newline' && children}
 
             {error && <ErrorMessage error={error} />}
         </div>
