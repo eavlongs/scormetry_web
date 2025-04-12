@@ -2,11 +2,12 @@
 
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { Home } from 'lucide-react'
+import { ArrowLeft, Home } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function NotFound() {
-    // const router = useRouter()
+    const router = useRouter()
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground">
             <div className="container flex max-w-[64rem] flex-col items-center justify-center gap-4 px-4 py-16 md:py-24">
@@ -32,13 +33,13 @@ export default function NotFound() {
                                 <Home className="mr-2 h-4 w-4" /> Go Home
                             </Link>
                         </Button>
-                        {/* <Button
+                        <Button
                             size="lg"
                             variant="outline"
                             onClick={() => router.back()}
                         >
                             <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-                        </Button> */}
+                        </Button>
                     </div>
                 </motion.div>
             </div>

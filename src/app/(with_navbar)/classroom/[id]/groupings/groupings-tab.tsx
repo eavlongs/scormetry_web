@@ -12,11 +12,12 @@ import {
 } from '@/components/ui/table'
 import { Grouping } from '@/types/classroom'
 import { EditIcon, FileTextIcon, Plus, Trash2 } from 'lucide-react'
+import Link from 'next/link'
 import { useState } from 'react'
 import { GetClassroomResponse } from '../actions'
 import { CreateGroupingDialog } from './create-grouping-dialog'
-import { EditGroupingDialog } from './edit-grouping-dialog'
 import { DeleteGroupingDialog } from './delete-grouping-dialog'
+import { EditGroupingDialog } from './edit-grouping-dialog'
 
 export default function GroupingsTab({
     classroom,
@@ -79,7 +80,11 @@ export function GroupingList({
                 <TableBody>
                     {classroom.groupings.map((grouping) => (
                         <TableRow key={grouping.id}>
-                            <TableCell>{grouping.name}</TableCell>
+                            <TableCell>
+                                <Link href={`/grouping/${grouping.id}`}>
+                                    {grouping.name}
+                                </Link>
+                            </TableCell>
                             <TableCell className="overflow-hidden whitespace-nowrap overflow-ellipsis">
                                 {grouping.description ? (
                                     grouping.description

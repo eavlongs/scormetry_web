@@ -30,6 +30,19 @@ export const GroupingSchema = z.object({
     description: z.string().max(1000, 'Description is too long').nullable(),
 })
 
+export const GroupsCompositionSchema = z.object({
+    groups: z.array(
+        z.object({
+            id: z.string().min(1, 'Group ID is required'),
+            name: z
+                .string()
+                .min(1, 'Group name is required')
+                .max(50, 'Group name is too long'),
+            students: z.array(z.string().min(1, 'Student ID is required')),
+        })
+    ),
+})
+
 export const customErrorMap: z.ZodErrorMap = (
     issue: z.ZodIssueOptionalMessage,
     ctx: z.ErrorMapCtx

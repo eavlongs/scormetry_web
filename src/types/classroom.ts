@@ -84,3 +84,19 @@ export type Grouping = {
     created_at: string
     updated_at: string
 }
+
+export type Group = {
+    id: string
+    name: string
+    grouping_id: string
+    created_at: string
+    updated_at: string
+}
+
+export type GroupMember = {
+    id: string
+    group_id: string
+    user_id: string
+    created_at: string
+    updated_at: string
+}
