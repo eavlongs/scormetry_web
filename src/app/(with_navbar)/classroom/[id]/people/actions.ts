@@ -17,13 +17,7 @@ export async function inviteUsersToClassroom(
 ): Promise<ActionResponse> {
     try {
         const data = InviteUsersToClassroomSchema.parse({
-            // users: usersToInvite,
-            users: usersToInvite.map((user) => {
-                return {
-                    email: user.email,
-                    role: 'test',
-                }
-            }),
+            users: usersToInvite,
         })
 
         const response = await apiWithAuth.post<
