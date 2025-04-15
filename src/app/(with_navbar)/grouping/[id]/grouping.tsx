@@ -1,15 +1,6 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { useWarnIfUnsavedChanges } from '@/hooks/useWarnIfUnsavedChanges'
 import type { UserEssentialDetail } from '@/types/auth'
 import ld from 'lodash'
@@ -20,18 +11,20 @@ import { useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { toast } from 'sonner'
-import { ZodError } from 'zod'
-import z from 'zod'
 import { GetGroupingDetailResponse, saveGroupingComposition } from './actions'
+import { CreateGroupDialog } from './create-group-dialog'
+import { DeleteGroupDialog } from './delete-group-dialog'
 import GroupTable from './group-table'
 import UngroupedStudents from './ungrouped-students'
-import { GroupNameSchema } from '@/schema'
 
 export default function Grouping({
     groupingDetail,
 }: {
     groupingDetail: Readonly<GetGroupingDetailResponse>
 }) {
+    const [originalData, _setOriginalData] = useState<typeof groupingDetail>(
+        structuredClone(groupingDetail)
+    )
     const [grouping] = useState<typeof groupingDetail.grouping>(
         structuredClone(groupingDetail.grouping)
     )
@@ -45,18 +38,20 @@ export default function Grouping({
         typeof groupingDetail.available_students
     >(structuredClone(groupingDetail.available_students))
 
-    const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
-    const [newGroupName, setNewGroupName] = useState('')
-    const [createGroupErrorMessage, setCreateGroupErrorMessage] = useState('')
     const router = useRouter()
     const [saving, setSaving] = useState(false)
+    const [discardingChange, setDiscardingChange] = useState(false)
+    const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
+    const [groupToDelete, setGroupToDelete] = useState<
+        GetGroupingDetailResponse['groups'][number] | null
+    >(null)
 
     const [hasDataChanged, setHasDataChanged] = useState(false)
 
     useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
 
     useEffect(() => {
-        const changed = !ld.isEqual(groupingDetail, {
+        const changed = !ld.isEqual(originalData, {
             grouping,
             groups,
             available_students: ungroupedStudents,
@@ -64,35 +59,6 @@ export default function Grouping({
         })
         setHasDataChanged(changed)
     }, [groups, ungroupedStudents])
-
-    useEffect(() => {
-        if (isCreateGroupOpen) {
-            setNewGroupName('')
-        }
-    }, [isCreateGroupOpen])
-
-    function handleCreateGroup() {
-        setCreateGroupErrorMessage('')
-        try {
-            const groupName = GroupNameSchema.parse(newGroupName)
-
-            const newGroup: (typeof groupingDetail.groups)[number] = {
-                id: `group-${new Date().getTime()}`,
-                name: groupName.trim(),
-                grouping_id: grouping.id,
-                students: [],
-            }
-            setGroups([...groups, newGroup])
-            setNewGroupName('')
-            setIsCreateGroupOpen(false)
-        } catch (e) {
-            if (e instanceof ZodError) {
-                setCreateGroupErrorMessage(e.issues[0].message)
-                return
-            }
-            toast.error('Something went wrong. Please try again.')
-        }
-    }
 
     function handleRenameGroup(groupId: string, newName: string) {
         setGroups(
@@ -105,6 +71,7 @@ export default function Grouping({
     function handleDeleteGroup(groupId: string) {
         const groupToDelete = groups.find((g) => g.id === groupId)
         if (groupToDelete) {
+            setGroupToDelete(null)
             setUngroupedStudents([
                 ...ungroupedStudents,
                 ...groupToDelete.students,
@@ -166,160 +133,172 @@ export default function Grouping({
         }
     }
 
+    function handleDiscardChange() {
+        setDiscardingChange(true)
+        setGroups(structuredClone(originalData.groups))
+        setUngroupedStudents(structuredClone(originalData.available_students))
+        setDiscardingChange(false)
+    }
+
     async function handleSaveChanges() {
         setSaving(true)
+        const groupsCheckpoint = structuredClone(groups)
+        const ungroupedStudentsCheckpoint = structuredClone(ungroupedStudents)
         const respones = await saveGroupingComposition(grouping.id, groups)
 
         if (respones.success) {
             toast.success('Changes saved successfully')
-            router.push(`/classroom/${grouping.classroom_id}/groupings`)
+            // this is to make sure that the "save change" button is disabled, and user can navigate to other pages
+            _setOriginalData((prev) => {
+                return {
+                    ...prev,
+                    groups: groupsCheckpoint,
+                    available_students: ungroupedStudentsCheckpoint,
+                }
+            })
         } else {
             toast.error(respones.message)
+            setSaving(false)
         }
-        setSaving(false)
     }
 
     return (
-        <DndProvider backend={HTML5Backend}>
-            <div className="w-full h-full">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <Link
-                        href={`/classroom/${classroom.id}/groupings`}
-                        className="text-sm opacity-70 cursor-pointer flex items-center"
-                    >
-                        <ArrowLeft
-                            className="inline-block align-middle mr-1"
-                            strokeWidth={1.5}
-                            size={18}
-                        />{' '}
-                        Back to {classroom.name}
-                    </Link>
-
-                    <div className="flex gap-2 w-full sm:w-auto">
-                        <Button
-                            onClick={() => setIsCreateGroupOpen(true)}
-                            className="flex items-center gap-2 flex-1 sm:flex-none"
+        <>
+            <DndProvider backend={HTML5Backend}>
+                <div className="w-full h-full">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <Link
+                            href={`/classroom/${classroom.id}/groupings`}
+                            className="text-sm opacity-70 cursor-pointer flex items-center"
                         >
-                            <Plus className="h-4 w-4" />
-                            Create Group
-                        </Button>
-                        <Button
-                            onClick={handleSaveChanges}
-                            className="flex items-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-500 hover:text-gray-100"
-                            disabled={saving}
-                        >
-                            <Save className="h-4 w-4" />
-                            Save Changes
-                        </Button>
-                    </div>
-                </div>
+                            <ArrowLeft
+                                className="inline-block align-middle mr-1"
+                                strokeWidth={1.5}
+                                size={18}
+                            />{' '}
+                            Back to {classroom.name}
+                        </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-                    <div className="lg:col-span-7 overflow-auto pr-2">
-                        <h2 className="text-lg font-medium mb-3 bg-background pb-2">
-                            Grouping: {grouping.name}
-                        </h2>
-                        {groups.length === 0 ? (
-                            <div className="text-center p-4 h-[250px] flex flex-col items-center justify-center gap-y-4">
-                                <p>
-                                    No groups created yet. Create a group to get
-                                    started.
-                                </p>
-                                <Button
-                                    onClick={() => setIsCreateGroupOpen(true)}
-                                    className="flex items-center gap-2 flex-1 sm:flex-none"
-                                >
-                                    Create Group
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                                {groups.map((group) => (
-                                    <GroupTable
-                                        key={group.id}
-                                        group={group}
-                                        onRename={handleRenameGroup}
-                                        onDelete={handleDeleteGroup}
-                                        onMoveStudent={handleMoveStudent}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <Button
+                                onClick={() => setIsCreateGroupOpen(true)}
+                                className="flex items-center gap-2 flex-1 sm:flex-none"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Create Group
+                            </Button>
+                            <Button
+                                onClick={handleDiscardChange}
+                                variant="destructive"
+                                className="flex items-center gap-2 flex-1 sm:flex-none"
+                                disabled={
+                                    discardingChange ||
+                                    !hasDataChanged ||
+                                    saving
+                                }
+                            >
+                                <Save className="h-4 w-4" />
+                                Discard Change
+                            </Button>
+                            <Button
+                                onClick={handleSaveChanges}
+                                className="flex items-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-500 hover:text-gray-100"
+                                disabled={
+                                    saving ||
+                                    !hasDataChanged ||
+                                    discardingChange
+                                }
+                            >
+                                <Save className="h-4 w-4" />
+                                Save Changes
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* TODO: make this position absolute, and scrollable */}
-                    <div className="h-full flex flex-col min-h-[250px] lg:min-h-[80dvh] lg:col-span-3">
-                        {/* <h2 className="text-lg font-semibold mb-3 sticky top-0 bg-background z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
+                        <div className="lg:col-span-7 overflow-auto pr-2">
+                            <h2 className="text-lg font-medium mb-3 bg-background pb-2">
+                                Grouping: {grouping.name}
+                            </h2>
+                            {groups.length === 0 ? (
+                                <div className="text-center p-4 h-[250px] flex flex-col items-center justify-center gap-y-4">
+                                    <p>
+                                        No groups created yet. Create a group to
+                                        get started.
+                                    </p>
+                                    <Button
+                                        onClick={() =>
+                                            setIsCreateGroupOpen(true)
+                                        }
+                                        className="flex items-center gap-2 flex-1 sm:flex-none"
+                                    >
+                                        Create Group
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                                    {groups.map((group) => (
+                                        <GroupTable
+                                            key={group.id}
+                                            group={group}
+                                            onRename={handleRenameGroup}
+                                            onDelete={handleDeleteGroup}
+                                            onMoveStudent={handleMoveStudent}
+                                            setGroupToDelete={setGroupToDelete}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* TODO: make this position absolute, and scrollable */}
+                        <div className="h-full flex flex-col min-h-[250px] lg:min-h-[80dvh] lg:col-span-3">
+                            {/* <h2 className="text-lg font-semibold mb-3 sticky top-0 bg-background z-10">
                             Ungrouped Students
                         </h2> */}
-                        <div className="flex-grow">
-                            <UngroupedStudents
-                                students={ungroupedStudents}
-                                onMoveStudent={(
-                                    studentId: string,
-                                    toGroupId: string
-                                ) =>
-                                    handleMoveStudent(
-                                        studentId,
-                                        null,
-                                        toGroupId
-                                    )
-                                }
-                                onRemoveStudentFromGroup={(
-                                    studentId: string,
-                                    fromGroupId: string | null
-                                ) => {
-                                    if (!fromGroupId) return
-                                    handleMoveStudent(
-                                        studentId,
-                                        fromGroupId,
-                                        null
-                                    )
-                                }}
-                                groups={groups}
-                            />
+                            <div className="flex-grow">
+                                <UngroupedStudents
+                                    students={ungroupedStudents}
+                                    onMoveStudent={(
+                                        studentId: string,
+                                        toGroupId: string
+                                    ) =>
+                                        handleMoveStudent(
+                                            studentId,
+                                            null,
+                                            toGroupId
+                                        )
+                                    }
+                                    onRemoveStudentFromGroup={(
+                                        studentId: string,
+                                        fromGroupId: string | null
+                                    ) => {
+                                        if (!fromGroupId) return
+                                        handleMoveStudent(
+                                            studentId,
+                                            fromGroupId,
+                                            null
+                                        )
+                                    }}
+                                    groups={groups}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
+            </DndProvider>
 
-                <Dialog
-                    open={isCreateGroupOpen}
-                    onOpenChange={setIsCreateGroupOpen}
-                >
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Create New Group</DialogTitle>
-                        </DialogHeader>
-                        <div className="py-4">
-                            <LabelWrapper
-                                label={{
-                                    text: 'Group Name',
-                                    field: 'name',
-                                }}
-                                error={createGroupErrorMessage}
-                            >
-                                <Input
-                                    placeholder="Enter group name"
-                                    id="name"
-                                    value={newGroupName}
-                                    onChange={(e) =>
-                                        setNewGroupName(e.target.value)
-                                    }
-                                />
-                            </LabelWrapper>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsCreateGroupOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button onClick={handleCreateGroup}>Create</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </DndProvider>
+            <CreateGroupDialog
+                grouping_id={grouping.id}
+                isOpen={isCreateGroupOpen}
+                setOpen={setIsCreateGroupOpen}
+                onCreateGroup={(group) => setGroups([...groups, group])}
+            />
+            <DeleteGroupDialog
+                group={groupToDelete}
+                setGroup={setGroupToDelete}
+                onDelete={handleDeleteGroup}
+            />
+        </>
     )
 }

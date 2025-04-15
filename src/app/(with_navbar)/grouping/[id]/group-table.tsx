@@ -1,14 +1,5 @@
 'use client'
 
-import {
-    AlertDialog,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
@@ -29,7 +20,13 @@ import { toast } from 'sonner'
 import { ZodError } from 'zod'
 import { GetGroupingDetailResponse } from './actions'
 
-interface GroupTableProps {
+export default function GroupTable({
+    group,
+    onRename,
+    onDelete,
+    onMoveStudent,
+    setGroupToDelete,
+}: {
     group: Prettify<GetGroupingDetailResponse['groups'][number]>
     onRename: (groupId: string, newName: string) => void
     onDelete: (groupId: string) => void
@@ -38,17 +35,10 @@ interface GroupTableProps {
         fromGroupId: string,
         toGroupId: string | null
     ) => void
-}
-
-export default function GroupTable({
-    group,
-    onRename,
-    onDelete,
-    onMoveStudent,
-}: GroupTableProps) {
+    setGroupToDelete: React.Dispatch<React.SetStateAction<typeof group | null>>
+}) {
     const [isEditing, setIsEditing] = useState(false)
     const [editedName, setEditedName] = useState(group.name)
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
 
     const [{ isOver }, drop] = useDrop({
@@ -153,7 +143,7 @@ export default function GroupTable({
                             <DropdownMenuItem
                                 onClick={() => {
                                     if (group.students.length > 0) {
-                                        setIsDeleteDialogOpen(true)
+                                        setGroupToDelete(group)
                                     } else {
                                         onDelete(group.id)
                                     }
@@ -194,30 +184,6 @@ export default function GroupTable({
                     </ul>
                 </div>
             </CardContent>
-
-            <AlertDialog
-                open={isDeleteDialogOpen}
-                onOpenChange={setIsDeleteDialogOpen}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will delete the group "{group.name}" and move
-                            all its members to the ungrouped students list.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <Button
-                            variant="destructive"
-                            onClick={() => onDelete(group.id)}
-                        >
-                            Delete
-                        </Button>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </Card>
     )
 }
