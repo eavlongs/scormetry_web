@@ -19,11 +19,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { GroupNameSchema } from '@/schema'
 import type { UserEssentialDetail } from '@/types/auth'
 import { Prettify } from '@/types/general'
 import { Check, Edit, EllipsisVertical, Trash2, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import { toast } from 'sonner'
+import { ZodError } from 'zod'
 import { GetGroupingDetailResponse } from './actions'
 
 interface GroupTableProps {
@@ -61,9 +64,16 @@ export default function GroupTable({
     })
 
     const handleRename = () => {
-        if (editedName.trim()) {
-            onRename(group.id, editedName)
+        try {
+            const groupName = GroupNameSchema.parse(editedName)
+            onRename(group.id, groupName.trim())
             setIsEditing(false)
+        } catch (e) {
+            if (e instanceof ZodError) {
+                toast.error(e.issues[0].message)
+                return
+            }
+            toast.error('Something went wrong. Please try again.')
         }
     }
 
@@ -141,7 +151,13 @@ export default function GroupTable({
                                 Rename Group
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                onClick={() => setIsDeleteDialogOpen(true)}
+                                onClick={() => {
+                                    if (group.students.length > 0) {
+                                        setIsDeleteDialogOpen(true)
+                                    } else {
+                                        onDelete(group.id)
+                                    }
+                                }}
                                 className="text-destructive focus:text-destructive"
                             >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />

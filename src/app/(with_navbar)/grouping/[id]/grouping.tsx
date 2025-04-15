@@ -9,23 +9,34 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { LabelWrapper } from '@/components/ui/label-wrapper'
+import { useWarnIfUnsavedChanges } from '@/hooks/useWarnIfUnsavedChanges'
 import type { UserEssentialDetail } from '@/types/auth'
+import ld from 'lodash'
 import { ArrowLeft, Plus, Save } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { GetGroupingDetailResponse } from './actions'
+import { toast } from 'sonner'
+import { ZodError } from 'zod'
+import z from 'zod'
+import { GetGroupingDetailResponse, saveGroupingComposition } from './actions'
 import GroupTable from './group-table'
 import UngroupedStudents from './ungrouped-students'
+import { GroupNameSchema } from '@/schema'
 
 export default function Grouping({
     groupingDetail,
 }: {
-    groupingDetail: GetGroupingDetailResponse
+    groupingDetail: Readonly<GetGroupingDetailResponse>
 }) {
-    const [grouping, _] = useState<typeof groupingDetail.grouping>(
+    const [grouping] = useState<typeof groupingDetail.grouping>(
         structuredClone(groupingDetail.grouping)
+    )
+    const [classroom] = useState<typeof groupingDetail.classroom>(
+        structuredClone(groupingDetail.classroom)
     )
     const [groups, setGroups] = useState<typeof groupingDetail.groups>(
         structuredClone(groupingDetail.groups)
@@ -36,22 +47,54 @@ export default function Grouping({
 
     const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
     const [newGroupName, setNewGroupName] = useState('')
+    const [createGroupErrorMessage, setCreateGroupErrorMessage] = useState('')
+    const router = useRouter()
+    const [saving, setSaving] = useState(false)
 
-    const handleCreateGroup = () => {
-        if (newGroupName.trim()) {
+    const [hasDataChanged, setHasDataChanged] = useState(false)
+
+    useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
+
+    useEffect(() => {
+        const changed = !ld.isEqual(groupingDetail, {
+            grouping,
+            groups,
+            available_students: ungroupedStudents,
+            classroom,
+        })
+        setHasDataChanged(changed)
+    }, [groups, ungroupedStudents])
+
+    useEffect(() => {
+        if (isCreateGroupOpen) {
+            setNewGroupName('')
+        }
+    }, [isCreateGroupOpen])
+
+    function handleCreateGroup() {
+        setCreateGroupErrorMessage('')
+        try {
+            const groupName = GroupNameSchema.parse(newGroupName)
+
             const newGroup: (typeof groupingDetail.groups)[number] = {
                 id: `group-${new Date().getTime()}`,
-                name: newGroupName,
+                name: groupName.trim(),
                 grouping_id: grouping.id,
                 students: [],
             }
             setGroups([...groups, newGroup])
             setNewGroupName('')
             setIsCreateGroupOpen(false)
+        } catch (e) {
+            if (e instanceof ZodError) {
+                setCreateGroupErrorMessage(e.issues[0].message)
+                return
+            }
+            toast.error('Something went wrong. Please try again.')
         }
     }
 
-    const handleRenameGroup = (groupId: string, newName: string) => {
+    function handleRenameGroup(groupId: string, newName: string) {
         setGroups(
             groups.map((group) =>
                 group.id === groupId ? { ...group, name: newName } : group
@@ -59,7 +102,7 @@ export default function Grouping({
         )
     }
 
-    const handleDeleteGroup = (groupId: string) => {
+    function handleDeleteGroup(groupId: string) {
         const groupToDelete = groups.find((g) => g.id === groupId)
         if (groupToDelete) {
             setUngroupedStudents([
@@ -70,11 +113,11 @@ export default function Grouping({
         }
     }
 
-    const handleMoveStudent = (
+    function handleMoveStudent(
         studentId: string,
         fromGroupId: string | null,
         toGroupId: string | null
-    ) => {
+    ) {
         // Get the student object
         let student: UserEssentialDetail | undefined
 
@@ -123,10 +166,17 @@ export default function Grouping({
         }
     }
 
-    const handleSaveChanges = () => {
-        // In a real application, this would send the data to the server
-        console.log('Saving changes:', { groups, ungroupedStudents })
-        // You could implement a server action here
+    async function handleSaveChanges() {
+        setSaving(true)
+        const respones = await saveGroupingComposition(grouping.id, groups)
+
+        if (respones.success) {
+            toast.success('Changes saved successfully')
+            router.push(`/classroom/${grouping.classroom_id}/groupings`)
+        } else {
+            toast.error(respones.message)
+        }
+        setSaving(false)
     }
 
     return (
@@ -134,7 +184,7 @@ export default function Grouping({
             <div className="w-full h-full">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <Link
-                        href={`/classroom/${groupingDetail.classroom.id}/groupings`}
+                        href={`/classroom/${classroom.id}/groupings`}
                         className="text-sm opacity-70 cursor-pointer flex items-center"
                     >
                         <ArrowLeft
@@ -142,8 +192,9 @@ export default function Grouping({
                             strokeWidth={1.5}
                             size={18}
                         />{' '}
-                        Back to {groupingDetail.classroom.name}
+                        Back to {classroom.name}
                     </Link>
+
                     <div className="flex gap-2 w-full sm:w-auto">
                         <Button
                             onClick={() => setIsCreateGroupOpen(true)}
@@ -154,7 +205,8 @@ export default function Grouping({
                         </Button>
                         <Button
                             onClick={handleSaveChanges}
-                            className="flex items-center gap-2 flex-1 sm:flex-none bg-green-500"
+                            className="flex items-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-500 hover:text-gray-100"
+                            disabled={saving}
                         >
                             <Save className="h-4 w-4" />
                             Save Changes
@@ -165,7 +217,7 @@ export default function Grouping({
                 <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
                     <div className="lg:col-span-7 overflow-auto pr-2">
                         <h2 className="text-lg font-medium mb-3 bg-background pb-2">
-                            Grouping: {groupingDetail.grouping.name}
+                            Grouping: {grouping.name}
                         </h2>
                         {groups.length === 0 ? (
                             <div className="text-center p-4 h-[250px] flex flex-col items-center justify-center gap-y-4">
@@ -195,7 +247,7 @@ export default function Grouping({
                         )}
                     </div>
 
-                    {/* TODO: make this absolute positioned */}
+                    {/* TODO: make this position absolute, and scrollable */}
                     <div className="h-full flex flex-col min-h-[250px] lg:min-h-[80dvh] lg:col-span-3">
                         {/* <h2 className="text-lg font-semibold mb-3 sticky top-0 bg-background z-10">
                             Ungrouped Students
@@ -239,13 +291,22 @@ export default function Grouping({
                             <DialogTitle>Create New Group</DialogTitle>
                         </DialogHeader>
                         <div className="py-4">
-                            <Input
-                                placeholder="Enter group name"
-                                value={newGroupName}
-                                onChange={(e) =>
-                                    setNewGroupName(e.target.value)
-                                }
-                            />
+                            <LabelWrapper
+                                label={{
+                                    text: 'Group Name',
+                                    field: 'name',
+                                }}
+                                error={createGroupErrorMessage}
+                            >
+                                <Input
+                                    placeholder="Enter group name"
+                                    id="name"
+                                    value={newGroupName}
+                                    onChange={(e) =>
+                                        setNewGroupName(e.target.value)
+                                    }
+                                />
+                            </LabelWrapper>
                         </div>
                         <DialogFooter>
                             <Button

@@ -30,17 +30,31 @@ export const GroupingSchema = z.object({
     description: z.string().max(1000, 'Description is too long').nullable(),
 })
 
-export const GroupsCompositionSchema = z.object({
-    groups: z.array(
-        z.object({
-            id: z.string().min(1, 'Group ID is required'),
-            name: z
-                .string()
-                .min(1, 'Group name is required')
-                .max(50, 'Group name is too long'),
-            students: z.array(z.string().min(1, 'Student ID is required')),
-        })
-    ),
+export const GroupNameSchema = z
+    .string()
+    .min(1, 'Group name is required')
+    .max(50, 'Group name cannot exceed 50 characters')
+    .refine((val) => val.trim().length > 0, 'Name cannot be empty')
+    .refine(
+        (val) => val.trim().length <= 50,
+        'Group name cannot exceed 50 characters'
+    )
+
+export const GroupingCompositionSchema = z.object({
+    groups: z
+        .array(
+            z.object({
+                id: z.string().min(1, 'Group ID is required'),
+                name: z
+                    .string()
+                    .min(1, 'Group name is required')
+                    .max(50, 'Group name cannot exceed 50 characters'),
+                students: z
+                    .array(z.string().min(1, 'Student ID is required'))
+                    .min(1, 'Each group must have at least one student'),
+            })
+        )
+        .min(1, 'there must be at least 1 group'),
 })
 
 export const customErrorMap: z.ZodErrorMap = (
