@@ -47,29 +47,23 @@ export function convertZodErrorToValidationError<T>(
 ): ValidationError[] {
     if (!(err instanceof ZodError)) return []
 
-    const formattedErrors = err.format()
+    const issues = err.issues
     const validationErrors: ValidationError[] = []
 
-    // Handle root level errors
-    for (const key in formattedErrors) {
-        if (key === '_errors') continue
+    for (const issue of issues) {
+        const path = issue.path
+        let field = path[path.length - 1].toString()
 
-        const fieldError = formattedErrors[key as keyof typeof formattedErrors]
-
-        // Check if fieldError is an object first before using 'in' operator
-        if (
-            fieldError &&
-            typeof fieldError === 'object' &&
-            fieldError !== null &&
-            '_errors' in fieldError &&
-            Array.isArray(fieldError._errors) &&
-            fieldError._errors.length > 0
-        ) {
-            validationErrors.push({
-                field: key,
-                message: fieldError._errors[0] || 'Invalid input',
-            })
+        for (let i = path.length - 1; i >= 0; i--) {
+            if (typeof path[i] === 'string') {
+                field = path[i] as string
+            }
         }
+
+        validationErrors.push({
+            field,
+            message: issue.message,
+        })
     }
 
     return validationErrors
@@ -106,6 +100,10 @@ export function getValidationErrorActionResponse<T>(
         message: VALIDATION_ERROR_MESSAGE,
         error: convertZodErrorToValidationError(err),
     }
+}
+
+export function getValidationErrorMessage(e: ValidationError[]): string {
+    return e.length > 0 ? e[0].message : ''
 }
 
 export function preventNonNumericInput(
