@@ -11,17 +11,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import {
-    getErrorMessageFromValidationError,
-    limitFloatInputDecimalPlaces,
-    preventNonNumericInput,
-} from '@/lib/utils'
+import { Textarea } from '@/components/ui/textarea'
+import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { GetClassroomResponse } from '../actions'
 import { createGrouping } from './actions'
-import { Textarea } from '@/components/ui/textarea'
 
 interface CreateGroupingDialogProps {
     open: boolean

@@ -125,3 +125,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+.read-only-editor.ql-container.ql-snow {
+    border: none;
+    background-color: transparent;
+}
+
+.read-only-editor {
+    background-color: #f9fafb;
+}
+
+.read-only-editor .ql-editor {
+    padding: 1rem;
+}
+
+.ql-container {
+    font-family: Inter, Inter Fallback !important;
+    font-style: normal;
+}
