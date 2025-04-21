@@ -1,7 +1,9 @@
 'use server'
 
 import { apiWithAuth } from '@/lib/axios'
+import { UserEssentialDetail } from '@/types/auth'
 import {
+    Activity,
     Category,
     Classroom,
     ClassroomRole,
@@ -18,6 +20,26 @@ export type GetClassroomResponse = {
     people: ClassroomUsersResponse
     categories: Category[]
     groupings: Grouping[]
+}
+
+export async function getActivities(classroomId: string) {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                classroom: Classroom
+                activities: (Activity & {
+                    posted_by_user: UserEssentialDetail
+                })[]
+            }>
+        >(`/classroom/${classroomId}/activities`)
+
+        return {
+            ...response.data.data!,
+        }
+    } catch (e: any) {
+        console.error(e.response.data)
+        return null
+    }
 }
 
 export async function getClassroom(

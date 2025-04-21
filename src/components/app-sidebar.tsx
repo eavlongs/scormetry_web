@@ -71,36 +71,42 @@ export function AppSidebar({
                                                 {relation}
                                             </span>
                                         )}
-                                        {classroomsToRender.map((classroom) => (
-                                            <SidebarMenuItem
-                                                key={classroom.id}
-                                                className="px-0"
-                                            >
-                                                <SidebarMenuButton asChild>
-                                                    <Link
-                                                        href={`/classroom/${classroom.id}`}
-                                                        className="px-0 py-6"
-                                                    >
-                                                        <Avatar>
-                                                            <AvatarFallback
-                                                                className={cn(
-                                                                    'text-white px-2 py-1',
-                                                                    colorMap[
-                                                                        classroom
-                                                                            .color
-                                                                    ]
-                                                                )}
-                                                            >
-                                                                {classroom.name[0].toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <span>
-                                                            {classroom.name}
-                                                        </span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                        ))}
+                                        {classroomsToRender.map(
+                                            (classroom, i) => (
+                                                <SidebarMenuItem
+                                                    key={classroom.id}
+                                                    className={cn(
+                                                        'px-0',
+                                                        i != 0 &&
+                                                            'border-t border-gray-300'
+                                                    )}
+                                                >
+                                                    <SidebarMenuButton asChild>
+                                                        <Link
+                                                            href={`/classroom/${classroom.id}`}
+                                                            className="px-0 py-6"
+                                                        >
+                                                            <Avatar>
+                                                                <AvatarFallback
+                                                                    className={cn(
+                                                                        'text-white px-2 py-1',
+                                                                        colorMap[
+                                                                            classroom
+                                                                                .color
+                                                                        ]
+                                                                    )}
+                                                                >
+                                                                    {classroom.name[0].toUpperCase()}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <span>
+                                                                {classroom.name}
+                                                            </span>
+                                                        </Link>
+                                                    </SidebarMenuButton>
+                                                </SidebarMenuItem>
+                                            )
+                                        )}
                                     </Fragment>
                                 )
                             })}

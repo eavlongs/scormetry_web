@@ -61,6 +61,11 @@ export const ALL_CLASSROOM_ROLES = [
     CLASSROOM_ROLE_STUDENT,
 ] as const
 
+export const SCORING_TYPE_RANGE = 'range'
+export const SCORING_TYPE_RUBRIC = 'rubric'
+
+export const SCORING_TYPES = [SCORING_TYPE_RANGE, SCORING_TYPE_RUBRIC] as const
+
 export type ClassroomRole =
     | typeof CLASSROOM_ROLE_TEACHER
     | typeof CLASSROOM_ROLE_JUDGE
@@ -97,6 +102,22 @@ export type GroupMember = {
     id: string
     group_id: string
     user_id: string
+    created_at: string
+    updated_at: string
+}
+
+export type Activity = {
+    id: string
+    classroom_id: string
+    title: string
+    description: string
+    category_id: string | null
+    grouping_id: string | null
+    rubric_id: string | null
+    scoring_type: string | null
+    max_score: number | null
+    posted_by: string
+    files: string[]
     created_at: string
     updated_at: string
 }

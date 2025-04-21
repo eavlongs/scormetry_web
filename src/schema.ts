@@ -1,5 +1,11 @@
 import { z } from 'zod'
-import { ALL_CLASSROOM_ROLES, CLASSROOM_COLORS } from './types/classroom'
+import {
+    ALL_CLASSROOM_ROLES,
+    CLASSROOM_COLORS,
+    SCORING_TYPE_RANGE,
+    SCORING_TYPE_RUBRIC,
+    SCORING_TYPES,
+} from './types/classroom'
 
 export const ClassroomSchema = z.object({
     name: z.string().min(2).max(150),
@@ -57,12 +63,66 @@ export const GroupingCompositionSchema = z.object({
         .min(1, 'there must be at least 1 group'),
 })
 
+export const ActivitySchema = z
+    .object({
+        title: z.string().min(1, 'Title is required').max(255),
+        description: z.string().nullable(),
+        files: z.any().refine((val) => true),
+        category_id: z.string().nullable(),
+        grouping_id: z.string().nullable(), // nullable for individual tasks
+        scoring_type: z.enum([...SCORING_TYPES, 'none']).nullable(),
+        max_score: z.any(),
+        // rubric_id: z.string().nullable(),
+        rubric: z.any().nullable(), // to be defined, RubricSchema,
+    })
+    .superRefine((val, ctx) => {
+        if (val.scoring_type !== SCORING_TYPE_RANGE) return
+        if (!val.max_score) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    "Max score is required when scoring type is 'range-based'",
+                path: ['max_score'],
+            })
+        }
+
+        const maxScoreNumber = Number(val.max_score)
+        if (Number.isNaN(maxScoreNumber)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Max score must be a number',
+                path: ['max_score'],
+            })
+        }
+
+        if (maxScoreNumber <= 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Max score must be greater than 0',
+                path: ['max_score'],
+            })
+        }
+    })
+    .refine(
+        (val) => {
+            if (val.scoring_type === SCORING_TYPE_RUBRIC) {
+                return !!JSON.parse(val.rubric)
+            }
+            return true
+        },
+        {
+            message: "Rubric is required when scoring type is 'rubric-based'",
+            path: ['rubric'],
+        }
+    )
+
 export const customErrorMap: z.ZodErrorMap = (
     issue: z.ZodIssueOptionalMessage,
     ctx: z.ErrorMapCtx
 ) => {
     let message: string
 
+    console.log(issue)
     switch (issue.code) {
         case z.ZodIssueCode.invalid_type:
             if (issue.received === 'undefined' || issue.received === 'null') {
@@ -70,6 +130,12 @@ export const customErrorMap: z.ZodErrorMap = (
             } else {
                 message = `Expected ${issue.expected}, received ${issue.received}`
             }
+            break
+
+        case z.ZodIssueCode.invalid_enum_value:
+            message =
+                'Please select one of the following options: ' +
+                issue.options.join(', ')
             break
 
         case z.ZodIssueCode.invalid_string:
@@ -88,7 +154,11 @@ export const customErrorMap: z.ZodErrorMap = (
             if (issue.type === 'string') {
                 message = `Must be at least ${issue.minimum} character${issue.minimum === 1 ? '' : 's'}`
             } else if (issue.type === 'number') {
-                message = `Must be at least ${issue.minimum}`
+                if (issue.inclusive) {
+                    message = `Must be at least ${issue.minimum}`
+                } else {
+                    message = `Must be greater than ${issue.minimum}`
+                }
             } else if (issue.type === 'array') {
                 message = `Please select at least ${issue.minimum} item${issue.minimum === 1 ? '' : 's'}`
             } else {

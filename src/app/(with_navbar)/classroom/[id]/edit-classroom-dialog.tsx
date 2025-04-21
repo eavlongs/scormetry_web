@@ -19,29 +19,29 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { colorMap, ColorType } from '@/types/classroom'
+import { Classroom, colorMap, ColorType } from '@/types/classroom'
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { editClassroom, GetClassroomResponse } from './actions'
+import { editClassroom } from './actions'
 
 export default function EditClassroomDialog({
     classroom,
     open,
     setOpen,
 }: {
-    classroom: GetClassroomResponse
+    classroom: Classroom
     open: boolean
     setOpen: Dispatch<SetStateAction<boolean>>
 }) {
     const nameRef = useRef<HTMLInputElement>(null)
-    const [color, setColor] = useState<ColorType>(classroom.classroom.color)
+    const [color, setColor] = useState<ColorType>(classroom.color)
 
     useEffect(() => {
         if (!open) {
             if (nameRef.current) {
-                nameRef.current.value = classroom.classroom.name
+                nameRef.current.value = classroom.name
             }
-            setColor(classroom.classroom.color)
+            setColor(classroom.color)
         } else {
             if (nameRef.current) nameRef.current.focus()
         }
@@ -50,7 +50,7 @@ export default function EditClassroomDialog({
     async function handleSubmit() {
         if (nameRef.current?.value) {
             const response = await editClassroom(
-                classroom.classroom.id,
+                classroom.id,
                 nameRef.current.value,
                 color
             )
@@ -77,7 +77,7 @@ export default function EditClassroomDialog({
                             id="name"
                             ref={nameRef}
                             className="w-full"
-                            defaultValue={classroom.classroom.name}
+                            defaultValue={classroom.name}
                         />
                     </div>
                     <div className="flex gap-x-4 mb-4">

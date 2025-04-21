@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn, copyUrlToClipboard } from '@/lib/utils'
-import { colorMap } from '@/types/classroom'
+import { Classroom, colorMap } from '@/types/classroom'
 import {
     ArchiveIcon,
     Copy,
@@ -23,7 +23,7 @@ import {
 import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { GetClassroomResponse, regenerateClassroomCode } from './actions'
+import { regenerateClassroomCode } from './actions'
 import DeleteClassroomDialog from './delete-classroom-dialog'
 import EditClassroomDialog from './edit-classroom-dialog'
 
@@ -31,7 +31,7 @@ export default function ClassroomHeader({
     classroom,
     tab,
 }: {
-    classroom: GetClassroomResponse
+    classroom: Classroom
     tab: 'activities' | 'people' | 'grades' | 'categories' | 'groupings'
 }) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -42,33 +42,33 @@ export default function ClassroomHeader({
         {
             name: 'Activities',
             value: 'activities',
-            href: `/classroom/${classroom.classroom.id}`,
+            href: `/classroom/${classroom.id}`,
         },
         {
             name: 'People',
             value: 'people',
-            href: `/classroom/${classroom.classroom.id}/people`,
+            href: `/classroom/${classroom.id}/people`,
         },
         {
             name: 'Grades',
             value: 'grades',
-            href: `/classroom/${classroom.classroom.id}/grades`,
+            href: `/classroom/${classroom.id}/grades`,
         },
         {
             name: 'Categories',
             value: 'categories',
-            href: `/classroom/${classroom.classroom.id}/categories`,
+            href: `/classroom/${classroom.id}/categories`,
         },
         {
             name: 'Groupings',
             value: 'groupings',
-            href: `/classroom/${classroom.classroom.id}/groupings`,
+            href: `/classroom/${classroom.id}/groupings`,
         },
     ]
 
     async function copyCode() {
         try {
-            await navigator.clipboard.writeText(classroom.classroom.code)
+            await navigator.clipboard.writeText(classroom.code)
             toast.success('Code copied to clipboard')
         } catch (err) {
             toast.error('Failed to copy')
@@ -76,7 +76,7 @@ export default function ClassroomHeader({
     }
 
     async function copyLink() {
-        const path = `/code/${classroom.classroom.code}`
+        const path = `/code/${classroom.code}`
 
         await copyUrlToClipboard(path)
     }
@@ -84,10 +84,10 @@ export default function ClassroomHeader({
     async function handleRegenerateClassroomCode() {
         setIsRegeneratingCode(true)
 
-        const response = await regenerateClassroomCode(classroom.classroom.id)
+        const response = await regenerateClassroomCode(classroom.id)
 
         if (response.success && response.data) {
-            classroom.classroom.code = response.data.code
+            classroom.code = response.data.code
         } else {
             toast.error(response.message)
         }
@@ -103,15 +103,13 @@ export default function ClassroomHeader({
                         <AvatarFallback
                             className={cn(
                                 'text-white px-2 py-1',
-                                colorMap[classroom.classroom.color]
+                                colorMap[classroom.color]
                             )}
                         >
-                            {classroom.classroom.name[0].toUpperCase()}
+                            {classroom.name[0].toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
-                    <h1 className="text-xl font-bold">
-                        {classroom.classroom.name}
-                    </h1>
+                    <h1 className="text-xl font-bold">{classroom.name}</h1>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -151,7 +149,7 @@ export default function ClassroomHeader({
                             Code:
                         </span>
                         <span className="font-mono font-medium">
-                            {classroom.classroom.code}
+                            {classroom.code}
                         </span>
                         <div className="flex items-center ml-3 border-l pl-3">
                             <Button

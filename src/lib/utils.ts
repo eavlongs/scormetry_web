@@ -5,6 +5,7 @@ import {
     ValidationError,
 } from '@/types/response'
 import { clsx, type ClassValue } from 'clsx'
+import { redirect, RedirectType } from 'next/navigation'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { ZodError } from 'zod'
@@ -50,8 +51,17 @@ export function convertZodErrorToValidationError<T>(
     const issues = err.issues
     const validationErrors: ValidationError[] = []
 
-    for (const issue of issues) {
-        const path = issue.path
+    for (const i in issues) {
+        const path = issues[i].path
+
+        if (!path) {
+            validationErrors.push({
+                field: i + 1,
+                message: issues[i].message,
+            })
+            continue
+        }
+
         let field = path[path.length - 1].toString()
 
         for (let i = path.length - 1; i >= 0; i--) {
@@ -62,7 +72,7 @@ export function convertZodErrorToValidationError<T>(
 
         validationErrors.push({
             field,
-            message: issue.message,
+            message: issues[i].message,
         })
     }
 
@@ -135,4 +145,11 @@ export function limitFloatInputDecimalPlaces(
     if (input.length - decimalPointIndex > maxDecimalPlaces) {
         e.preventDefault()
     }
+}
+
+export function redirectToNotFoundPageWithRedirectUrl(redirectUrl: string) {
+    return redirect(
+        '/not-found?redirect_url=' + encodeURIComponent(redirectUrl),
+        RedirectType.replace
+    )
 }

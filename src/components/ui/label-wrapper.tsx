@@ -45,7 +45,7 @@ export function LabelWrapper({
     )
     return (
         <div className={cn('space-y-2', className)}>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center">
                 <Label htmlFor={label.field} className={labelClassName}>
                     {label.text}
                     {optionsWithDefaults.required && (
