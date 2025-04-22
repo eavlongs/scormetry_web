@@ -25,14 +25,26 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { getErrorMessageFromValidationError } from '@/lib/utils'
-import { SCORING_TYPE_RANGE, SCORING_TYPE_RUBRIC } from '@/types/classroom'
+import {
+    Category,
+    Grouping,
+    SCORING_TYPE_RANGE,
+    SCORING_TYPE_RUBRIC,
+} from '@/types/classroom'
+import {
+    NEW_ACTIVITY_DATA_KEY_PREFIX,
+    SP_AFTER_SAVE_KEY,
+    SP_DATA_KEY,
+} from '@/types/general'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { Pencil, Plus, Upload, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Delta } from 'quill'
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { GetClassroomResponse } from '../../actions'
+import { CreateCategoryDialog } from '../../categories/create-category-dialog'
+import { CreateGroupingDialog } from '../../groupings/create-grouping-dialog'
 import { createActivity } from './action'
 import { CreateRubricDialog } from './create-rubric-dialog'
 
@@ -54,7 +66,13 @@ export default function CreateActivityForm({
 }: {
     classroom: GetClassroomResponse
 }) {
+    const [categories, setCategories] = useState<Category[]>(
+        classroom.categories
+    )
+    const searchParams = useSearchParams()
+    const [groupings, setGroupings] = useState<Grouping[]>(classroom.groupings)
     const router = useRouter()
+    const pathname = usePathname()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
         []
@@ -74,11 +92,77 @@ export default function CreateActivityForm({
     // State for managing rubric options
     const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
-    // Extract categories and groupings from classroom data
-    const categories = classroom.categories || []
-    const groupings = classroom.groupings || []
-
     const [files, setFiles] = useState<File[]>([])
+
+    const [isCreateCategoryDialogOpen, setCreateCategoryDialogOpen] =
+        useState(false)
+
+    const [isCreateGroupingDialogOpen, setCreateGroupingDialogOpen] =
+        useState(false)
+
+    const [quill, setQuill] = useState()
+
+    function saveDataToSessionStorage(data: any): string {
+        const sessionStorageKeys = Object.keys(sessionStorage)
+
+        for (const key of sessionStorageKeys) {
+            if (key.startsWith(NEW_ACTIVITY_DATA_KEY_PREFIX)) {
+                sessionStorage.removeItem(key)
+            }
+        }
+
+        const dataKey =
+            NEW_ACTIVITY_DATA_KEY_PREFIX + new Date().getTime().toString()
+
+        sessionStorage.setItem(dataKey.toString(), JSON.stringify(data))
+        return dataKey
+    }
+
+    const parseSessionStorageData = useMemo(() => {
+        if (searchParams.has(SP_DATA_KEY)) {
+            const dataKey = searchParams.get(SP_DATA_KEY)
+            if (!dataKey) return
+            const data = sessionStorage.getItem(dataKey)
+
+            if (data) {
+                const parsedData = JSON.parse(data)
+                return parsedData
+            }
+        }
+
+        return null
+    }, [searchParams])
+
+    useEffect(() => {
+        if (parseSessionStorageData) {
+            titleRef.current!.value = parseSessionStorageData.title
+
+            // @ts-ignore
+            if (quill) {
+                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
+                // @ts-ignore
+                quill.setContents(
+                    JSON.parse(parseSessionStorageData.description)
+                )
+                setDescription(JSON.parse(parseSessionStorageData.description))
+            }
+
+            setCategoryId(parseSessionStorageData.category_id)
+            setGroupingId(parseSessionStorageData.grouping_id)
+            setScoringType(parseSessionStorageData.scoring_type)
+            if (parseSessionStorageData.max_score) {
+                maxScoreRef.current!.value = parseSessionStorageData.max_score
+            }
+            if (parseSessionStorageData.rubric) {
+                const tmp = JSON.parse(parseSessionStorageData.rubric)
+                setRubric(JSON.parse(parseSessionStorageData.rubric))
+
+                if (tmp.id) {
+                    setSelectedRubricId(tmp.id)
+                }
+            }
+        }
+    }, [parseSessionStorageData, quill])
 
     function onUpload(
         files: File[],
@@ -93,7 +177,7 @@ export default function CreateActivityForm({
         })
     }
 
-    const onFileReject = React.useCallback((file: File, message: string) => {
+    const onFileReject = useCallback((file: File, message: string) => {
         toast.error(message, {
             description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`,
         })
@@ -317,8 +401,10 @@ export default function CreateActivityForm({
                                 }}
                             >
                                 <QuillEditor
+                                    initialContent={description}
                                     className="min-h-[200px]"
                                     onContentChange={setDescription}
+                                    setQuillObject={setQuill}
                                 />
                             </LabelWrapper>
                         </div>
@@ -420,6 +506,10 @@ export default function CreateActivityForm({
                                 <Select
                                     value={categoryId}
                                     onValueChange={(val) => {
+                                        if (val === 'new') {
+                                            setCreateCategoryDialogOpen(true)
+                                            return
+                                        }
                                         if (val === 'none') {
                                             setCategoryId('')
                                             return
@@ -442,6 +532,11 @@ export default function CreateActivityForm({
                                                 {category.name}
                                             </SelectItem>
                                         ))}
+                                        <SelectItem value="new">
+                                            <div className="flex items-center gap-2">
+                                                <Plus size={16} /> New category
+                                            </div>
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </LabelWrapper>
@@ -460,7 +555,13 @@ export default function CreateActivityForm({
                             >
                                 <Select
                                     value={groupingId}
-                                    onValueChange={setGroupingId}
+                                    onValueChange={(val) => {
+                                        if (val === 'new') {
+                                            setCreateGroupingDialogOpen(true)
+                                            return
+                                        }
+                                        setGroupingId(val)
+                                    }}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select grouping (optional)" />
@@ -480,6 +581,11 @@ export default function CreateActivityForm({
                                                 {grouping.name}
                                             </SelectItem>
                                         ))}
+                                        <SelectItem value="new">
+                                            <div className="flex items-center gap-2">
+                                                <Plus size={16} /> New Grouping
+                                            </div>
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </LabelWrapper>
@@ -563,6 +669,61 @@ export default function CreateActivityForm({
                 isOpen={isRubricDialogOpen}
                 onClose={() => setIsRubricDialogOpen(false)}
                 onSave={handleRubricSave}
+            />
+
+            <CreateCategoryDialog
+                classroom={classroom}
+                open={isCreateCategoryDialogOpen}
+                setOpen={setCreateCategoryDialogOpen}
+                onCreate={(category: Category) => {
+                    setCreateCategoryDialogOpen(false)
+                    setCategories((prevCategories) => {
+                        // Update categories first
+                        const updatedCategories = [...prevCategories, category]
+                        // Then set the category ID in the next tick
+                        // This still uses React's scheduling but is more intentional
+                        Promise.resolve().then(() => setCategoryId(category.id))
+                        return updatedCategories
+                    })
+                }}
+            />
+
+            <CreateGroupingDialog
+                classroom={classroom}
+                open={isCreateGroupingDialogOpen}
+                setOpen={setCreateGroupingDialogOpen}
+                onCreate={(grouping: Grouping) => {
+                    setCreateGroupingDialogOpen(false)
+                    setGroupings((prevGroupings) => {
+                        // Update groupings first
+                        const updatedGroupings = [...prevGroupings, grouping]
+                        // Then set the grouping ID in the next tick
+                        // This still uses React's scheduling but is more intentional
+                        Promise.resolve().then(() => {
+                            setGroupingId(groupingId)
+
+                            const dataKey = saveDataToSessionStorage({
+                                title: titleRef.current?.value || '',
+                                description: JSON.stringify(description),
+                                category_id: categoryId,
+                                grouping_id: grouping.id,
+                                scoring_type: scoringType,
+                                max_score: maxScoreRef.current?.value,
+                                rubric: JSON.stringify(rubric),
+                            })
+                            const urlSearchParams = new URLSearchParams()
+                            urlSearchParams.set(
+                                SP_AFTER_SAVE_KEY,
+                                pathname + '?' + SP_DATA_KEY + '=' + dataKey
+                            )
+                            router.push(
+                                `/grouping/${grouping.id}?${urlSearchParams.toString()}`
+                            )
+                            return grouping.id
+                        })
+                        return updatedGroupings
+                    })
+                }}
             />
         </>
     )

@@ -3,10 +3,11 @@
 import { Button } from '@/components/ui/button'
 import { useWarnIfUnsavedChanges } from '@/hooks/useWarnIfUnsavedChanges'
 import type { UserEssentialDetail } from '@/types/auth'
+import { SP_AFTER_SAVE_KEY, SP_DATA_KEY } from '@/types/general'
 import ld from 'lodash'
 import { ArrowLeft, Plus, Save } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -47,6 +48,7 @@ export default function Grouping({
     >(null)
 
     const [hasDataChanged, setHasDataChanged] = useState(false)
+    const searchParams = useSearchParams()
 
     useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
 
@@ -156,6 +158,28 @@ export default function Grouping({
                     available_students: ungroupedStudentsCheckpoint,
                 }
             })
+            console.log(searchParams.keys)
+            if (!searchParams.has(SP_AFTER_SAVE_KEY)) return
+
+            const redirectAfterSave = searchParams.get(SP_AFTER_SAVE_KEY)
+            if (!redirectAfterSave) return
+
+            let url = redirectAfterSave
+            const urlSearchParams = new URLSearchParams()
+
+            if (searchParams.has(SP_DATA_KEY)) {
+                const dataKey = searchParams.get(SP_DATA_KEY)
+
+                if (dataKey) {
+                    urlSearchParams.append(SP_DATA_KEY, dataKey)
+                }
+            }
+
+            if (searchParams.keys.length > 0) {
+                url += '?' + urlSearchParams.toString()
+            }
+
+            router.push(url)
         } else {
             toast.error(respones.message)
             setSaving(false)

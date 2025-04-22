@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { Delta } from 'quill'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 interface QuillEditorProps {
     initialContent?: Delta
@@ -10,6 +10,7 @@ interface QuillEditorProps {
     onContentChange?: (content: Delta) => void
     placeholder?: string
     className?: string
+    setQuillObject?: React.Dispatch<React.SetStateAction<any>>
 }
 
 const quillEditorElementId = 'quill-editor'
@@ -21,6 +22,7 @@ export default function QuillEditor({
     onContentChange,
     placeholder,
     className,
+    setQuillObject, // this exposes the quill object to be used by parents
 }: QuillEditorProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const toolbarRef = useRef<HTMLDivElement>(null)
@@ -66,6 +68,7 @@ export default function QuillEditor({
                 })
 
                 setQuill(quillInstance)
+                setQuillObject && setQuillObject(quillInstance)
 
                 if (initialContent) {
                     if (quillInstance.editor.isBlank()) {
@@ -78,7 +81,6 @@ export default function QuillEditor({
                 if (!readOnly) {
                     if (onContentChange) {
                         quillInstance.on('text-change', () => {
-                            console.log(quillInstance.editor.getDelta())
                             onContentChange(quillInstance.editor.getDelta())
                         })
                     }

@@ -19,6 +19,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { GetClassroomResponse } from '../actions'
 import { updateGrouping } from './actions'
+import { useSearchParams } from 'next/navigation'
 
 interface EditGroupingDialogProps {
     grouping: Grouping | null

@@ -16,6 +16,7 @@ import {
     limitFloatInputDecimalPlaces,
     preventNonNumericInput,
 } from '@/lib/utils'
+import { Category } from '@/types/classroom'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -26,12 +27,14 @@ interface CreateCategoryDialogProps {
     open: boolean
     setOpen: (open: boolean) => void
     classroom: GetClassroomResponse
+    onCreate?: (category: Category) => void
 }
 
 export function CreateCategoryDialog({
     open,
     setOpen,
     classroom,
+    onCreate,
 }: CreateCategoryDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
@@ -69,6 +72,7 @@ export function CreateCategoryDialog({
         if (response.success) {
             toast.success(response.message)
             setOpen(false)
+            onCreate && response.data && onCreate(response.data.category)
             return
         }
 

@@ -18,17 +18,21 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { GetClassroomResponse } from '../actions'
 import { createGrouping } from './actions'
+import { Grouping } from '@/types/classroom'
+import { responseCookiesToRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
 interface CreateGroupingDialogProps {
     open: boolean
     setOpen: (open: boolean) => void
     classroom: GetClassroomResponse
+    onCreate?: (grouping: Grouping) => void
 }
 
 export function CreateGroupingDialog({
     open,
     setOpen,
     classroom,
+    onCreate,
 }: CreateGroupingDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
@@ -59,8 +63,12 @@ export function CreateGroupingDialog({
         setIsSubmitting(false)
 
         if (response.success) {
-            toast.success(response.message)
             setOpen(false)
+            if (onCreate && response.data) {
+                onCreate(response.data.grouping)
+                return
+            }
+            toast.success(response.message)
             return
         }
 

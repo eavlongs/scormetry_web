@@ -20,7 +20,7 @@ export default async function Page({
     return (
         <div className="py-6">
             <div className="mb-4">
-                <ClassroomHeader classroom={classroom} tab="people" />
+                <ClassroomHeader classroom={classroom.classroom} tab="people" />
             </div>
             <section className="my-4">
                 <PeopleTab classroom={classroom} />

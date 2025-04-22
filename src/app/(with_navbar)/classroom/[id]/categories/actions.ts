@@ -3,6 +3,7 @@
 import { apiWithAuth } from '@/lib/axios'
 import { getValidationErrorActionResponse } from '@/lib/utils'
 import { CategorySchema } from '@/schema'
+import { Category } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
 import { ZodError } from 'zod'
@@ -11,17 +12,22 @@ export async function createCategory(
     classroom_id: string,
     name: string,
     score_percentage: number
-): Promise<ActionResponse> {
+): Promise<
+    ActionResponse<{
+        category: Category
+    }>
+> {
     try {
         const data = CategorySchema.parse({
             name: name,
             score_percentage: score_percentage,
         })
 
-        const response = await apiWithAuth.post<ApiResponse>(
-            `/classroom/${classroom_id}/category`,
-            data
-        )
+        const response = await apiWithAuth.post<
+            ApiResponse<{
+                category: Category
+            }>
+        >(`/classroom/${classroom_id}/category`, data)
 
         revalidatePath(`/classroom/${classroom_id}/categories`)
 
