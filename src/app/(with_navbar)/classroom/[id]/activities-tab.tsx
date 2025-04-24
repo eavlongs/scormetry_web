@@ -57,7 +57,14 @@ export default function ActivitiesTab({
             setShowedErrorMessage(true)
             router.replace(pathname)
         }
-    }, [successMessage, errorMessage])
+    }, [
+        successMessage,
+        errorMessage,
+        pathname,
+        router,
+        showedErrorMessage,
+        showedSuccessMessage,
+    ])
 
     return (
         <>

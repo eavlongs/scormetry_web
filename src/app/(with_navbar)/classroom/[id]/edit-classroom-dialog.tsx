@@ -45,7 +45,7 @@ export default function EditClassroomDialog({
         } else {
             if (nameRef.current) nameRef.current.focus()
         }
-    }, [open])
+    }, [open, classroom.color, classroom.name])
 
     async function handleSubmit() {
         if (nameRef.current?.value) {

@@ -24,7 +24,8 @@ export default function NotFound() {
                             Page Not Found
                         </h2>
                         <p className="mt-4 max-w-[42rem] text-muted-foreground sm:text-xl">
-                            We couldn't find the page you're looking for.
+                            We couldn&apos;t find the page you&apos;re looking
+                            for.
                         </p>
 
                         <div className="mt-8 flex gap-4">

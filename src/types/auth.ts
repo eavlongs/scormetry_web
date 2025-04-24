@@ -25,8 +25,6 @@ export type AccessTokenJWTPayload = Prettify<
     }
 >
 
-export type RefreshTokenJWTPayload = {}
-
 export const UnauthenticatedSession: Session = {
     isAuthenticated: false,
     user: null,

@@ -33,8 +33,8 @@ export function DeleteGroupDialog({
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will delete the group "{group?.name}" and move all
-                        its members to the ungrouped students list.
+                        This will delete the group &quot;{group?.name}&quot; and
+                        move all its members to the ungrouped students list.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

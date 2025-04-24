@@ -12,8 +12,8 @@ export default function ClassroomNotFound() {
                 <CardHeader>
                     <CardTitle>Classroom Not Found</CardTitle>
                     <CardDescription>
-                        The classroom you're looking for doesn't exist or has
-                        been removed.
+                        The classroom you&apos;re looking for doesn&apos;t exist
+                        or has been removed.
                     </CardDescription>
                 </CardHeader>
             </Card>

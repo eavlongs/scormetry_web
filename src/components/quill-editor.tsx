@@ -1,13 +1,13 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Delta } from 'quill'
+// import { Delta } from 'quill'
 import React, { useEffect, useRef, useState } from 'react'
 
 interface QuillEditorProps {
-    initialContent?: Delta
+    initialContent?: any
     readOnly?: boolean
-    onContentChange?: (content: Delta) => void
+    onContentChange?: (content: any) => void
     placeholder?: string
     className?: string
     setQuillObject?: React.Dispatch<React.SetStateAction<any>>
@@ -28,16 +28,21 @@ export default function QuillEditor({
     const toolbarRef = useRef<HTMLDivElement>(null)
     const [quill, setQuill] = useState<any>(null)
     const [isLoaded, setIsLoaded] = useState(false)
+    const [containerElement, setContainerElement] =
+        useState<HTMLDivElement | null>(null)
 
     useEffect(() => {
         if (
-            typeof window !== 'undefined' &&
-            typeof document !== 'undefined' &&
+            window !== undefined &&
+            document !== undefined &&
+            // typeof window !== 'undefined' &&
+            // typeof document !== 'undefined' &&
             !isLoaded
         ) {
             // Dynamically import Quill to avoid SSR issues
             import('quill').then((Quill) => {
                 if (containerRef.current) {
+                    setContainerElement(containerRef.current)
                     const toolbar = containerRef.current.querySelector(
                         quillToolbarQuerySelectorString
                     )
@@ -68,7 +73,7 @@ export default function QuillEditor({
                 })
 
                 setQuill(quillInstance)
-                setQuillObject && setQuillObject(quillInstance)
+                if (setQuillObject) setQuillObject(quillInstance)
 
                 if (initialContent) {
                     if (quillInstance.editor.isBlank()) {
@@ -76,7 +81,7 @@ export default function QuillEditor({
                         quillInstance.setContents(initialContent)
                     }
                 } else {
-                    quillInstance.setContents(new Delta())
+                    quillInstance.setContents([])
                 }
 
                 // Listen for text changes
@@ -87,20 +92,6 @@ export default function QuillEditor({
                             onContentChange(quillInstance.editor.getDelta())
                         })
                     }
-
-                    const quillEditorContainer =
-                        document.getElementById(quillEditorElementId)
-
-                    // if (quillEditorContainer) {
-                    //     quillEditorContainer.addEventListener('click', () => {
-                    //         const actualQuillEditorInputElement =
-                    //             quillEditorContainer?.querySelector(
-                    //                 '.ql-editor.ql-blank'
-                    //             ) as HTMLDivElement
-
-                    //         actualQuillEditorInputElement?.focus()
-                    //     })
-                    // }
                 }
 
                 setIsLoaded(true)
@@ -109,7 +100,6 @@ export default function QuillEditor({
 
         return () => {
             if (quill) {
-                const containerElement = containerRef.current as HTMLDivElement
                 if (containerElement && containerElement.parentNode) {
                     while (containerElement.firstChild) {
                         containerElement.removeChild(
@@ -117,7 +107,6 @@ export default function QuillEditor({
                         )
                     }
                 }
-
                 // Remove event listeners
                 if (!readOnly) {
                     quill.off('text-change')

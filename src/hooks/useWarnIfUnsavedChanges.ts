@@ -1,6 +1,6 @@
 import { NavigateOptions } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 
 // https://github.com/vercel/next.js/discussions/50700
 export const useWarnIfUnsavedChanges = (
@@ -14,18 +14,18 @@ export const useWarnIfUnsavedChanges = (
         const targetUrl = (e.currentTarget as HTMLAnchorElement).href
         const currentUrl = window.location.href
         if (targetUrl !== currentUrl && window.onbeforeunload) {
-            // @ts-ignore
+            // @ts-expect-error for some reason, onbeforeunload is not typed on window
             const res = window.onbeforeunload()
             if (!res) e.preventDefault()
         }
     }
 
-    const addAnchorListeners = () => {
+    const addAnchorListeners = useCallback(() => {
         const anchorElements = document.querySelectorAll('a[href]')
         anchorElements.forEach((anchor) =>
             anchor.addEventListener('click', handleAnchorClick)
         )
-    }
+    }, [])
 
     useEffect(() => {
         const mutationObserver = new MutationObserver(addAnchorListeners)
@@ -42,7 +42,7 @@ export const useWarnIfUnsavedChanges = (
                 anchor.removeEventListener('click', handleAnchorClick)
             )
         }
-    }, [])
+    }, [addAnchorListeners])
 
     useEffect(() => {
         const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
@@ -75,7 +75,7 @@ export const useWarnIfUnsavedChanges = (
             window.removeEventListener('beforeunload', beforeUnloadHandler)
             window.removeEventListener('popstate', handlePopState)
         }
-    }, [unsaved])
+    }, [unsaved, addAnchorListeners, currentPath])
 
     useEffect(() => {
         const originalPush = router.push

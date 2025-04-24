@@ -72,7 +72,7 @@ export function CreateCategoryDialog({
         if (response.success) {
             toast.success(response.message)
             setOpen(false)
-            onCreate && response.data && onCreate(response.data.category)
+            if (onCreate && response.data) onCreate(response.data.category)
             return
         }
 

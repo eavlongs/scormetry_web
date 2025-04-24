@@ -137,10 +137,9 @@ export default function CreateActivityForm({
         if (parseSessionStorageData) {
             titleRef.current!.value = parseSessionStorageData.title
 
-            // @ts-ignore
             if (quill) {
                 // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-ignore
+                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
                 quill.setContents(
                     JSON.parse(parseSessionStorageData.description)
                 )
@@ -363,7 +362,13 @@ export default function CreateActivityForm({
             default:
                 return null
         }
-    }, [scoringType, rubric, availableRubrics, validationErrors])
+    }, [
+        scoringType,
+        rubric,
+        availableRubrics,
+        validationErrors,
+        selectedRubricId,
+    ])
 
     return (
         <>

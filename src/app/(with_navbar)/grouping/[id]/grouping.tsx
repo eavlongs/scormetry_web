@@ -60,7 +60,7 @@ export default function Grouping({
             classroom,
         })
         setHasDataChanged(changed)
-    }, [groups, ungroupedStudents])
+    }, [groups, ungroupedStudents, classroom, grouping, originalData])
 
     function handleRenameGroup(groupId: string, newName: string) {
         setGroups(

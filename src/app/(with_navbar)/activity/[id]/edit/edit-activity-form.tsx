@@ -106,8 +106,6 @@ export default function EditActivityForm({
         useState(false)
 
     const [quill, setQuill] = useState()
-    const [titleValueSet, setTitleValueSet] = useState(false)
-    const [maxScoreSet, setMaxScoreSet] = useState(false)
 
     function saveDataToSessionStorage(data: any): string {
         const sessionStorageKeys = Object.keys(sessionStorage)
@@ -143,12 +141,10 @@ export default function EditActivityForm({
     useEffect(() => {
         if (parseSessionStorageData) {
             titleRef.current!.value = parseSessionStorageData.title
-            setTitleValueSet(true)
 
-            // @ts-ignore
             if (quill) {
                 // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-ignore
+                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
                 quill.setContents(
                     JSON.parse(parseSessionStorageData.description)
                 )
@@ -160,7 +156,6 @@ export default function EditActivityForm({
             setScoringType(parseSessionStorageData.scoring_type)
             if (parseSessionStorageData.max_score) {
                 maxScoreRef.current!.value = parseSessionStorageData.max_score
-                setMaxScoreSet(true)
             }
             if (parseSessionStorageData.rubric) {
                 const tmp = JSON.parse(parseSessionStorageData.rubric)
@@ -171,10 +166,9 @@ export default function EditActivityForm({
                 }
             }
         } else {
-            // @ts-ignore
             if (quill) {
                 // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-ignore
+                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
                 quill.setContents(JSON.parse(activity.description))
                 setDescription(JSON.parse(activity.description))
             }
@@ -192,7 +186,15 @@ export default function EditActivityForm({
                 setSelectedRubricId(activity.rubric_id)
             }
         }
-    }, [parseSessionStorageData, quill])
+    }, [
+        parseSessionStorageData,
+        quill,
+        activity.category_id,
+        activity.description,
+        activity.grouping_id,
+        activity.rubric_id,
+        activity.scoring_type,
+    ])
 
     function onUpload(
         files: File[],
@@ -393,7 +395,14 @@ export default function EditActivityForm({
             default:
                 return null
         }
-    }, [scoringType, rubric, availableRubrics, validationErrors])
+    }, [
+        scoringType,
+        rubric,
+        availableRubrics,
+        validationErrors,
+        activity.max_score,
+        selectedRubricId,
+    ])
 
     return (
         <>

@@ -62,8 +62,9 @@ export function DeleteGroupingDialog({
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete Grouping</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to delete the "{grouping?.name}"
-                        grouping? This action cannot be undone.
+                        Are you sure you want to delete the &quot;
+                        {grouping?.name}&quot; grouping? This action cannot be
+                        undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

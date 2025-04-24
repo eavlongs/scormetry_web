@@ -28,8 +28,8 @@ export default function DeleteActivityDialog({
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete Class</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to delete the activity "
-                        {activity?.title}"?
+                        Are you sure you want to delete the activity &quot;
+                        {activity?.title}&quot;?
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
