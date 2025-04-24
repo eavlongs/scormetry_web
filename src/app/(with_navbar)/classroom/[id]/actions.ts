@@ -131,3 +131,25 @@ export async function regenerateClassroomCode(id: string): Promise<
         }
     }
 }
+
+export async function deleteActivity(
+    activityId: string,
+    classroomId: string
+): Promise<ActionResponse> {
+    try {
+        const response = await apiWithAuth.delete<ApiResponse>(
+            `/activity/${activityId}`
+        )
+
+        revalidatePath(`/classroom/${classroomId}`)
+        return {
+            success: true,
+            message: response.data.message,
+        }
+    } catch (e: any) {
+        return {
+            success: false,
+            message: e.response.data.message,
+        }
+    }
+}

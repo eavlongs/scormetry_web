@@ -5,7 +5,6 @@ import {
     ValidationError,
 } from '@/types/response'
 import { clsx, type ClassValue } from 'clsx'
-import { redirect, RedirectType } from 'next/navigation'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { ZodError } from 'zod'
@@ -145,11 +144,4 @@ export function limitFloatInputDecimalPlaces(
     if (input.length - decimalPointIndex > maxDecimalPlaces) {
         e.preventDefault()
     }
-}
-
-export function redirectToNotFoundPageWithRedirectUrl(redirectUrl: string) {
-    return redirect(
-        '/not-found?redirect_url=' + encodeURIComponent(redirectUrl),
-        RedirectType.replace
-    )
 }

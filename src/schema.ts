@@ -70,7 +70,7 @@ export const ActivitySchema = z
         files: z.any().refine((val) => true),
         category_id: z.string().nullable(),
         grouping_id: z.string().nullable(), // nullable for individual tasks
-        scoring_type: z.enum([...SCORING_TYPES, 'none']).nullable(),
+        scoring_type: z.enum([...SCORING_TYPES, '']).nullable(),
         max_score: z.any(),
         // rubric_id: z.string().nullable(),
         rubric: z.any().nullable(), // to be defined, RubricSchema,

@@ -1,5 +1,9 @@
 'use client'
 
+import { GetClassroomResponse } from '@/app/(with_navbar)/classroom/[id]/actions'
+import { CreateRubricDialog } from '@/app/(with_navbar)/classroom/[id]/activities/new/create-rubric-dialog'
+import { CreateCategoryDialog } from '@/app/(with_navbar)/classroom/[id]/categories/create-category-dialog'
+import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupings/create-grouping-dialog'
 import QuillEditor from '@/components/quill-editor'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +30,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { getErrorMessageFromValidationError } from '@/lib/utils'
 import {
+    Activity,
     Category,
     Grouping,
     SCORING_TYPE_RANGE,
@@ -42,11 +47,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Delta } from 'quill'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { GetClassroomResponse } from '../../actions'
-import { CreateCategoryDialog } from '../../categories/create-category-dialog'
-import { CreateGroupingDialog } from '../../groupings/create-grouping-dialog'
-import { createActivity } from './actions'
-import { CreateRubricDialog } from './create-rubric-dialog'
+import { editActivity } from './actions'
+import { EditRubricDialog } from './edit-rubric-dialog'
 
 // Mock data for rubrics
 const mockRubrics = [
@@ -55,16 +57,17 @@ const mockRubrics = [
     { id: 'rubric-3', name: 'Technical Skills Rubric' },
 ]
 
-// Scoring type options - updated to include range-based and rubric-based
 const scoringTypes = [
     { id: SCORING_TYPE_RANGE, name: 'Range Based' },
     { id: SCORING_TYPE_RUBRIC, name: 'Rubric Based' },
 ]
 
-export default function CreateActivityForm({
+export default function EditActivityForm({
     classroom,
+    activity,
 }: {
     classroom: GetClassroomResponse
+    activity: Activity
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -78,13 +81,15 @@ export default function CreateActivityForm({
         []
     )
     const [description, setDescription] = useState<Delta>()
-    const [isRubricDialogOpen, setIsRubricDialogOpen] = useState(false)
+    const [rubricForDialog, setRubricForDialog] = useState<any>(null)
 
     // Form fields
     const titleRef = useRef<HTMLInputElement>(null)
     const [categoryId, setCategoryId] = useState<string>('')
     const [groupingId, setGroupingId] = useState<string>('individual')
     const [rubric, setRubric] = useState<any>(null)
+    const [isCreateRubricDialogOpen, setCreateRubricDialogOpen] =
+        useState(false)
     const [selectedRubricId, setSelectedRubricId] = useState<string>('')
     const [scoringType, setScoringType] = useState<string>('none')
     const maxScoreRef = useRef<HTMLInputElement>(null)
@@ -101,6 +106,8 @@ export default function CreateActivityForm({
         useState(false)
 
     const [quill, setQuill] = useState()
+    const [titleValueSet, setTitleValueSet] = useState(false)
+    const [maxScoreSet, setMaxScoreSet] = useState(false)
 
     function saveDataToSessionStorage(data: any): string {
         const sessionStorageKeys = Object.keys(sessionStorage)
@@ -136,6 +143,7 @@ export default function CreateActivityForm({
     useEffect(() => {
         if (parseSessionStorageData) {
             titleRef.current!.value = parseSessionStorageData.title
+            setTitleValueSet(true)
 
             // @ts-ignore
             if (quill) {
@@ -152,6 +160,7 @@ export default function CreateActivityForm({
             setScoringType(parseSessionStorageData.scoring_type)
             if (parseSessionStorageData.max_score) {
                 maxScoreRef.current!.value = parseSessionStorageData.max_score
+                setMaxScoreSet(true)
             }
             if (parseSessionStorageData.rubric) {
                 const tmp = JSON.parse(parseSessionStorageData.rubric)
@@ -160,6 +169,27 @@ export default function CreateActivityForm({
                 if (tmp.id) {
                     setSelectedRubricId(tmp.id)
                 }
+            }
+        } else {
+            // @ts-ignore
+            if (quill) {
+                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
+                // @ts-ignore
+                quill.setContents(JSON.parse(activity.description))
+                setDescription(JSON.parse(activity.description))
+            }
+
+            setCategoryId(activity.category_id || '')
+            setGroupingId(activity.grouping_id || 'individual')
+            setScoringType(activity.scoring_type || 'none')
+
+            if (activity.rubric_id) {
+                setRubric({
+                    id: activity.rubric_id,
+                    name: 'temp',
+                }) // temporary
+
+                setSelectedRubricId(activity.rubric_id)
             }
         }
     }, [parseSessionStorageData, quill])
@@ -186,7 +216,8 @@ export default function CreateActivityForm({
     // Handle new rubric creation
     const handleRubricSave = (rubric: any) => {
         setRubric(rubric)
-        setIsRubricDialogOpen(false)
+        setRubricForDialog(null)
+        setCreateRubricDialogOpen(false)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -224,10 +255,7 @@ export default function CreateActivityForm({
         })
 
         try {
-            const response = await createActivity(
-                classroom.classroom.id,
-                formData
-            )
+            const response = await editActivity(activity.id, formData)
 
             if (response.success) {
                 toast.success(response.message)
@@ -251,7 +279,6 @@ export default function CreateActivityForm({
         }
     }
 
-    // Determine what to render based on scoring type
     const renderScoringFields = useCallback(() => {
         switch (scoringType) {
             case SCORING_TYPE_RANGE:
@@ -278,6 +305,9 @@ export default function CreateActivityForm({
                                 placeholder="Maximum score"
                                 ref={maxScoreRef}
                                 className="w-auto"
+                                defaultValue={activity.max_score?.toPrecision(
+                                    2
+                                )}
                             />
                         </LabelWrapper>
                     </div>
@@ -300,7 +330,7 @@ export default function CreateActivityForm({
                                     <Button
                                         type="button"
                                         onClick={() =>
-                                            setIsRubricDialogOpen(true)
+                                            setCreateRubricDialogOpen(true)
                                         }
                                         className="flex-1"
                                     >
@@ -388,6 +418,7 @@ export default function CreateActivityForm({
                                     id="title"
                                     placeholder="Activity title"
                                     ref={titleRef}
+                                    defaultValue={activity.title}
                                 />
                             </LabelWrapper>
                         </div>
@@ -411,6 +442,7 @@ export default function CreateActivityForm({
                                     className="min-h-[200px]"
                                     onContentChange={setDescription}
                                     setQuillObject={setQuill}
+                                    // readOnly
                                 />
                             </LabelWrapper>
                         </div>
@@ -608,7 +640,7 @@ export default function CreateActivityForm({
                                     'scoring_type'
                                 )}
                                 options={{
-                                    required: false,
+                                    required: true,
                                 }}
                             >
                                 <Select
@@ -618,7 +650,7 @@ export default function CreateActivityForm({
                                     }}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select scoring type (optional)" />
+                                        <SelectValue placeholder="Select scoring type" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="none">
@@ -637,7 +669,6 @@ export default function CreateActivityForm({
                             </LabelWrapper>
                         </div>
 
-                        {/* Conditional rendering based on scoring type */}
                         {renderScoringFields()}
 
                         <div className="flex justify-end mt-auto gap-4 pt-4">
@@ -649,19 +680,22 @@ export default function CreateActivityForm({
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting
-                                    ? 'Creating...'
-                                    : 'Create Activity'}
+                                {isSubmitting ? 'Saving...' : 'Save'}
                             </Button>
                         </div>
                     </div>
                 </div>
             </form>
 
-            {/* Rubric Creation Dialog */}
             <CreateRubricDialog
-                isOpen={isRubricDialogOpen}
-                onClose={() => setIsRubricDialogOpen(false)}
+                isOpen={isCreateRubricDialogOpen}
+                onClose={() => setCreateRubricDialogOpen(false)}
+                onSave={handleRubricSave}
+            />
+
+            <EditRubricDialog
+                rubric={rubricForDialog}
+                setRubric={setRubricForDialog}
                 onSave={handleRubricSave}
             />
 

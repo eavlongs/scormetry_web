@@ -2,15 +2,15 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { Classroom } from '@/types/classroom'
-import { formatDistanceToNow } from 'date-fns'
-import { CalendarIcon, FileTextIcon, Plus } from 'lucide-react'
-import Image from 'next/image'
+import { Activity, Classroom } from '@/types/classroom'
+import { FileTextIcon, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { getActivities } from './actions'
+import { deleteActivity, getActivities } from './actions'
+import { ActivityCard } from './activity-card'
+import DeleteActivityDialog from './delete-activity-dialog'
 
 export default function ActivitiesTab({
     classroom,
@@ -29,6 +29,21 @@ export default function ActivitiesTab({
     const [showedErrorMessage, setShowedErrorMessage] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
+    const [activityToDelete, setActivityToDelete] = useState<Activity | null>(
+        null
+    )
+
+    async function handleDeleteActivity(id: string) {
+        const response = await deleteActivity(id, classroom.id)
+
+        if (response.success) {
+            setActivityToDelete(null)
+            toast.success(response.message)
+            return
+        }
+
+        toast.error(response.message)
+    }
 
     useEffect(() => {
         if (successMessage && !showedSuccessMessage) {
@@ -42,7 +57,7 @@ export default function ActivitiesTab({
             setShowedErrorMessage(true)
             router.replace(pathname)
         }
-    }, [successMessage, errorMessage, showedSuccessMessage, showedErrorMessage])
+    }, [successMessage, errorMessage])
 
     return (
         <>
@@ -62,6 +77,7 @@ export default function ActivitiesTab({
                             key={activity.id}
                             activity={activity}
                             classroom={classroom}
+                            onShowDeleteDialog={setActivityToDelete}
                         />
                     ))}
                 </div>
@@ -84,58 +100,12 @@ export default function ActivitiesTab({
                     </CardFooter>
                 </Card>
             )}
+
+            <DeleteActivityDialog
+                activity={activityToDelete}
+                onClose={() => setActivityToDelete(null)}
+                onDelete={handleDeleteActivity}
+            />
         </>
-    )
-}
-
-function ActivityCard({
-    activity,
-    classroom,
-}: {
-    activity: NonNullable<
-        Awaited<ReturnType<typeof getActivities>>
-    >['activities'][0]
-    classroom: Classroom
-}) {
-    const timeAgo = formatDistanceToNow(new Date(activity.created_at), {
-        addSuffix: true,
-    })
-
-    return (
-        <Link
-            href={`/classroom/${classroom.id}/activites/${activity.id}`}
-            className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors border-b"
-        >
-            <div className="flex items-center gap-4">
-                <div className="flex flex-col">
-                    <h3 className="font-medium line-clamp-1">
-                        {activity.title}
-                    </h3>
-                    <div className="flex items-center space-x-2 mt-1">
-                        <div className="relative h-6 w-6 cursor-pointer">
-                            <Image
-                                src={activity.posted_by_user.profile_picture}
-                                alt={
-                                    activity.posted_by_user.first_name +
-                                    ' ' +
-                                    activity.posted_by_user.last_name
-                                }
-                                fill
-                                className="rounded-full"
-                            />
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                            {activity.posted_by_user.first_name +
-                                ' ' +
-                                activity.posted_by_user.last_name}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground">
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                <span>{timeAgo}</span>
-            </div>
-        </Link>
     )
 }

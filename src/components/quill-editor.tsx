@@ -75,12 +75,15 @@ export default function QuillEditor({
                         // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
                         quillInstance.setContents(initialContent)
                     }
+                } else {
+                    quillInstance.setContents(new Delta())
                 }
 
                 // Listen for text changes
                 if (!readOnly) {
                     if (onContentChange) {
                         quillInstance.on('text-change', () => {
+                            // console.log(quillInstance.editor.getDelta())
                             onContentChange(quillInstance.editor.getDelta())
                         })
                     }
