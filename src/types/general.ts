@@ -11,3 +11,5 @@ export const NEW_ACTIVITY_DATA_KEY_PREFIX = 'na_'
 
 export const SP_TRUE_VALUE = '1'
 export const SP_FALSE_VALUE = '0'
+
+export const MAX_REQUEST_BODY_SIZE_MB = 30

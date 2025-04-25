@@ -17,6 +17,7 @@ export async function getActivity(activityId: string) {
             }>
         >(`/activity/${activityId}`)
 
+        console.log(response.data.data)
         return {
             ...response.data.data!,
         }
@@ -33,6 +34,7 @@ export async function editActivity(
         activity: Activity
     }>
 > {
+    console.log('called')
     try {
         ActivitySchema.parse(Object.fromEntries(formData))
 

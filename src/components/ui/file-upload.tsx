@@ -11,7 +11,6 @@ import {
     FileTextIcon,
     FileVideoIcon,
 } from 'lucide-react'
-import Image from 'next/image'
 import * as React from 'react'
 
 const ROOT_NAME = 'FileUpload'
@@ -1065,7 +1064,7 @@ const FileUploadItemPreview = React.forwardRef<
 
             if (isImage) {
                 return (
-                    <Image
+                    <img
                         src={URL.createObjectURL(file)}
                         alt={file.name}
                         className="size-full rounded object-cover"
@@ -1109,13 +1108,14 @@ FileUploadItemPreview.displayName = ITEM_PREVIEW_NAME
 interface FileUploadItemMetadataProps
     extends React.ComponentPropsWithoutRef<'div'> {
     asChild?: boolean
+    forcedSize?: number
 }
 
 const FileUploadItemMetadata = React.forwardRef<
     HTMLDivElement,
     FileUploadItemMetadataProps
 >((props, forwardedRef) => {
-    const { asChild, children, className, ...metadataProps } = props
+    const { asChild, children, className, forcedSize, ...metadataProps } = props
 
     const context = useFileUploadContext(ITEM_METADATA_NAME)
     const itemContext = useFileUploadItemContext(ITEM_METADATA_NAME)
@@ -1144,7 +1144,9 @@ const FileUploadItemMetadata = React.forwardRef<
                         id={itemContext.sizeId}
                         className="text-muted-foreground text-xs"
                     >
-                        {formatBytes(itemContext.fileState.file.size)}
+                        {forcedSize !== undefined
+                            ? formatBytes(forcedSize)
+                            : formatBytes(itemContext.fileState.file.size)}
                     </span>
                     {itemContext.fileState.error && (
                         <span

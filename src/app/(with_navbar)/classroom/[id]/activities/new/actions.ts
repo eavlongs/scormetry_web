@@ -27,6 +27,7 @@ export async function createActivity(classroomId: string, formData: FormData) {
         }
     } catch (e: any) {
         if (e instanceof ZodError) {
+            console.log(e)
             return getValidationErrorActionResponse(e)
         }
 

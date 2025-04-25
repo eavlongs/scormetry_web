@@ -37,6 +37,7 @@ import {
     SCORING_TYPE_RUBRIC,
 } from '@/types/classroom'
 import {
+    MAX_REQUEST_BODY_SIZE_MB,
     NEW_ACTIVITY_DATA_KEY_PREFIX,
     SP_AFTER_SAVE_KEY,
     SP_DATA_KEY,
@@ -44,9 +45,9 @@ import {
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { Pencil, Plus, Upload, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Delta } from 'quill'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 import { editActivity } from './actions'
 import { EditRubricDialog } from './edit-rubric-dialog'
 
@@ -80,7 +81,7 @@ export default function EditActivityForm({
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
         []
     )
-    const [description, setDescription] = useState<Delta>()
+    const [description, setDescription] = useState({})
     const [rubricForDialog, setRubricForDialog] = useState<any>(null)
 
     // Form fields
@@ -94,10 +95,14 @@ export default function EditActivityForm({
     const [scoringType, setScoringType] = useState<string>('none')
     const maxScoreRef = useRef<HTMLInputElement>(null)
 
+    const originalFiles = activity.files
+
     // State for managing rubric options
     const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
-    const [files, setFiles] = useState<File[]>([])
+    const [files, setFiles] = useState<
+        { id: string; file: File; forcedSize?: number }[]
+    >([])
 
     const [isCreateCategoryDialogOpen, setCreateCategoryDialogOpen] =
         useState(false)
@@ -186,6 +191,27 @@ export default function EditActivityForm({
                 setSelectedRubricId(activity.rubric_id)
             }
         }
+
+        setFiles(() => {
+            const files: {
+                id: string
+                file: File
+                forcedSize?: number
+            }[] = []
+
+            for (const _file of activity.files) {
+                const tmp = new File([], _file.file_name, {
+                    type: _file.id,
+                })
+                files.push({
+                    id: _file.id,
+                    file: tmp,
+                    forcedSize: _file.file_size,
+                })
+            }
+
+            return files
+        })
     }, [
         parseSessionStorageData,
         quill,
@@ -252,33 +278,42 @@ export default function EditActivityForm({
             formData.append('rubric', JSON.stringify(rubric))
         }
 
-        files.forEach((file) => {
-            formData.append('files', file)
-        })
+        const filesToRemove = originalFiles
+            .map((file) => {
+                const idx = files.findIndex((f) => f.id === file.id)
 
-        try {
-            const response = await editActivity(activity.id, formData)
+                if (idx === -1) {
+                    return file.id
+                }
+            })
+            .filter((v) => v !== undefined)
 
-            if (response.success) {
-                toast.success(response.message)
-                router.push(`/classroom/${classroom.classroom.id}`)
-                return
-            }
+        filesToRemove.forEach((file) =>
+            formData.append('files_to_remove', file)
+        )
 
-            if (
-                response.message === VALIDATION_ERROR_MESSAGE &&
-                response.error
-            ) {
-                setValidationErrors(response.error)
-                return
-            }
+        files
+            .map((file) => file.file)
+            .filter((file) => !validateUUID(file.type))
+            .forEach((file) => {
+                formData.append('files', file)
+            })
 
-            toast.error(response.message)
-        } catch (error) {
-            toast.error('An error occurred while creating the activity')
-        } finally {
-            setIsSubmitting(false)
+        const response = await editActivity(activity.id, formData)
+
+        setIsSubmitting(false)
+        if (response.success) {
+            toast.success(response.message)
+            router.push(`/classroom/${classroom.classroom.id}`)
+            return
         }
+
+        if (response.message === VALIDATION_ERROR_MESSAGE && response.error) {
+            setValidationErrors(response.error)
+            return
+        }
+
+        toast.error(response.message)
     }
 
     const renderScoringFields = useCallback(() => {
@@ -471,10 +506,34 @@ export default function EditActivityForm({
                                 }}
                             >
                                 <FileUpload
-                                    value={files}
-                                    onValueChange={setFiles}
+                                    value={files.map((file) => file.file)}
+                                    onValueChange={(val) => {
+                                        setFiles((prev) => {
+                                            const updatedFiles = val
+                                                .map((file) => {
+                                                    if (
+                                                        validateUUID(file.type)
+                                                    ) {
+                                                        return prev.find(
+                                                            (prevFile) =>
+                                                                prevFile.id ===
+                                                                file.type
+                                                        )
+                                                    }
+                                                    return {
+                                                        id: uuidv4(),
+                                                        file: file,
+                                                    }
+                                                })
+                                                .filter((v) => v !== undefined)
+
+                                            return updatedFiles
+                                        })
+                                    }}
                                     maxFiles={5}
-                                    maxSize={5 * 1024 * 1024}
+                                    maxSize={
+                                        MAX_REQUEST_BODY_SIZE_MB * 1024 * 1024
+                                    }
                                     className="w-full"
                                     onUpload={onUpload}
                                     onFileReject={onFileReject}
@@ -488,7 +547,8 @@ export default function EditActivityForm({
                                             </p>
                                             <p className="text-muted-foreground text-xs">
                                                 Or click to browse (max 5 files,
-                                                up to 5MB each)
+                                                up to {MAX_REQUEST_BODY_SIZE_MB}
+                                                MB)
                                             </p>
                                         </div>
                                         <FileUploadTrigger asChild>
@@ -504,12 +564,15 @@ export default function EditActivityForm({
                                     <FileUploadList>
                                         {files.map((file) => (
                                             <FileUploadItem
-                                                key={file.name}
-                                                value={file}
+                                                key={file.file.name}
+                                                value={file.file}
                                             >
                                                 {/* <div className="flex gap-x-2 items-center w-full"> */}
                                                 <FileUploadItemPreview />
-                                                <FileUploadItemMetadata className="flex-grow" />
+                                                <FileUploadItemMetadata
+                                                    forcedSize={file.forcedSize}
+                                                    className="flex-grow"
+                                                />
                                                 <FileUploadItemDelete asChild>
                                                     <Button
                                                         variant="ghost"

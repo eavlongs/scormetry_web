@@ -12,7 +12,6 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
 import { CalendarIcon, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { getActivities } from './actions'
 
 export function ActivityCard({
@@ -77,7 +76,9 @@ export function ActivityCard({
                     <DropdownMenuContent
                         align="start"
                         side="left"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
                     >
                         <DropdownMenuItem asChild>
                             <Link href={`/activity/${activity.id}/edit`}>

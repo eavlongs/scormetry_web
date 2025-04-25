@@ -117,7 +117,15 @@ export type Activity = {
     scoring_type: string | null
     max_score: number | null
     posted_by: string
-    files: string[]
+    files: CustomFile[]
     created_at: string
     updated_at: string
+}
+
+export type CustomFile = {
+    id: string
+    file_path: string
+    file_name: string
+    file_size: number
+    created_at: string
 }

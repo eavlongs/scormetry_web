@@ -6,6 +6,7 @@ import {
     SCORING_TYPE_RUBRIC,
     SCORING_TYPES,
 } from './types/classroom'
+import { MAX_REQUEST_BODY_SIZE_MB } from './types/general'
 
 export const ClassroomSchema = z.object({
     name: z.string().min(2).max(150),
@@ -67,7 +68,65 @@ export const ActivitySchema = z
     .object({
         title: z.string().min(1, 'Title is required').max(255),
         description: z.string().nullable(),
-        files: z.any().refine((val) => true),
+        files: z.any().superRefine((val, ctx) => {
+            if (val === undefined) return
+
+            if (Array.isArray(val)) {
+                if (val.length > 5) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.too_big,
+                        message: 'Maximum files allowed is 5',
+                        path: ['files'],
+                        maximum: 5,
+                        inclusive: true,
+                        type: 'array',
+                    })
+                    return
+                }
+
+                let totalSize = 0
+
+                for (const file of val) {
+                    if (!(file instanceof File)) {
+                        ctx.addIssue({
+                            code: z.ZodIssueCode.invalid_type,
+                            message: 'Invalid file type',
+                            path: ['files'],
+                            expected: 'object',
+                            received: typeof file,
+                        })
+                        return
+                    }
+
+                    totalSize += file.size
+                }
+
+                if (totalSize > MAX_REQUEST_BODY_SIZE_MB * 1024 * 1024) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.too_big,
+                        message: `Maximum total file size is ${MAX_REQUEST_BODY_SIZE_MB}MB`,
+                        path: ['files'],
+                        maximum: MAX_REQUEST_BODY_SIZE_MB,
+                        inclusive: true,
+                        type: 'array',
+                    })
+                    return
+                }
+
+                return
+            }
+
+            if (!(val instanceof File)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.invalid_type,
+                    message: 'Invalid type',
+                    path: ['files'],
+                    expected: 'object',
+                    received: typeof val,
+                })
+                return
+            }
+        }),
         category_id: z.string().nullable(),
         grouping_id: z.string().nullable(), // nullable for individual tasks
         scoring_type: z.enum([...SCORING_TYPES, '']).nullable(),
@@ -84,6 +143,7 @@ export const ActivitySchema = z
                     "Max score is required when scoring type is 'range-based'",
                 path: ['max_score'],
             })
+            return
         }
 
         const maxScoreNumber = Number(val.max_score)
@@ -93,6 +153,7 @@ export const ActivitySchema = z
                 message: 'Max score must be a number',
                 path: ['max_score'],
             })
+            return
         }
 
         if (maxScoreNumber <= 0) {
@@ -101,6 +162,7 @@ export const ActivitySchema = z
                 message: 'Max score must be greater than 0',
                 path: ['max_score'],
             })
+            return
         }
     })
     .refine(
@@ -113,6 +175,144 @@ export const ActivitySchema = z
         {
             message: "Rubric is required when scoring type is 'rubric-based'",
             path: ['rubric'],
+        }
+    )
+
+export const EditActivitySchema = z
+    .object({
+        title: z.string().min(1, 'Title is required').max(255),
+        description: z.string().nullable(),
+        files: z.any().superRefine((val, ctx) => {
+            if (val === undefined) return
+
+            if (Array.isArray(val)) {
+                if (val.length > 5) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.too_big,
+                        message: 'Maximum files allowed is 5',
+                        path: ['files'],
+                        maximum: 5,
+                        inclusive: true,
+                        type: 'array',
+                    })
+                    return
+                }
+
+                let totalSize = 0
+
+                for (const file of val) {
+                    if (!(file instanceof File)) {
+                        ctx.addIssue({
+                            code: z.ZodIssueCode.invalid_type,
+                            message: 'Invalid file type',
+                            path: ['files'],
+                            expected: 'object',
+                            received: typeof file,
+                        })
+                        return
+                    }
+
+                    totalSize += file.size
+                }
+
+                if (totalSize > MAX_REQUEST_BODY_SIZE_MB * 1024 * 1024) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.too_big,
+                        message: `Maximum total file size is ${MAX_REQUEST_BODY_SIZE_MB}MB`,
+                        path: ['files'],
+                        maximum: MAX_REQUEST_BODY_SIZE_MB,
+                        inclusive: true,
+                        type: 'array',
+                    })
+                    return
+                }
+
+                return
+            }
+
+            if (!(val instanceof File)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.invalid_type,
+                    message: 'Invalid type',
+                    path: ['files'],
+                    expected: 'object',
+                    received: typeof val,
+                })
+                return
+            }
+        }),
+        category_id: z.string().nullable(),
+        grouping_id: z.string().nullable(), // nullable for individual tasks
+        scoring_type: z.enum([...SCORING_TYPES, '']).nullable(),
+        max_score: z.any(),
+        files_to_remove: z.array(z.string()).optional(),
+        // rubric_id: z.string().nullable(),
+        rubric: z.any().nullable(), // to be defined, RubricSchema,
+    })
+    .superRefine((val, ctx) => {
+        if (val.scoring_type !== SCORING_TYPE_RANGE) return
+        if (!val.max_score) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    "Max score is required when scoring type is 'range-based'",
+                path: ['max_score'],
+            })
+            return
+        }
+
+        const maxScoreNumber = Number(val.max_score)
+        if (Number.isNaN(maxScoreNumber)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Max score must be a number',
+                path: ['max_score'],
+            })
+            return
+        }
+
+        if (maxScoreNumber <= 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Max score must be greater than 0',
+                path: ['max_score'],
+            })
+            return
+        }
+    })
+    .refine(
+        (val) => {
+            if (val.scoring_type === SCORING_TYPE_RUBRIC) {
+                return !!JSON.parse(val.rubric)
+            }
+            return true
+        },
+        {
+            message: "Rubric is required when scoring type is 'rubric-based'",
+            path: ['rubric'],
+        }
+    )
+    .refine(
+        (val) => {
+            if (!val.files_to_remove || val.files_to_remove.length === 0)
+                return true
+
+            // if files is array (multiple files), check if the sum of files exceed 5
+            if (Array.isArray(val.files)) {
+                if (val.files.length + val.files_to_remove.length > 5) {
+                    return false
+                }
+            }
+
+            if (val.files instanceof File) {
+                if (val.files_to_remove.length > 4) return false
+            }
+
+            return true
+        },
+        {
+            path: ['files'],
+            message: 'Maximum files allowed is 5',
         }
     )
 
