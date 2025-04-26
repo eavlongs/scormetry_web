@@ -48,11 +48,12 @@ export async function inviteUsersToClassroom(
 }
 
 export async function deleteClassroomUser(
+    classroomId: string,
     userId: string
 ): Promise<ActionResponse> {
     try {
         const response = await apiWithAuth.delete<ApiResponse>(
-            `/classroom/user/${userId}`
+            `/classroom/${classroomId}/user/${userId}`
         )
 
         return {

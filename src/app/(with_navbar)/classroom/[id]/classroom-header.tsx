@@ -9,12 +9,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import useSession from '@/hooks/useSession'
 import { cn, copyUrlToClipboard } from '@/lib/utils'
 import { Classroom, colorMap } from '@/types/classroom'
 import {
     ArchiveIcon,
     Copy,
     Link2,
+    LogOut,
     MoreVertical,
     Pencil,
     RefreshCw,
@@ -26,6 +28,7 @@ import { toast } from 'sonner'
 import { regenerateClassroomCode } from './actions'
 import DeleteClassroomDialog from './delete-classroom-dialog'
 import EditClassroomDialog from './edit-classroom-dialog'
+import LeaveClassroomDialog from './leave-classroom-dialog'
 
 export default function ClassroomHeader({
     classroom,
@@ -34,9 +37,11 @@ export default function ClassroomHeader({
     classroom: Classroom
     tab: 'activities' | 'people' | 'grades' | 'categories' | 'groupings'
 }) {
+    const session = useSession()
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isRegeneratingCode, setIsRegeneratingCode] = useState(false)
+    const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false)
 
     const tabs = [
         {
@@ -132,6 +137,15 @@ export default function ClassroomHeader({
                                 <ArchiveIcon className="h-4 w-4 mr-2" />
                                 <span>Archive</span>
                             </DropdownMenuItem>
+                            {classroom.owned_by !== session.user?.id && (
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setIsLeaveDialogOpen(true)}
+                                >
+                                    <LogOut className="h-4 w-4 mr-2" />
+                                    <span>Leave</span>
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                                 variant="destructive"
                                 onClick={() => setIsDeleteDialogOpen(true)}
@@ -216,6 +230,14 @@ export default function ClassroomHeader({
                 open={isDeleteDialogOpen}
                 setOpen={setIsDeleteDialogOpen}
             />
+
+            {classroom.owned_by != session.user?.id && (
+                <LeaveClassroomDialog
+                    classroom={classroom}
+                    open={isLeaveDialogOpen}
+                    setOpen={setIsLeaveDialogOpen}
+                />
+            )}
         </>
     )
 }

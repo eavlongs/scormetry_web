@@ -153,3 +153,23 @@ export async function deleteActivity(
         }
     }
 }
+
+export async function leaveClassroom(id: string): Promise<ActionResponse> {
+    try {
+        const response = await apiWithAuth.post<ApiResponse>(
+            `/classroom/${id}/leave`
+        )
+
+        revalidatePath('/')
+
+        return {
+            success: true,
+            message: response.data.message,
+        }
+    } catch (e: any) {
+        return {
+            success: false,
+            message: e.response.data.message,
+        }
+    }
+}
