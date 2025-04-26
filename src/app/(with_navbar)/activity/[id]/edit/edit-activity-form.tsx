@@ -564,7 +564,7 @@ export default function EditActivityForm({
                                     <FileUploadList>
                                         {files.map((file) => (
                                             <FileUploadItem
-                                                key={file.file.name}
+                                                key={file.id}
                                                 value={file.file}
                                             >
                                                 {/* <div className="flex gap-x-2 items-center w-full"> */}

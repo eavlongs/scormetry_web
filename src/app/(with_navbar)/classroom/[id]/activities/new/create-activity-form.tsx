@@ -1,5 +1,6 @@
 'use client'
 
+import { v4 as uuidv4 } from 'uuid'
 import QuillEditor from '@/components/quill-editor'
 import { Button } from '@/components/ui/button'
 import {
@@ -92,7 +93,7 @@ export default function CreateActivityForm({
     // State for managing rubric options
     const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
-    const [files, setFiles] = useState<File[]>([])
+    const [files, setFiles] = useState<{ id: string; file: File }[]>([])
 
     const [isCreateCategoryDialogOpen, setCreateCategoryDialogOpen] =
         useState(false)
@@ -219,7 +220,7 @@ export default function CreateActivityForm({
         }
 
         files.forEach((file) => {
-            formData.append('files', file)
+            formData.append('files', file.file)
         })
 
         try {
@@ -435,8 +436,15 @@ export default function CreateActivityForm({
                                 }}
                             >
                                 <FileUpload
-                                    value={files}
-                                    onValueChange={setFiles}
+                                    value={files.map((v) => v.file)}
+                                    onValueChange={(val) => {
+                                        setFiles(
+                                            val.map((file) => ({
+                                                id: uuidv4(),
+                                                file,
+                                            }))
+                                        )
+                                    }}
                                     maxFiles={5}
                                     maxSize={5 * 1024 * 1024}
                                     className="w-full"
@@ -468,8 +476,8 @@ export default function CreateActivityForm({
                                     <FileUploadList>
                                         {files.map((file) => (
                                             <FileUploadItem
-                                                key={file.name}
-                                                value={file}
+                                                key={file.id}
+                                                value={file.file}
                                             >
                                                 {/* <div className="flex gap-x-2 items-center w-full"> */}
                                                 <FileUploadItemPreview />
