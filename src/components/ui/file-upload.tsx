@@ -980,7 +980,7 @@ const FileUploadItem = React.forwardRef<HTMLDivElement, FileUploadItemProps>(
 )
 FileUploadItem.displayName = ITEM_NAME
 
-function formatBytes(bytes: number) {
+export function formatBytes(bytes: number) {
     if (bytes === 0) return '0 B'
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
     const i = Math.floor(Math.log(bytes) / Math.log(1024))

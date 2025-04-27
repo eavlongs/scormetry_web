@@ -9,7 +9,8 @@ interface QuillEditorProps {
     readOnly?: boolean
     onContentChange?: (content: any) => void
     placeholder?: string
-    className?: string
+    className?: React.ComponentProps<'div'>['className']
+    loadingClassName?: React.ComponentProps<'div'>['className']
     setQuillObject?: React.Dispatch<React.SetStateAction<any>>
 }
 
@@ -22,6 +23,7 @@ export default function QuillEditor({
     onContentChange,
     placeholder,
     className,
+    loadingClassName,
     setQuillObject, // this exposes the quill object to be used by parents
 }: QuillEditorProps) {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -123,7 +125,7 @@ export default function QuillEditor({
                 className={cn(
                     'flex items-center justify-center min-h-[100px] border',
                     isLoaded && 'hidden',
-                    className
+                    loadingClassName
                 )}
             >
                 Loading...

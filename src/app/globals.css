@@ -132,7 +132,7 @@
 }
 
 .read-only-editor {
-    background-color: #f9fafb;
+    /* background-color: #f9fafb; */
 }
 
 .read-only-editor .ql-editor {
@@ -150,6 +150,10 @@
 
 .ql-editor {
     flex-grow: 1;
+}
+
+.ql-editor[contenteditable=false] {
+    padding: 0;
 }
 
 ::-webkit-scrollbar-track

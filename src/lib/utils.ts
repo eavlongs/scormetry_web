@@ -22,24 +22,28 @@ export function getRandomColor() {
 /**
    client side only
 */
-export async function copyUrlToClipboard(path: string) {
+export async function copyToClipboard(text: string) {
     try {
-        const hostname = window.location.hostname
-        const port = window.location.port
-
-        let url = ''
-        if (port != '80' && port != '443') {
-            url = `${hostname}:${port}${path}`
-        } else {
-            url = `${hostname}${path}`
-        }
-
-        await navigator.clipboard.writeText(url)
-        toast.success('Link copied to clipboard')
+        await navigator.clipboard.writeText(text)
+        toast.success('Copied to clipboard')
     } catch (err) {
         console.log(err)
         toast.error('Failed to copy')
     }
+}
+
+export async function copyUrlToClipboard(path: string) {
+    const hostname = window.location.hostname
+    const port = window.location.port
+
+    let url = ''
+    if (port != '80' && port != '443') {
+        url = `${hostname}:${port}${path}`
+    } else {
+        url = `${hostname}${path}`
+    }
+
+    await copyToClipboard(url)
 }
 
 export function convertZodErrorToValidationError<T>(
