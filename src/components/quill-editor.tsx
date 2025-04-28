@@ -70,6 +70,9 @@ export default function QuillEditor({
                                   ['clean'],
                               ],
                     },
+                    // formats: [
+
+                    // ]
                     placeholder: placeholder,
                     readOnly: readOnly,
                 })
@@ -134,6 +137,7 @@ export default function QuillEditor({
                 <div
                     id={quillEditorElementId}
                     className={cn(
+                        'text-sm',
                         readOnly
                             ? 'read-only-editor'
                             : 'min-h-[100px] border flex flex-col',

@@ -43,7 +43,7 @@ export function CreateGroupDialog({
                 id: `group-${new Date().getTime()}`,
                 name: groupName.trim(),
                 grouping_id: grouping_id,
-                students: [],
+                users: [],
             }
             onCreateGroup(newGroup)
             setNewGroupName('')

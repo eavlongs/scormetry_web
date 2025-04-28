@@ -74,10 +74,7 @@ export default function Grouping({
         const groupToDelete = groups.find((g) => g.id === groupId)
         if (groupToDelete) {
             setGroupToDelete(null)
-            setUngroupedStudents([
-                ...ungroupedStudents,
-                ...groupToDelete.students,
-            ])
+            setUngroupedStudents([...ungroupedStudents, ...groupToDelete.users])
             setGroups(groups.filter((group) => group.id !== groupId))
         }
     }
@@ -102,13 +99,13 @@ export default function Grouping({
             // Moving from a group
             const fromGroup = groups.find((g) => g.id === fromGroupId)
             if (fromGroup) {
-                student = fromGroup.students.find((s) => s.id === studentId)
+                student = fromGroup.users.find((s) => s.id === studentId)
                 setGroups((prev) =>
                     prev.map((group) =>
                         group.id === fromGroupId
                             ? {
                                   ...group,
-                                  students: group.students.filter(
+                                  users: group.users.filter(
                                       (s) => s.id !== studentId
                                   ),
                               }
@@ -128,7 +125,7 @@ export default function Grouping({
             setGroups((prev) =>
                 prev.map((group) =>
                     group.id === toGroupId
-                        ? { ...group, students: [...group.students, student] }
+                        ? { ...group, users: [...group.users, student] }
                         : group
                 )
             )

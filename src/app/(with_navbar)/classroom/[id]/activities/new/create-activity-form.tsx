@@ -33,6 +33,7 @@ import {
     SCORING_TYPE_RUBRIC,
 } from '@/types/classroom'
 import {
+    MAX_REQUEST_BODY_SIZE_MB,
     NEW_ACTIVITY_DATA_KEY_PREFIX,
     SP_AFTER_SAVE_KEY,
     SP_DATA_KEY,
@@ -446,7 +447,9 @@ export default function CreateActivityForm({
                                         )
                                     }}
                                     maxFiles={5}
-                                    maxSize={5 * 1024 * 1024}
+                                    maxSize={
+                                        MAX_REQUEST_BODY_SIZE_MB * 1024 * 1024
+                                    }
                                     className="w-full"
                                     onUpload={onUpload}
                                     onFileReject={onFileReject}
@@ -460,7 +463,7 @@ export default function CreateActivityForm({
                                             </p>
                                             <p className="text-muted-foreground text-xs">
                                                 Or click to browse (max 5 files,
-                                                up to 5MB each)
+                                                up to 30MB in total)
                                             </p>
                                         </div>
                                         <FileUploadTrigger asChild>

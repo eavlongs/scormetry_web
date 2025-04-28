@@ -10,7 +10,7 @@ import { UserEssentialDetail } from '@/types/auth'
 import { Classroom } from '@/types/classroom'
 import { ActionResponse, ApiResponse, ValidationError } from '@/types/response'
 import { revalidatePath } from 'next/cache'
-import { z, ZodError } from 'zod'
+import { ZodError } from 'zod'
 
 export type GetGroupingDetailResponse = {
     grouping: {
@@ -23,7 +23,7 @@ export type GetGroupingDetailResponse = {
         id: string
         name: string
         grouping_id: string
-        students: UserEssentialDetail[]
+        users: UserEssentialDetail[]
     }[]
     available_students: UserEssentialDetail[]
     classroom: Classroom
@@ -37,6 +37,7 @@ export async function getgrouping(
             ApiResponse<GetGroupingDetailResponse>
         >(`/grouping/${id}`)
 
+        console.log(response.data.data!)
         return {
             ...response.data.data!,
         }
@@ -55,7 +56,7 @@ export async function saveGroupingComposition(
             return {
                 id: group.id,
                 name: group.name,
-                students: group.students.map((student) => student.id),
+                students: group.users.map((student) => student.id),
             }
         })
 

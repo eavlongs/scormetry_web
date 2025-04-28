@@ -142,7 +142,7 @@ export default function GroupTable({
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => {
-                                    if (group.students.length > 0) {
+                                    if (group.users.length > 0) {
                                         setGroupToDelete(group)
                                     } else {
                                         onDelete(group.id)
@@ -161,12 +161,12 @@ export default function GroupTable({
             <CardContent className="px-2 pb-2 pt-0 flex-grow overflow-hidden">
                 <div className="border-t pt-1 mt-1">
                     <ul className="space-y-1 overflow-y-auto max-h-[120px]">
-                        {group.students.length === 0 ? (
+                        {group.users.length === 0 ? (
                             <li className="text-xs text-center py-2 text-muted-foreground">
                                 Drag students here
                             </li>
                         ) : (
-                            group.students.map((student) => (
+                            group.users.map((student) => (
                                 <StudentItem
                                     key={student.id}
                                     student={student}

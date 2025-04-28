@@ -4,8 +4,7 @@ import { GetClassroomResponse } from '@/app/(with_navbar)/classroom/[id]/actions
 import { apiWithAuth } from '@/lib/axios'
 import { getValidationErrorActionResponse } from '@/lib/utils'
 import { ActivitySchema } from '@/schema'
-import { UserEssentialDetail } from '@/types/auth'
-import { Activity } from '@/types/classroom'
+import { Activity, GetActivity } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { ZodError } from 'zod'
 
@@ -13,12 +12,11 @@ export async function getActivity(activityId: string) {
     try {
         const response = await apiWithAuth.get<
             ApiResponse<{
-                activity: Activity & { posted_by_user: UserEssentialDetail }
+                activity: GetActivity
                 classroom: GetClassroomResponse
             }>
         >(`/activity/${activityId}`)
 
-        console.log(response.data.data)
         return {
             ...response.data.data!,
         }

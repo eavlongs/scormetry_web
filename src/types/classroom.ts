@@ -1,4 +1,4 @@
-import { ClassroomUserDetail } from './auth'
+import { ClassroomUserDetail, UserEssentialDetail } from './auth'
 
 export type Classroom = {
     id: string
@@ -128,4 +128,14 @@ export type CustomFile = {
     file_name: string
     file_size: number
     created_at: string
+}
+
+export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
+    users: UserEssentialDetail[]
+}
+
+export type GetActivity = Activity & {
+    posted_by_user: ClassroomUserDetail
+    groups: GetGroup[] | null
+    group: GetGroup | null
 }

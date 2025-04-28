@@ -156,6 +156,10 @@
     padding: 0;
 }
 
+.read-only-editor .ql-editor * {
+    cursor: auto;
+}
+
 ::-webkit-scrollbar-track
 {
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
