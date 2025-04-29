@@ -13,6 +13,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import ActivityCommentSection from './activity-comment-section'
+import ActivityGroups from './activity-groups'
 import ActivityScoreview from './activity-score-view'
 
 export default function ViewActivity({
@@ -166,11 +167,13 @@ export default function ViewActivity({
 
             <div className="relative pl-4 gap-y-6 col-span-1 md:col-span-3 h-full">
                 {/* TODO fix separator leaving space at the bottom  */}
-                <div className="hidden md:block md:absolute left-0 top-0 bottom-0">
+                <div className="hidden md:block md:absolute left-0 top-[-0.5rem] bottom-0 min-h-[calc(100dvh-4rem)]">
                     <Separator orientation="vertical" className="h-full" />
                 </div>
 
-                {activity.groups ? null : (
+                {activity.groups ? (
+                    <ActivityGroups groups={activity.groups} />
+                ) : (
                     <>
                         <ActivityScoreview activity={activity} />
                         <ActivityCommentSection activity={activity} />
