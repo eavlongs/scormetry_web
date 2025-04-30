@@ -10,14 +10,19 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { getKeysFromValidationError } from '@/lib/utils'
-import { KEYOF_ERR_USER_ALREADY_IN_CLASSROOM } from '@/types/response'
+import { LabelWrapper } from '@/components/ui/label-wrapper'
+import {
+    getErrorMessageFromValidationError,
+    getKeysFromValidationError,
+} from '@/lib/utils'
+import {
+    KEYOF_ERR_USER_ALREADY_IN_CLASSROOM,
+    ValidationError,
+} from '@/types/response'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { joinClassroomByCode } from '../code/[code]/actions'
-import { revalidateData } from './actions'
 
 interface JoinClassroomDialogProps {
     open: boolean
@@ -30,31 +35,38 @@ export function JoinClassroomDialog({
 }: JoinClassroomDialogProps) {
     const [classCode, setClassCode] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [validationError, setValidationError] = useState<string | null>(null)
     const router = useRouter()
     const pathname = usePathname()
+    const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+        []
+    )
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         if (!classCode.trim()) {
-            setValidationError('Please enter a class code')
+            setValidationErrors([
+                {
+                    field: 'code',
+                    message: 'Class code is required',
+                },
+            ])
             return
         }
 
         setIsLoading(true)
-        setValidationError(null)
+        setValidationErrors([])
 
         const response = await joinClassroomByCode(classCode)
 
         if (response.success) {
-            await revalidateData('/')
+            // await revalidateData('/')
             if (response.data)
                 router.push(
                     `/classroom/${response.data.classroom.id}?success_message=${response.message}`
                 )
-            else {
-                toast.success(response.message)
-            }
+            else toast.success(response.message)
+            setClassCode('')
+            setOpen(false)
         } else {
             if (
                 response.error &&
@@ -76,19 +88,17 @@ export function JoinClassroomDialog({
                     setOpen(false)
                     return
                 }
-                toast.error(response.message)
             }
+            toast.error(response.message)
         }
 
         setIsLoading(false)
-        setClassCode('')
-        setOpen(false)
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setClassCode(e.target.value)
-        if (validationError) {
-            setValidationError(null)
+        if (validationErrors) {
+            setValidationErrors([])
         }
     }
 
@@ -103,29 +113,29 @@ export function JoinClassroomDialog({
                             join the classroom.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="classCode" className="text-right">
-                                Class Code
-                            </Label>
-                            <div className="col-span-3 space-y-1">
-                                <Input
-                                    id="classCode"
-                                    value={classCode}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter class code"
-                                    className={
-                                        validationError ? 'border-red-500' : ''
-                                    }
-                                    autoComplete="off"
-                                />
-                                {validationError && (
-                                    <p className="text-sm text-red-500">
-                                        {validationError}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+                    <div className="w-full my-6">
+                        <LabelWrapper
+                            label={{
+                                text: 'Class Code',
+                                field: 'code',
+                            }}
+                            error={getErrorMessageFromValidationError(
+                                validationErrors,
+                                'code'
+                            )}
+                            options={{
+                                label_placement: 'inline',
+                            }}
+                        >
+                            <Input
+                                id="code"
+                                className="w-auto flex-1"
+                                value={classCode}
+                                onChange={handleInputChange}
+                                placeholder="Enter class code"
+                                autoComplete="off"
+                            />
+                        </LabelWrapper>
                     </div>
                     <DialogFooter>
                         <Button

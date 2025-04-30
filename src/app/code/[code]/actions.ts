@@ -22,6 +22,7 @@ export async function joinClassroomByCode(code: string): Promise<
             data: response.data.data,
         }
     } catch (e: any) {
+        console.log(e.response.data)
         return {
             success: false,
             message: e.response.data.message,

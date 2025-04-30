@@ -6,7 +6,7 @@ import { Activity, Classroom } from '@/types/classroom'
 import { FileTextIcon, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { deleteActivity, getActivities } from './actions'
 import { ActivityCard } from './activity-card'
@@ -25,8 +25,8 @@ export default function ActivitiesTab({
     successMessage: Readonly<string>
     errorMessage: Readonly<string>
 }) {
-    const [showedSuccessMessage, setShowedSuccessMessage] = useState(false)
-    const [showedErrorMessage, setShowedErrorMessage] = useState(false)
+    const successMessageShown = useRef(false)
+    const errorMessageShown = useRef(false)
     const pathname = usePathname()
     const router = useRouter()
     const [activityToDelete, setActivityToDelete] = useState<Activity | null>(
@@ -46,25 +46,18 @@ export default function ActivitiesTab({
     }
 
     useEffect(() => {
-        if (successMessage && !showedSuccessMessage) {
+        if (successMessage && !successMessageShown.current) {
             toast.success(successMessage)
-            setShowedSuccessMessage(true)
+            successMessageShown.current = true
             router.replace(pathname)
         }
 
-        if (errorMessage && !showedErrorMessage) {
+        if (errorMessage && !errorMessageShown.current) {
             toast.error(errorMessage)
-            setShowedErrorMessage(true)
+            errorMessageShown.current = true
             router.replace(pathname)
         }
-    }, [
-        successMessage,
-        errorMessage,
-        pathname,
-        router,
-        showedErrorMessage,
-        showedSuccessMessage,
-    ])
+    }, [successMessage, errorMessage, pathname, router])
 
     return (
         <>
