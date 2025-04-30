@@ -231,7 +231,7 @@ export default function Grouping({
                                 }
                             >
                                 <Save className="h-4 w-4" />
-                                Save Changes
+                                {saving ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
                     </div>
