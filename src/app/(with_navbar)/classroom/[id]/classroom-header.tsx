@@ -137,7 +137,7 @@ export default function ClassroomHeader({
                                 <ArchiveIcon className="h-4 w-4 mr-2" />
                                 <span>Archive</span>
                             </DropdownMenuItem>
-                            {classroom.owned_by !== session.user?.id && (
+                            {classroom.owned_by !== session.user?.id ? (
                                 <DropdownMenuItem
                                     variant="destructive"
                                     onClick={() => setIsLeaveDialogOpen(true)}
@@ -145,14 +145,15 @@ export default function ClassroomHeader({
                                     <LogOut className="h-4 w-4 mr-2" />
                                     <span>Leave</span>
                                 </DropdownMenuItem>
+                            ) : (
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setIsDeleteDialogOpen(true)}
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <span>Delete</span>
+                                </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setIsDeleteDialogOpen(true)}
-                            >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                <span>Delete</span>
-                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
