@@ -33,93 +33,10 @@ export async function inviteUsersToClassroom(
         }
     } catch (e: any) {
         if (e instanceof ZodError) {
-            // keep in mind the data type we are working with is
-            // {
-            //     "users": {
-            //         "email: string",
-            //         "role: ClassroomRole
-            //     }[]
-            // }
-
-            // first check if "users" is valid
-
-            const usersValidationError = convertZodErrorToValidationError(e)
-
-            if (usersValidationError.length > 0) {
-                return {
-                    success: false,
-                    message: e.message,
-                    error: usersValidationError,
-                }
-            }
-
-            // @ts-ignore
-            const formattedErrors = (
-                e as ZodError<typeof InviteUsersToClassroomSchema>
-            ).format()
-            const validationErrors: ValidationError[] = []
-
-            // formattedErrors now looks like this:
-            // {"_errors":[],"users":{"0":{"_errors":[],"email":{"_errors":["Please enter a valid email address"]}},"_errors":[]}}
-
-            // @ts-ignore
-            const usersError =
-                formattedErrors['users' as keyof typeof formattedErrors]
-            // now usersError should look like this:
-            // {"0":{"_errors":[],"email":{"_errors":["Please enter a valid email address"]}},"_errors":[]}
-
-            if (usersError && Object.keys(usersError).length > 0) {
-                const firstError = usersError[
-                    Object.keys(
-                        usersError
-                    )[0] as string as keyof typeof usersError
-                ] as {
-                    _errors: string[]
-                    email?: {
-                        _errors: string[]
-                    }
-                    role?: {
-                        _errors: string[]
-                    }
-                }
-
-                // now firstError should look like this:
-                // {"_errors":[],"email":{"_errors":["Please enter a valid email address"]}}
-
-                for (const key of Object.keys(firstError)) {
-                    console.log({
-                        key,
-                        value: firstError[key as keyof typeof firstError],
-                    })
-
-                    const fieldError =
-                        firstError[key as keyof typeof firstError]
-
-                    // Check if fieldError is an object first before using 'in' operator
-                    if (
-                        key !== '_errors' &&
-                        '_errors' in firstError &&
-                        Array.isArray(firstError._errors) &&
-                        fieldError &&
-                        '_errors' in fieldError &&
-                        fieldError._errors.length > 0
-                    ) {
-                        validationErrors.push({
-                            field: key,
-                            message:
-                                (fieldError &&
-                                    '_errors' in fieldError &&
-                                    fieldError._errors?.[0]) ||
-                                'Invalid input',
-                        })
-                    }
-                }
-            }
-
             return {
                 success: false,
                 message: e.message,
-                error: validationErrors,
+                error: convertZodErrorToValidationError(e),
             }
         }
         return {
@@ -131,11 +48,12 @@ export async function inviteUsersToClassroom(
 }
 
 export async function deleteClassroomUser(
+    classroomId: string,
     userId: string
 ): Promise<ActionResponse> {
     try {
         const response = await apiWithAuth.delete<ApiResponse>(
-            `/classroom/user/${userId}`
+            `/classroom/${classroomId}/user/${userId}`
         )
 
         return {

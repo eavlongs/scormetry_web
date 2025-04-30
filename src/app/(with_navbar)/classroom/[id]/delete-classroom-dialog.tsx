@@ -8,24 +8,25 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Dispatch, SetStateAction } from 'react'
-import { deleteClassroom, GetClassroomResponse } from './actions'
+import { Classroom } from '@/types/classroom'
 import { useRouter } from 'next/navigation'
+import { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
+import { deleteClassroom } from './actions'
 
 export default function DeleteClassroomDialog({
     classroom,
     open,
     setOpen,
 }: {
-    classroom: GetClassroomResponse
+    classroom: Classroom
     open: boolean
     setOpen: Dispatch<SetStateAction<boolean>>
 }) {
     const router = useRouter()
 
     async function handleSubmit() {
-        const response = await deleteClassroom(classroom.classroom.id)
+        const response = await deleteClassroom(classroom.id)
 
         if (response.success) {
             toast.success(response.message)
@@ -43,8 +44,8 @@ export default function DeleteClassroomDialog({
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete Class</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to delete the "
-                        {classroom.classroom.name}" classroom?
+                        Are you sure you want to delete the &quot;{classroom.name}&quot;
+                        classroom?
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

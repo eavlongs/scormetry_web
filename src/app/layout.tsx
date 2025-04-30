@@ -5,12 +5,9 @@ import type React from 'react'
 import AppProvider from './AppProvider'
 import AuthProvider from './AuthProvider'
 import './globals.css'
+import { font } from './font'
 
-// const tmp = Roboto({ subsets: ["latin"] });
-// const tmp = Poppins({ subsets: ["latin"], weight: "400" });
-const tmp = Inter({ subsets: ['latin'] })
-
-const fontToDisplay = tmp
+const fontToDisplay = font
 
 export const metadata: Metadata = {
     title: 'Scormetry',
@@ -24,6 +21,12 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
+            <head>
+                <link
+                    href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
+                    rel="stylesheet"
+                />
+            </head>
             <body className={fontToDisplay.className}>
                 <Toaster richColors />
                 <AuthProvider>

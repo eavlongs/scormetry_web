@@ -1,7 +1,6 @@
 import { classroomColorsWithType } from '@/types/classroom'
 import {
     ActionResponse,
-    VALIDATION_ERROR,
     VALIDATION_ERROR_MESSAGE,
     ValidationError,
 } from '@/types/response'
@@ -23,24 +22,28 @@ export function getRandomColor() {
 /**
    client side only
 */
-export async function copyUrlToClipboard(path: string) {
+export async function copyToClipboard(text: string) {
     try {
-        const hostname = window.location.hostname
-        const port = window.location.port
-
-        let url = ''
-        if (port != '80' && port != '443') {
-            url = `${hostname}:${port}${path}`
-        } else {
-            url = `${hostname}${path}`
-        }
-
-        await navigator.clipboard.writeText(url)
-        toast.success('Link copied to clipboard')
+        await navigator.clipboard.writeText(text)
+        toast.success('Copied to clipboard')
     } catch (err) {
         console.log(err)
         toast.error('Failed to copy')
     }
+}
+
+export async function copyUrlToClipboard(path: string) {
+    const hostname = window.location.hostname
+    const port = window.location.port
+
+    let url = ''
+    if (port != '80' && port != '443') {
+        url = `${hostname}:${port}${path}`
+    } else {
+        url = `${hostname}${path}`
+    }
+
+    await copyToClipboard(url)
 }
 
 export function convertZodErrorToValidationError<T>(
@@ -48,29 +51,32 @@ export function convertZodErrorToValidationError<T>(
 ): ValidationError[] {
     if (!(err instanceof ZodError)) return []
 
-    const formattedErrors = err.format()
+    const issues = err.issues
     const validationErrors: ValidationError[] = []
 
-    // Handle root level errors
-    for (const key in formattedErrors) {
-        if (key === '_errors') continue
+    for (const i in issues) {
+        const path = issues[i].path
 
-        const fieldError = formattedErrors[key as keyof typeof formattedErrors]
-
-        // Check if fieldError is an object first before using 'in' operator
-        if (
-            fieldError &&
-            typeof fieldError === 'object' &&
-            fieldError !== null &&
-            '_errors' in fieldError &&
-            Array.isArray(fieldError._errors) &&
-            fieldError._errors.length > 0
-        ) {
+        if (!path) {
             validationErrors.push({
-                field: key,
-                message: fieldError._errors[0] || 'Invalid input',
+                field: i + 1,
+                message: issues[i].message,
             })
+            continue
         }
+
+        let field = path[path.length - 1].toString()
+
+        for (let i = path.length - 1; i >= 0; i--) {
+            if (typeof path[i] === 'string') {
+                field = path[i] as string
+            }
+        }
+
+        validationErrors.push({
+            field,
+            message: issues[i].message,
+        })
     }
 
     return validationErrors
@@ -106,5 +112,40 @@ export function getValidationErrorActionResponse<T>(
         success: false,
         message: VALIDATION_ERROR_MESSAGE,
         error: convertZodErrorToValidationError(err),
+    }
+}
+
+export function getValidationErrorMessage(e: ValidationError[]): string {
+    return e.length > 0 ? e[0].message : ''
+}
+
+export function preventNonNumericInput(
+    e: React.KeyboardEvent<HTMLInputElement>
+) {
+    if (e.key === '+' || e.key === '-' || e.key === 'e' || e.key === 'E') {
+        e.preventDefault()
+        return
+    }
+}
+
+export function limitFloatInputDecimalPlaces(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    ref: React.RefObject<HTMLInputElement | null>,
+    maxDecimalPlaces: number
+) {
+    if (!ref.current) {
+        return
+    }
+
+    const input = ref.current.value
+
+    const decimalPointIndex = input.indexOf('.')
+
+    if (decimalPointIndex === -1) {
+        return
+    }
+
+    if (input.length - decimalPointIndex > maxDecimalPlaces) {
+        e.preventDefault()
     }
 }

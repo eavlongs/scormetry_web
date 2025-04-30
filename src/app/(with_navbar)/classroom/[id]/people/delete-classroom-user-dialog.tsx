@@ -33,7 +33,10 @@ export default function DeleteClassroomUserDialog({
     async function handleDelete() {
         if (!user) return
 
-        const response = await deleteClassroomUser(user.id)
+        const response = await deleteClassroomUser(
+            classroom.classroom.id,
+            user.id
+        )
 
         if (!response.success) {
             toast.error(response.message)

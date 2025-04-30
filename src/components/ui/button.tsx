@@ -20,7 +20,7 @@ const buttonVariants = cva(
                 ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 cursor-pointer',
                 link: 'text-primary underline-offset-4 hover:underline cursor-pointer',
                 paragon:
-                    'bg-paragon text-paragon-foreground shadow-xs hover:bg-paragon-hover text-white cursor-pointer',
+                    'bg-paragon text-white shadow-xs hover:bg-paragon-hover cursor-pointer',
             },
             size: {
                 default: 'h-9 px-4 py-2 has-[>svg]:px-3',

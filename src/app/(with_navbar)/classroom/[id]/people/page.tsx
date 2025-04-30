@@ -18,9 +18,13 @@ export default async function Page({
     }
 
     return (
-        <div className="container py-6 space-y-6">
-            <ClassroomHeader classroom={classroom} tab="people" />
-            <PeopleTab classroom={classroom} />
+        <div className="py-6">
+            <div className="mb-4">
+                <ClassroomHeader classroom={classroom.classroom} tab="people" />
+            </div>
+            <section className="my-4">
+                <PeopleTab classroom={classroom} />
+            </section>
         </div>
     )
 }

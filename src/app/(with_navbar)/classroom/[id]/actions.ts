@@ -1,11 +1,15 @@
 'use server'
 
 import { apiWithAuth } from '@/lib/axios'
+import { UserEssentialDetail } from '@/types/auth'
 import {
+    Activity,
+    Category,
     Classroom,
     ClassroomRole,
     ClassroomUsersResponse,
     ColorType,
+    Grouping,
 } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
@@ -14,6 +18,28 @@ export type GetClassroomResponse = {
     classroom: Classroom
     role: ClassroomRole
     people: ClassroomUsersResponse
+    categories: Category[]
+    groupings: Grouping[]
+}
+
+export async function getActivities(classroomId: string) {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                classroom: Classroom
+                activities: (Activity & {
+                    posted_by_user: UserEssentialDetail
+                })[]
+            }>
+        >(`/classroom/${classroomId}/activities`)
+
+        return {
+            ...response.data.data!,
+        }
+    } catch (e: any) {
+        console.error(e.response.data)
+        return null
+    }
 }
 
 export async function getClassroom(
@@ -97,6 +123,48 @@ export async function regenerateClassroomCode(id: string): Promise<
             success: true,
             message: response.data.message,
             data: response.data.data,
+        }
+    } catch (e: any) {
+        return {
+            success: false,
+            message: e.response.data.message,
+        }
+    }
+}
+
+export async function deleteActivity(
+    activityId: string,
+    classroomId: string
+): Promise<ActionResponse> {
+    try {
+        const response = await apiWithAuth.delete<ApiResponse>(
+            `/activity/${activityId}`
+        )
+
+        revalidatePath(`/classroom/${classroomId}`)
+        return {
+            success: true,
+            message: response.data.message,
+        }
+    } catch (e: any) {
+        return {
+            success: false,
+            message: e.response.data.message,
+        }
+    }
+}
+
+export async function leaveClassroom(id: string): Promise<ActionResponse> {
+    try {
+        const response = await apiWithAuth.post<ApiResponse>(
+            `/classroom/${id}/leave`
+        )
+
+        revalidatePath('/')
+
+        return {
+            success: true,
+            message: response.data.message,
         }
     } catch (e: any) {
         return {

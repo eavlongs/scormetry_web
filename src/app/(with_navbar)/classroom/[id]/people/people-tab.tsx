@@ -35,8 +35,12 @@ export default function PeopleTab({
         useState<ClassroomRole | null>(null)
 
     return (
-        <Card>
-            {/* <CardHeader>
+        <>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">People</h2>
+            </div>
+            <Card>
+                {/* <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>People</CardTitle>
@@ -69,143 +73,146 @@ export default function PeopleTab({
                 </div>
             </CardHeader> */}
 
-            <CardContent className="space-y-6">
-                <section>
-                    <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold mb-2">
-                            Teachers ({teachers.length + 1}){' '}
-                            {/* +1 for owner */}
-                        </h3>
-                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
-                            <Button
-                                variant="outline"
-                                onClick={() =>
-                                    setInviteUserDialogRole(
-                                        CLASSROOM_ROLE_TEACHER
-                                    )
-                                }
-                            >
-                                <UserPlus className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <PersonRow
-                            person={owner}
-                            showDeleteButton={false}
-                            setUserToDelete={setUserToDelete}
-                        />
-                        {teachers.length > 0
-                            ? teachers.map((teacher) => (
-                                  <PersonRow
-                                      key={teacher.id || teacher.email}
-                                      person={teacher}
-                                      showDeleteButton={
-                                          session.user
-                                              ? session.user.id ==
-                                                classroom.classroom.owned_by
-                                              : false
-                                      }
-                                      setUserToDelete={setUserToDelete}
-                                  />
-                              ))
-                            : null}
-                    </div>
-                </section>
-
-                <Separator />
-
-                <section>
-                    <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold mb-2">
-                            Judges ({judges.length})
-                        </h3>
-                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
-                            <Button
-                                variant="outline"
-                                onClick={() =>
-                                    setInviteUserDialogRole(
-                                        CLASSROOM_ROLE_JUDGE
-                                    )
-                                }
-                            >
-                                <UserPlus className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        {judges.length > 0 ? (
-                            judges.map((judge) => (
-                                <PersonRow
-                                    key={judge.id || judge.email}
-                                    person={judge}
-                                    showDeleteButton={
-                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                <CardContent className="space-y-6">
+                    <section>
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold mb-2">
+                                Teachers ({teachers.length + 1}){' '}
+                                {/* +1 for owner */}
+                            </h3>
+                            {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setInviteUserDialogRole(
+                                            CLASSROOM_ROLE_TEACHER
+                                        )
                                     }
-                                    setUserToDelete={setUserToDelete}
-                                />
-                            ))
-                        ) : (
-                            <p className="text-muted-foreground text-sm py-2">
-                                No judges assigned
-                            </p>
-                        )}
-                    </div>
-                </section>
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <PersonRow
+                                person={owner}
+                                showDeleteButton={false}
+                                setUserToDelete={setUserToDelete}
+                            />
+                            {teachers.length > 0
+                                ? teachers.map((teacher) => (
+                                      <PersonRow
+                                          key={teacher.id || teacher.email}
+                                          person={teacher}
+                                          showDeleteButton={
+                                              session.user
+                                                  ? session.user.id ==
+                                                    classroom.classroom.owned_by
+                                                  : false
+                                          }
+                                          setUserToDelete={setUserToDelete}
+                                      />
+                                  ))
+                                : null}
+                        </div>
+                    </section>
 
-                <Separator />
+                    <Separator />
 
-                <section>
-                    <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold mb-2">
-                            Students ({students.length})
-                        </h3>
-                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
-                            <Button
-                                variant="outline"
-                                onClick={() =>
-                                    setInviteUserDialogRole(
-                                        CLASSROOM_ROLE_STUDENT
-                                    )
-                                }
-                            >
-                                <UserPlus className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        {students.length > 0 ? (
-                            students.map((student) => (
-                                <PersonRow
-                                    key={student.id || student.email}
-                                    person={student}
-                                    showDeleteButton={
-                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                    <section>
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold mb-2">
+                                Judges ({judges.length})
+                            </h3>
+                            {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setInviteUserDialogRole(
+                                            CLASSROOM_ROLE_JUDGE
+                                        )
                                     }
-                                    setUserToDelete={setUserToDelete}
-                                />
-                            ))
-                        ) : (
-                            <p className="text-muted-foreground text-sm py-2">
-                                No students enrolled
-                            </p>
-                        )}
-                    </div>
-                </section>
-            </CardContent>
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            {judges.length > 0 ? (
+                                judges.map((judge) => (
+                                    <PersonRow
+                                        key={judge.id || judge.email}
+                                        person={judge}
+                                        showDeleteButton={
+                                            classroom.role ==
+                                            CLASSROOM_ROLE_TEACHER
+                                        }
+                                        setUserToDelete={setUserToDelete}
+                                    />
+                                ))
+                            ) : (
+                                <p className="text-muted-foreground text-sm py-2">
+                                    No judges assigned
+                                </p>
+                            )}
+                        </div>
+                    </section>
 
-            <InviteUsersToClassroomDialog
-                classroom={classroom}
-                roleOfUserToInvite={inviteUserDialogRole}
-                setRoleOfUserToInvite={setInviteUserDialogRole}
-            />
+                    <Separator />
 
-            <DeleteClassroomUserDialog
-                classroom={classroom}
-                user={userToDelete}
-                setUser={setUserToDelete}
-            />
-        </Card>
+                    <section>
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold mb-2">
+                                Students ({students.length})
+                            </h3>
+                            {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setInviteUserDialogRole(
+                                            CLASSROOM_ROLE_STUDENT
+                                        )
+                                    }
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            {students.length > 0 ? (
+                                students.map((student) => (
+                                    <PersonRow
+                                        key={student.id || student.email}
+                                        person={student}
+                                        showDeleteButton={
+                                            classroom.role ==
+                                            CLASSROOM_ROLE_TEACHER
+                                        }
+                                        setUserToDelete={setUserToDelete}
+                                    />
+                                ))
+                            ) : (
+                                <p className="text-muted-foreground text-sm py-2">
+                                    No students enrolled
+                                </p>
+                            )}
+                        </div>
+                    </section>
+                </CardContent>
+
+                <InviteUsersToClassroomDialog
+                    classroom={classroom}
+                    roleOfUserToInvite={inviteUserDialogRole}
+                    setRoleOfUserToInvite={setInviteUserDialogRole}
+                />
+
+                <DeleteClassroomUserDialog
+                    classroom={classroom}
+                    user={userToDelete}
+                    setUser={setUserToDelete}
+                />
+            </Card>
+        </>
     )
 }
 

@@ -1,4 +1,4 @@
-import { ClassroomUserDetail } from './auth'
+import { ClassroomUserDetail, UserEssentialDetail } from './auth'
 
 export type Classroom = {
     id: string
@@ -61,7 +61,81 @@ export const ALL_CLASSROOM_ROLES = [
     CLASSROOM_ROLE_STUDENT,
 ] as const
 
+export const SCORING_TYPE_RANGE = 'range'
+export const SCORING_TYPE_RUBRIC = 'rubric'
+
+export const SCORING_TYPES = [SCORING_TYPE_RANGE, SCORING_TYPE_RUBRIC] as const
+
 export type ClassroomRole =
     | typeof CLASSROOM_ROLE_TEACHER
     | typeof CLASSROOM_ROLE_JUDGE
     | typeof CLASSROOM_ROLE_STUDENT
+
+export type Category = {
+    id: string
+    classroom_id: string
+    name: string
+    score_percentage: number
+    created_at: string
+    updated_at: string
+}
+
+export type Grouping = {
+    id: string
+    classroom_id: string
+    name: string
+    description: string
+    is_default: boolean
+    created_at: string
+    updated_at: string
+}
+
+export type Group = {
+    id: string
+    name: string
+    grouping_id: string
+    created_at: string
+    updated_at: string
+}
+
+export type GroupMember = {
+    id: string
+    group_id: string
+    user_id: string
+    created_at: string
+    updated_at: string
+}
+
+export type Activity = {
+    id: string
+    classroom_id: string
+    title: string
+    description: string
+    category_id: string | null
+    grouping_id: string | null
+    rubric_id: string | null
+    scoring_type: string | null
+    max_score: number | null
+    posted_by: string
+    files: CustomFile[]
+    created_at: string
+    updated_at: string
+}
+
+export type CustomFile = {
+    id: string
+    file_path: string
+    file_name: string
+    file_size: number
+    created_at: string
+}
+
+export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
+    users: UserEssentialDetail[]
+}
+
+export type GetActivity = Activity & {
+    posted_by_user: ClassroomUserDetail
+    groups: GetGroup[] | null
+    group: GetGroup | null
+}

@@ -49,16 +49,11 @@ export default function AuthProvider({
         }
 
         async function handleRefreshSession() {
-            console.log({
-                sessionFetched,
-                refreshToken: session.refreshToken,
-            })
             if (!(sessionFetched && session.refreshToken)) {
                 return
             }
 
             if (!session.isAuthenticated) {
-                console.log('Refreshing because unauthenticated')
                 await refreshSession()
             } else {
                 const refreshToken = await getDataFromToken(
@@ -76,9 +71,6 @@ export default function AuthProvider({
                     refreshTokenExpiry <
                     new Date(new Date().getTime() + REFRESH_TOKEN_LIFETIME / 2)
                 ) {
-                    console.log(
-                        'Refreshing because refresh token expiry is less than half of its lifetime'
-                    )
                     // then we should refresh the token
                     refreshSession()
                 }

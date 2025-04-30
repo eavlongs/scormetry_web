@@ -42,10 +42,12 @@ export function CreateClassroomDialog({
     const [validationError, setValidationError] = useState<ValidationError[]>(
         []
     )
+    const [loading, setLoading] = useState(false)
     const router = useRouter()
 
     async function handleSubmit() {
         setValidationError([])
+        setLoading(true)
         if (nameRef.current?.value) {
             const response = await createClassroom(nameRef.current.value, color)
 
@@ -56,14 +58,10 @@ export function CreateClassroomDialog({
                     router.push(`/classroom/${response.data.classroom.id}`)
                 return
             }
-            if (
-                response.message === VALIDATION_ERROR_MESSAGE &&
-                response.error
-            ) {
+            if (response.message === VALIDATION_ERROR_MESSAGE && response.error)
                 setValidationError(response.error)
-                return
-            }
-            toast.error(response.message)
+            else toast.error(response.message)
+            setLoading(false)
         }
     }
 
@@ -149,7 +147,9 @@ export function CreateClassroomDialog({
                 </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button onClick={handleSubmit}>Create</Button>
+                    <Button onClick={handleSubmit} disabled={loading}>
+                        {loading ? 'Creating...' : 'Create'}
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

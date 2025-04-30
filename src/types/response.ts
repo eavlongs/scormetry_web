@@ -11,7 +11,8 @@ export type ValidationError = {
 }
 
 export const VALIDATION_ERROR = 'validation'
-export const VALIDATION_ERROR_MESSAGE = 'Validation Error'
+export const VALIDATION_ERROR_MESSAGE =
+    'Validation failed. Please check your input.'
 
 export type ActionResponse<T = any, U = ValidationError[]> = {
     success: boolean
