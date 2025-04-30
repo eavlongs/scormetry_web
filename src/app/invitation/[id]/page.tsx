@@ -1,16 +1,23 @@
 import { Button } from '@/components/ui/button'
+import { getSession } from '@/lib/session'
+import { getKeysFromValidationError } from '@/lib/utils'
 import { KEYOF_ERR_NOT_INTENDED_USER_FOR_INVITATION } from '@/types/response'
+import assert from 'assert'
 import { XIcon } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { acceptInvitation } from './actions'
 import ChangeAccountButton from './change-account-button'
-import { getKeysFromValidationError } from '@/lib/utils'
 
 export default async function Page({ params }: { params: { id: string } }) {
     const { id } = await params
 
     const response = await acceptInvitation(id)
+    const session = await getSession()
+
+    assert(session, 'session should not be null')
+    assert(session.user, 'session.user should not be null')
 
     if (response.success) {
         if (response.data)
@@ -29,7 +36,38 @@ export default async function Page({ params }: { params: { id: string } }) {
                     </div>
                 </div>
 
-                <p className="text-gray-600 mb-8">{response.message}</p>
+                <div className="mb-8">
+                    <p className="text-gray-600">{response.message}</p>
+                    {response.error &&
+                        getKeysFromValidationError(response.error).includes(
+                            KEYOF_ERR_NOT_INTENDED_USER_FOR_INVITATION
+                        ) && (
+                            <div className="flex flex-col items-center justify-center mt-4">
+                                <p className="text-gray-600">
+                                    Currently logged in as:
+                                </p>
+                                <div className="flex items-center space-x-2 mt-2">
+                                    <div className="relative h-8 w-8 cursor-pointer">
+                                        <Image
+                                            src={session.user.profile_picture}
+                                            alt={
+                                                session.user.first_name +
+                                                ' ' +
+                                                session.user.last_name
+                                            }
+                                            fill
+                                            className="rounded-full"
+                                        />
+                                    </div>
+                                    <span className="text-sm text-muted-foreground">
+                                        {session.user.first_name +
+                                            ' ' +
+                                            session.user.last_name}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                </div>
 
                 <div>
                     <Link href="/">
