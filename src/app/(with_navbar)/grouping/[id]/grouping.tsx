@@ -5,7 +5,7 @@ import { useWarnIfUnsavedChanges } from '@/hooks/useWarnIfUnsavedChanges'
 import type { UserEssentialDetail } from '@/types/auth'
 import { SP_AFTER_SAVE_KEY, SP_DATA_KEY } from '@/types/general'
 import ld from 'lodash'
-import { ArrowLeft, Plus, Save } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -16,6 +16,7 @@ import { GetGroupingDetailResponse, saveGroupingComposition } from './actions'
 import { CreateGroupDialog } from './create-group-dialog'
 import { DeleteGroupDialog } from './delete-group-dialog'
 import GroupTable from './group-table'
+import GroupingActionButtons from './grouping-action-buttons'
 import UngroupedStudents from './ungrouped-students'
 
 export default function Grouping({
@@ -200,40 +201,14 @@ export default function Grouping({
                             Back to {classroom.name}
                         </Link>
 
-                        <div className="flex gap-2 w-full sm:w-auto">
-                            <Button
-                                onClick={() => setIsCreateGroupOpen(true)}
-                                className="flex items-center gap-2 flex-1 sm:flex-none"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Create Group
-                            </Button>
-                            <Button
-                                onClick={handleDiscardChange}
-                                variant="destructive"
-                                className="flex items-center gap-2 flex-1 sm:flex-none"
-                                disabled={
-                                    discardingChange ||
-                                    !hasDataChanged ||
-                                    saving
-                                }
-                            >
-                                <Save className="h-4 w-4" />
-                                Discard Change
-                            </Button>
-                            <Button
-                                onClick={handleSaveChanges}
-                                className="flex items-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-500 hover:text-gray-100"
-                                disabled={
-                                    saving ||
-                                    !hasDataChanged ||
-                                    discardingChange
-                                }
-                            >
-                                <Save className="h-4 w-4" />
-                                {saving ? 'Saving...' : 'Save Changes'}
-                            </Button>
-                        </div>
+                        <GroupingActionButtons
+                            saving={saving}
+                            discardingChange={discardingChange}
+                            onCreateGroup={() => setIsCreateGroupOpen(true)}
+                            onDiscardChange={handleDiscardChange}
+                            onSaveChanges={handleSaveChanges}
+                            hasDataChanged={hasDataChanged}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
