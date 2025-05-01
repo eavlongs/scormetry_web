@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { GetGroupingDetailResponse, saveGroupingComposition } from './actions'
 import { CreateGroupDialog } from './create-group-dialog'
 import { DeleteGroupDialog } from './delete-group-dialog'
+import DiscardSaveButtons from './discard-save-buttons'
 import GroupTable from './group-table'
 import GroupingActionButtons from './grouping-action-buttons'
 import UngroupedStudents from './ungrouped-students'
@@ -140,6 +141,15 @@ export default function Grouping({
         setDiscardingChange(false)
     }
 
+    function handleImportGroups(
+        groups: GetGroupingDetailResponse['groups'],
+        availableStudents: UserEssentialDetail[]
+    ) {
+        setGroups(groups)
+        setUngroupedStudents(availableStudents)
+        toast.success('Groups imported successfully')
+    }
+
     async function handleSaveChanges() {
         setSaving(true)
         const groupsCheckpoint = structuredClone(groups)
@@ -202,12 +212,9 @@ export default function Grouping({
                         </Link>
 
                         <GroupingActionButtons
-                            saving={saving}
-                            discardingChange={discardingChange}
+                            groupingDetail={groupingDetail}
                             onCreateGroup={() => setIsCreateGroupOpen(true)}
-                            onDiscardChange={handleDiscardChange}
-                            onSaveChanges={handleSaveChanges}
-                            hasDataChanged={hasDataChanged}
+                            onImport={handleImportGroups}
                         />
                     </div>
 
@@ -249,9 +256,6 @@ export default function Grouping({
 
                         {/* TODO: make this position absolute, and scrollable */}
                         <div className="h-full flex flex-col min-h-[250px] lg:min-h-[80dvh] lg:col-span-3">
-                            {/* <h2 className="text-lg font-semibold mb-3 sticky top-0 bg-background z-10">
-                            Ungrouped Students
-                        </h2> */}
                             <div className="flex-grow">
                                 <UngroupedStudents
                                     students={ungroupedStudents}
@@ -277,6 +281,15 @@ export default function Grouping({
                                         )
                                     }}
                                     groups={groups}
+                                />
+                            </div>
+                            <div className="flex gap-2 w-full sm:w-auto ml-auto mt-4">
+                                <DiscardSaveButtons
+                                    saving={saving}
+                                    onDiscardChange={handleDiscardChange}
+                                    onSaveChanges={handleSaveChanges}
+                                    hasDataChanged={hasDataChanged}
+                                    discardingChange={discardingChange}
                                 />
                             </div>
                         </div>

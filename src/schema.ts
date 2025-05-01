@@ -6,7 +6,11 @@ import {
     SCORING_TYPE_RUBRIC,
     SCORING_TYPES,
 } from './types/classroom'
-import { MAX_REQUEST_BODY_SIZE_MB } from './types/general'
+import {
+    ACCEPTED_IMPORT_FILE_TYPES,
+    MAX_IMPORT_FILE_SIZE_MB,
+    MAX_REQUEST_BODY_SIZE_MB,
+} from './types/general'
 
 export const ClassroomSchema = z.object({
     name: z.string().min(2).max(150),
@@ -315,6 +319,32 @@ export const EditActivitySchema = z
             message: 'Maximum files allowed is 5',
         }
     )
+
+export const ImportGroupFileUploadSchema = z.object({
+    file: z.instanceof(File).superRefine((f, ctx) => {
+        if (f.size >= MAX_IMPORT_FILE_SIZE_MB * 1024 * 1024) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.too_big,
+                message: `Maximum file size is ${MAX_IMPORT_FILE_SIZE_MB}MB, received ${(f.size / (1024 * 1024)).toFixed(2)}MB`,
+                path: ['file'],
+                maximum: MAX_IMPORT_FILE_SIZE_MB,
+                inclusive: true,
+                type: 'number',
+            })
+            return
+        }
+
+        if (!ACCEPTED_IMPORT_FILE_TYPES.includes(f.type)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `Invalid file type. Supported file types are: ${ACCEPTED_IMPORT_FILE_TYPES.join(
+                    ', '
+                )}`,
+                path: ['file'],
+            })
+        }
+    }),
+})
 
 export const customErrorMap: z.ZodErrorMap = (
     issue: z.ZodIssueOptionalMessage,

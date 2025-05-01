@@ -11,7 +11,7 @@ export default async function Page({ params }: { params: { id: string } }) {
     }
 
     return (
-        <main className="pt-2">
+        <main className="pt-2 h-full">
             <Grouping groupingDetail={groupingDetail} />
         </main>
     )

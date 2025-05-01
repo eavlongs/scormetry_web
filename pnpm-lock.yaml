@@ -132,6 +132,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.17.24
+      '@types/papaparse':
+        specifier: ^5.3.15
+        version: 5.3.15
       '@types/react':
         specifier: ^19
         version: 19.0.10
@@ -144,6 +147,9 @@ importers:
       eslint-config-next:
         specifier: 15.2.2
         version: 15.2.2(eslint@9.22.0(jiti@2.4.2))(typescript@5.8.2)
+      papaparse:
+        specifier: ^5.5.2
+        version: 5.5.2
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -1183,6 +1189,9 @@ packages:
   '@types/node@20.17.24':
     resolution: {integrity: sha512-d7fGCyB96w9BnWQrOsJtpyiSaBcAYYr75bnK6ZRjDbql2cGLj/3GsL5OYmLPNq76l7Gf2q4Rv9J2o6h5CrD9sA==}
 
+  '@types/papaparse@5.3.15':
+    resolution: {integrity: sha512-JHe6vF6x/8Z85nCX4yFdDslN11d+1pr12E526X8WAfhadOeaOTx5AuIkvDKIBopfvlzpzkdMx4YyvSKCM9oqtw==}
+
   '@types/react-dom@19.0.4':
     resolution: {integrity: sha512-4fSQ8vWFkg+TGhePfUzVmat3eC14TXYSsiiDSLI0dVLsrm9gZFABjPy/Qu6TKgl1tq1Bu1yDsuQgY3A3DOjCcg==}
     peerDependencies:
@@ -2193,6 +2202,9 @@ packages:
   p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
+
+  papaparse@5.5.2:
+    resolution: {integrity: sha512-PZXg8UuAc4PcVwLosEEDYjPyfWnTEhOrUfdv+3Bx+NuAb+5NhDmXzg5fHWmdCh1mP5p7JAZfFr3IMQfcntNAdA==}
 
   parchment@3.0.0:
     resolution: {integrity: sha512-HUrJFQ/StvgmXRcQ1ftY6VEZUq3jA2t9ncFN4F84J/vN0/FPpQF+8FKXb3l6fLces6q0uOHj6NJn+2xvZnxO6A==}
@@ -3543,6 +3555,10 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
+  '@types/papaparse@5.3.15':
+    dependencies:
+      '@types/node': 20.17.24
+
   '@types/react-dom@19.0.4(@types/react@19.0.10)':
     dependencies:
       '@types/react': 19.0.10
@@ -4766,6 +4782,8 @@ snapshots:
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
+
+  papaparse@5.5.2: {}
 
   parchment@3.0.0: {}
 
