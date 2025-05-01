@@ -1,6 +1,11 @@
 import { ImportGroupFileUploadSchema } from '@/schema'
-import { CSV_MIME_TYPE } from '@/types/general'
+import {
+    CSV_MIME_TYPE,
+    EXCEL_MIME_TYPE,
+    EXCEL_XLSX_MIME_TYPE,
+} from '@/types/general'
 import { CSVReader } from './csv-reader'
+import { ExcelReader } from './excel-reader'
 
 /**
  * to be used on the client.
@@ -37,6 +42,14 @@ export class TextFileReader {
                     this.maxRows
                 )
                 break
+            case EXCEL_MIME_TYPE:
+            case EXCEL_XLSX_MIME_TYPE:
+                this.reader = new ExcelReader(
+                    this.file,
+                    this.numOfCols,
+                    this.maxRows
+                )
+                break
             default:
                 throw new Error('File type not supported')
         }
@@ -47,6 +60,7 @@ export class TextFileReader {
     }
 
     async init() {
+        console.log('initing')
         await this.reader.init()
     }
 
