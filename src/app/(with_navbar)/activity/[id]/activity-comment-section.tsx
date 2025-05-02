@@ -20,7 +20,7 @@ export default function ActivityCommentSection({
                     <div className="flex gap-3">
                         <div className="relative h-8 w-8 flex-shrink-0">
                             <Image
-                                src="/placeholder-avatar.jpg" // Replace with actual avatar
+                                src="/user_placeholder.png"
                                 alt="Teacher"
                                 fill
                                 className="rounded-full"
@@ -48,7 +48,7 @@ export default function ActivityCommentSection({
                             <Image
                                 src={
                                     activity.posted_by_user.profile_picture ??
-                                    'user.png'
+                                    'user_placeholder.png'
                                 }
                                 alt="Student"
                                 fill
@@ -76,7 +76,7 @@ export default function ActivityCommentSection({
                         <Image
                             src={
                                 activity.posted_by_user.profile_picture ??
-                                'user.png'
+                                'user_placeholder.png'
                             }
                             alt="You"
                             fill

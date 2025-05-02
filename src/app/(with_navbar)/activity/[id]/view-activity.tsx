@@ -15,6 +15,7 @@ import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import ActivityCommentSection from './activity-comment-section'
 import ActivityGroups from './activity-groups'
 import ActivityScoreview from './activity-score-view'
+import ActivityStudents from './activity-students'
 
 export default function ViewActivity({
     activity,
@@ -173,6 +174,8 @@ export default function ViewActivity({
 
                 {activity.groups ? (
                     <ActivityGroups groups={activity.groups} />
+                ) : activity.students ? (
+                    <ActivityStudents activity={activity} />
                 ) : (
                     <>
                         <ActivityScoreview activity={activity} />

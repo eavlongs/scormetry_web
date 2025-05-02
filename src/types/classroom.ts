@@ -136,5 +136,6 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
 export type GetActivity = Activity & {
     posted_by_user: ClassroomUserDetail
     groups: GetGroup[] | null
+    students: UserEssentialDetail[]
     group: GetGroup | null
 }
