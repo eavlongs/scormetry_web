@@ -1,6 +1,8 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
     Collapsible,
     CollapsibleContent,
@@ -8,15 +10,30 @@ import {
 } from '@/components/ui/collapsible'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { UserEssentialDetail } from '@/types/auth'
 import { GetGroup } from '@/types/classroom'
 import { ChevronDown, Users } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { toast } from 'sonner'
+import { assignJudgesToGroup } from './actions'
+import AssignJudgeAll from './assign-judge-all'
+import { AssignJudgeDialog } from './assign-jugde-dialog'
 
-export default function ActivityGroups({ groups }: { groups: GetGroup[] }) {
+export default function ActivityGroups({
+    activityID,
+    groups,
+    judges,
+}: {
+    activityID: string
+    groups: GetGroup[]
+    judges: UserEssentialDetail[]
+}) {
     const [openGroups, setOpenGroups] = useState<string[]>([])
+    const [groupToAssignJudges, setGroupToAssignJudges] =
+        useState<GetGroup | null>()
 
-    const toggleGroup = (groupId: string) => {
+    function toggleGroup(groupId: string) {
         setOpenGroups((prev) =>
             prev.includes(groupId)
                 ? prev.filter((id) => id !== groupId)
@@ -24,15 +41,35 @@ export default function ActivityGroups({ groups }: { groups: GetGroup[] }) {
         )
     }
 
+    async function handleAssignJudges(judgesId: string[]) {
+        if (!groupToAssignJudges) return
+
+        const response = await assignJudgesToGroup(
+            activityID,
+            groupToAssignJudges.id,
+            judgesId
+        )
+
+        if (response.success) {
+            toast.success(response.message)
+            setGroupToAssignJudges(null)
+        } else {
+            toast.error(response.message)
+        }
+    }
+
     return (
         <ScrollArea className="h-[calc(100vh-5rem)]">
-            <div className="pr-4">
-                <div className="flex items-center gap-2 mb-4">
+            <div>
+                <div className="flex items-center gap-2 mb-2">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <h2 className="text-lg font-semibold">Groups</h2>
                     <Badge variant="outline" className="ml-auto">
                         {groups.length} groups
                     </Badge>
+                </div>
+                <div className="mb-4">
+                    <AssignJudgeAll activityID={activityID} judges={judges} />
                 </div>
                 <div className="space-y-3">
                     {groups.map((group) => (
@@ -44,13 +81,18 @@ export default function ActivityGroups({ groups }: { groups: GetGroup[] }) {
                         >
                             <CollapsibleTrigger className="w-full">
                                 <div className="px-4 py-3 border-b bg-muted/40 flex items-center justify-between hover:bg-muted/60 transition-colors cursor-pointer">
-                                    <div className="flex items-center gap-2">
+                                    <div className="w-full flex items-center gap-2 px-2">
                                         <span className="font-medium">
                                             {group.name}
                                         </span>
                                         <Badge variant="secondary">
                                             {group.users.length} members
                                         </Badge>
+                                        <AssignJudgeButton
+                                            onClick={() =>
+                                                setGroupToAssignJudges(group)
+                                            }
+                                        />
                                     </div>
                                     <ChevronDown
                                         className={cn(
@@ -63,35 +105,87 @@ export default function ActivityGroups({ groups }: { groups: GetGroup[] }) {
                             </CollapsibleTrigger>
                             <CollapsibleContent className="divide-y divide-border">
                                 {group.users.map((user) => (
-                                    <div
-                                        key={user.id}
-                                        className="px-4 py-2.5 flex items-center gap-x-3 hover:bg-muted/50 transition-colors"
-                                    >
-                                        <div className="relative h-8 w-8 shrink-0">
-                                            <Image
-                                                src={user.profile_picture}
-                                                alt={`${user.first_name} ${user.last_name}`}
-                                                fill
-                                                className="rounded-full object-cover"
-                                            />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">
-                                                {user.first_name}{' '}
-                                                {user.last_name}
-                                            </p>
+                                    <ListUser user={user} key={user.id} />
+                                ))}
 
-                                            <p className="h-5 px-0 text-xs text-muted-foreground justify-start font-normal truncate max-w-full">
-                                                {user.email}
-                                            </p>
-                                        </div>
-                                    </div>
+                                {group.judges.map((judge) => (
+                                    <ListUser
+                                        user={judge}
+                                        isJudge
+                                        key={judge.id}
+                                    />
                                 ))}
                             </CollapsibleContent>
                         </Collapsible>
                     ))}
                 </div>
             </div>
+            <AssignJudgeDialog
+                open={!!groupToAssignJudges}
+                onClose={() => setGroupToAssignJudges(null)}
+                judges={judges}
+                selectedJudges={
+                    groupToAssignJudges ? groupToAssignJudges.judges : []
+                }
+                onAssignJudges={handleAssignJudges}
+            />
         </ScrollArea>
+    )
+}
+
+function ListUser({
+    user,
+    isJudge = false,
+}: {
+    user: UserEssentialDetail
+    isJudge?: boolean
+}) {
+    return (
+        <div className="px-4 py-2.5 flex items-center gap-x-3 hover:bg-muted/50 transition-colors">
+            <div className="relative h-8 w-8 shrink-0">
+                <Image
+                    src={user.profile_picture}
+                    alt={`${user.first_name} ${user.last_name}`}
+                    fill
+                    className="rounded-full object-cover"
+                />
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium line-clamp-1">
+                    {user.first_name} {user.last_name}
+                    {isJudge && (
+                        <Badge variant="outline" className="ml-2">
+                            Judge
+                        </Badge>
+                    )}
+                </p>
+
+                <p className="h-5 px-0 text-xs text-muted-foreground justify-start font-normal truncate max-w-full">
+                    {user.email}
+                </p>
+            </div>
+        </div>
+    )
+}
+
+function AssignJudgeButton({ onClick }: { onClick: () => void }) {
+    return (
+        <SimpleToolTip text="Assign judge to this group">
+            <Button
+                variant="outline"
+                className="ml-auto"
+                asChild
+                onClick={(e) => {
+                    e.stopPropagation()
+                    onClick()
+                }}
+            >
+                <div>
+                    <Users className="h-5 w-5" />
+                    Assign
+                </div>
+            </Button>
+        </SimpleToolTip>
     )
 }

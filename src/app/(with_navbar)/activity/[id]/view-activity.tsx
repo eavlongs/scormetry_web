@@ -11,6 +11,7 @@ import type { GetActivity } from '@/types/classroom'
 import { ArrowLeft, FileText, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useCallback } from 'react'
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import ActivityCommentSection from './activity-comment-section'
 import ActivityGroups from './activity-groups'
@@ -38,6 +39,27 @@ export default function ViewActivity({
             day: 'numeric',
         })
     }
+
+    const renderSidePanel = useCallback(() => {
+        if (activity.groups) {
+            return (
+                <ActivityGroups
+                    activityID={activity.id}
+                    groups={activity.groups}
+                    judges={activity.judges || []}
+                />
+            )
+        }
+        if (activity.students) {
+            return <ActivityStudents activity={activity} />
+        }
+        return (
+            <>
+                <ActivityScoreview activity={activity} />
+                <ActivityCommentSection activity={activity} />
+            </>
+        )
+    }, [activity.groups, activity.students])
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-10">
@@ -93,10 +115,6 @@ export default function ViewActivity({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {activity.files &&
                         activity.files.length > 0 &&
-                        // <h2 className="text-lg font-semibold mb-2">
-                        //     Attachments
-                        // </h2>
-                        // <div className="space-y-2">
                         activity.files.map((file) => (
                             <div
                                 key={file.id}
@@ -104,7 +122,9 @@ export default function ViewActivity({
                             >
                                 <FileText className="h-5 w-5 text-muted-foreground" />
                                 <div className="flex-1">
-                                    <p className="text-sm">{file.file_name}</p>
+                                    <p className="text-sm line-clamp-1">
+                                        {file.file_name}
+                                    </p>
                                     <p className="text-xs text-muted-foreground">
                                         {formatBytes(file.file_size)}
                                     </p>
@@ -172,16 +192,7 @@ export default function ViewActivity({
                     <Separator orientation="vertical" className="h-full" />
                 </div>
 
-                {activity.groups ? (
-                    <ActivityGroups groups={activity.groups} />
-                ) : activity.students ? (
-                    <ActivityStudents activity={activity} />
-                ) : (
-                    <>
-                        <ActivityScoreview activity={activity} />
-                        <ActivityCommentSection activity={activity} />
-                    </>
-                )}
+                {renderSidePanel()}
             </div>
         </div>
     )

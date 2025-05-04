@@ -13,7 +13,7 @@ export default function ActivityStudents({
 }) {
     return (
         <ScrollArea className="h-[calc(100vh-5rem)]">
-            <div className="pr-4">
+            <div>
                 <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <h2 className="text-lg font-semibold">Students</h2>

@@ -131,11 +131,13 @@ export type CustomFile = {
 
 export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
     users: UserEssentialDetail[]
+    judges: UserEssentialDetail[]
 }
 
 export type GetActivity = Activity & {
     posted_by_user: ClassroomUserDetail
     groups: GetGroup[] | null
-    students: UserEssentialDetail[]
+    students: UserEssentialDetail[] | null
+    judges: UserEssentialDetail[] | null
     group: GetGroup | null
 }
