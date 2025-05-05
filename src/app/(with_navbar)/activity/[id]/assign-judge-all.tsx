@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button'
 import { UserEssentialDetail } from '@/types/auth'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
-import { AssignJudgeDialog } from './assign-jugde-dialog'
-import { assignJudgesToAllGroups } from './actions'
 import { toast } from 'sonner'
+import { assignJudgesToEveryone } from './actions'
+import { AssignJudgeDialog } from './assign-jugde-dialog'
 
 export default function AssignJudgeAll({
     activityID,
@@ -19,7 +19,7 @@ export default function AssignJudgeAll({
     const [open, setOpen] = useState(false)
 
     async function handleAssignJudges(judgesId: string[]) {
-        const response = await assignJudgesToAllGroups(activityID, judgesId)
+        const response = await assignJudgesToEveryone(activityID, judgesId)
 
         if (response.success) {
             toast.success(response.message)

@@ -1,4 +1,5 @@
 import { ClassroomUserDetail, UserEssentialDetail } from './auth'
+import { Prettify } from './general'
 
 export type Classroom = {
     id: string
@@ -137,7 +138,13 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
 export type GetActivity = Activity & {
     posted_by_user: ClassroomUserDetail
     groups: GetGroup[] | null
-    students: UserEssentialDetail[] | null
+    students:
+        | Prettify<
+              UserEssentialDetail & {
+                  judges: UserEssentialDetail[]
+              }
+          >[]
+        | null
     judges: UserEssentialDetail[] | null
     group: GetGroup | null
 }

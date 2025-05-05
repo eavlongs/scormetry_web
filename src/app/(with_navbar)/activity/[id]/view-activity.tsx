@@ -51,7 +51,12 @@ export default function ViewActivity({
             )
         }
         if (activity.students) {
-            return <ActivityStudents activity={activity} />
+            return (
+                <ActivityStudents
+                    activity={activity}
+                    judges={activity.judges || []}
+                />
+            )
         }
         return (
             <>

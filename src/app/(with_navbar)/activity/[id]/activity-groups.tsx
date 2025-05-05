@@ -1,8 +1,6 @@
 'use client'
 
-import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
     Collapsible,
     CollapsibleContent,
@@ -18,6 +16,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { assignJudgesToGroup } from './actions'
 import AssignJudgeAll from './assign-judge-all'
+import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
 
 export default function ActivityGroups({
@@ -133,7 +132,7 @@ export default function ActivityGroups({
     )
 }
 
-function ListUser({
+export function ListUser({
     user,
     isJudge = false,
 }: {
@@ -166,26 +165,5 @@ function ListUser({
                 </p>
             </div>
         </div>
-    )
-}
-
-function AssignJudgeButton({ onClick }: { onClick: () => void }) {
-    return (
-        <SimpleToolTip text="Assign judge to this group">
-            <Button
-                variant="outline"
-                className="ml-auto"
-                asChild
-                onClick={(e) => {
-                    e.stopPropagation()
-                    onClick()
-                }}
-            >
-                <div>
-                    <Users className="h-5 w-5" />
-                    Assign
-                </div>
-            </Button>
-        </SimpleToolTip>
     )
 }

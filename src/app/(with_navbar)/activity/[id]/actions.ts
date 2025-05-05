@@ -39,7 +39,41 @@ export async function assignJudgesToGroup(
     }
 }
 
-export async function assignJudgesToAllGroups(
+export async function assignJudgesToStudent(
+    activityId: string,
+    studentId: string,
+    judgesId: string[]
+): Promise<
+    ActionResponse<{
+        judges: UserEssentialDetail[]
+    }>
+> {
+    try {
+        const response = await apiWithAuth.post<
+            ApiResponse<{
+                judges: UserEssentialDetail[]
+            }>
+        >(`/activity/${activityId}/assign-judge/student`, {
+            student_id: studentId,
+            judges_id: judgesId,
+        })
+
+        revalidatePath('/activity/' + activityId)
+        return {
+            success: true,
+            message: response.data.message,
+            data: response.data.data,
+        }
+    } catch (e: any) {
+        return {
+            success: false,
+            message:
+                e.response.data.message || 'Failed to assign judges to group',
+        }
+    }
+}
+
+export async function assignJudgesToEveryone(
     activityId: string,
     judgesId: string[]
 ): Promise<
@@ -52,7 +86,7 @@ export async function assignJudgesToAllGroups(
             ApiResponse<{
                 judges: UserEssentialDetail[]
             }>
-        >(`/activity/${activityId}/assign-judge/all-groups`, {
+        >(`/activity/${activityId}/assign-judge/all`, {
             judges_id: judgesId,
         })
 
