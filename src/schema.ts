@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { z } from 'zod'
 import {
     ALL_CLASSROOM_ROLES,
@@ -344,6 +345,87 @@ export const ImportGroupFileUploadSchema = z.object({
             })
         }
     }),
+})
+
+export const RubricCriteriaScoreRangeSchema = z
+    .object({
+        name: z.string().min(1, 'Score range name is required'),
+        description: z.string().max(255).optional(),
+        min_score: z.coerce.number().int().nonnegative(),
+        max_score: z.coerce.number().int().nonnegative(),
+    })
+    .superRefine((val, ctx) => {
+        if (val.min_score >= val.max_score) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.too_big,
+                message:
+                    'Min score cannot be greater than or equal to max score',
+                path: ['min_score'],
+                maximum: val.max_score,
+                inclusive: false,
+                type: 'number',
+            })
+            return
+        }
+    })
+
+export const RubricCriteriaSchema = z.object({
+    name: z.string().min(1, 'Criteria name is required'),
+    description: z.string().max(255).optional(),
+    criteria_score_range: z
+        .array(RubricCriteriaScoreRangeSchema)
+        .min(1, 'At least 1 score range is required')
+        .superRefine((val, ctx) => {
+            assert(val.length > 0)
+            let last = val[0].max_score
+
+            for (let i = 1; i < val.length; i++) {
+                const scoreRange = val[i]
+
+                if (scoreRange.min_score != last + 1) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: `Score ranges must be continuous and non-overlapping. This minimum score here should be ${scoreRange.min_score + 1}`,
+                        path: ['criteria_score_range', i, 'min_score'],
+                    })
+                    return
+                }
+            }
+        }),
+})
+
+export const RubricSectionSchema = z.object({
+    name: z.string().min(1, 'Section name is required').max(50),
+    description: z.string().max(255).optional(),
+    is_group_score: z.boolean(),
+    score_percentage: z.coerce.number().nonnegative().lte(100),
+    criteria: z
+        .array(RubricCriteriaSchema)
+        .min(1, 'At least 1 criteria is required'),
+})
+
+export const RubricSchema = z.object({
+    remarks: z.string().optional(),
+    sections: z
+        .array(RubricSectionSchema)
+        .min(1, 'At least 1 section is required')
+        .superRefine((val, ctx) => {
+            assert(val.length > 0)
+            let totalPercentage = 0
+
+            for (const section of val) {
+                totalPercentage += section.score_percentage
+            }
+
+            if (totalPercentage !== 100) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `Total score percentage must be 100%. Current total is ${totalPercentage}%`,
+                    path: ['sections'],
+                })
+                return
+            }
+        }),
 })
 
 export const customErrorMap: z.ZodErrorMap = (
