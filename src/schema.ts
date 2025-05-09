@@ -440,6 +440,10 @@ export const customErrorMap: z.ZodErrorMap = (
     console.log(issue)
     switch (issue.code) {
         case z.ZodIssueCode.invalid_type:
+            if (issue.expected === 'number' && issue.received === 'nan') {
+                message = 'This field must be a number'
+                break
+            }
             if (issue.received === 'undefined' || issue.received === 'null') {
                 message = 'This field is required'
             } else {

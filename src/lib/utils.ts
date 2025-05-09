@@ -1,6 +1,7 @@
 import { classroomColorsWithType } from '@/types/classroom'
 import {
     ActionResponse,
+    NestedPathValidationError,
     VALIDATION_ERROR_MESSAGE,
     ValidationError,
 } from '@/types/response'
@@ -46,6 +47,34 @@ export async function copyUrlToClipboard(path: string) {
     await copyToClipboard(url)
 }
 
+export function convertZodErrorToValidationErrorWithNestedPath<T>(
+    err: ZodError<T>
+): NestedPathValidationError[] {
+    if (!(err instanceof ZodError)) return []
+
+    const issues = err.issues
+    const validationErrors: NestedPathValidationError[] = []
+
+    for (const i in issues) {
+        const path = issues[i].path
+
+        if (!path) {
+            validationErrors.push({
+                field: [i + 1],
+                message: issues[i].message,
+            })
+            continue
+        }
+
+        validationErrors.push({
+            field: path,
+            message: issues[i].message,
+        })
+    }
+
+    return validationErrors
+}
+
 export function convertZodErrorToValidationError<T>(
     err: ZodError<T>
 ): ValidationError[] {
@@ -84,17 +113,20 @@ export function convertZodErrorToValidationError<T>(
 
 export function getErrorMessageFromValidationError(
     e: ValidationError[],
-    key: string | string[]
+    key: string
 ): string {
-    if (Array.isArray(key)) {
-        const error = e.find((error) => key.includes(error.field))
-        if (error) {
-            return error.message
-        }
-        return ''
-    }
-
     const error = e.find((error) => error.field === key)
+    if (error) {
+        return error.message
+    }
+    return ''
+}
+
+export function getErrorMessageFromNestedPathValidationError(
+    e: NestedPathValidationError[],
+    key: (string | number)[]
+): string {
+    const error = e.find((e) => e.field.join('.') === key.join('.'))
     if (error) {
         return error.message
     }

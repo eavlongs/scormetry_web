@@ -10,19 +10,25 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import {
+    cn,
+    convertZodErrorToValidationErrorWithNestedPath,
+    getErrorMessageFromNestedPathValidationError,
+} from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import { Prettify } from '@/types/general'
+import { NestedPathValidationError } from '@/types/response'
+import assert from 'assert'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { Delta } from 'quill'
 import {
     createContext,
     SetStateAction,
     useContext,
-    useEffect,
     useRef,
     useState,
 } from 'react'
+import { ZodError } from 'zod'
 import QuillEditor from './quill-editor'
 import { LabelWrapper } from './ui/label-wrapper'
 
@@ -53,6 +59,7 @@ interface RubricBuilderDialogProps {
 
 type RubricBuilderContextType = {
     sections: Section[]
+    errors: NestedPathValidationError[]
     setSections: React.Dispatch<SetStateAction<Section[]>>
     addSection: () => void
     updateSectionName: (sectionIndex: number, name: string) => void
@@ -119,6 +126,7 @@ const rubricBuilderDefaultValue: RubricBuilderContextType = {
             ],
         },
     ],
+    errors: [],
     setSections: () => {},
     addSection: () => {},
     updateSectionName: () => {},
@@ -153,6 +161,7 @@ export function RubricBuilderDialog({
     > | null>(null)
 
     const [note, setNote] = useState<Delta>()
+    const [errors, setErrors] = useState<NestedPathValidationError[]>([])
 
     const addCriteria = (sectionIndex: number) => {
         setSections((prev) => {
@@ -177,14 +186,6 @@ export function RubricBuilderDialog({
             return updatedSections
         })
     }
-
-    useEffect(() => {
-        console.log(sections)
-    }, [sections])
-
-    useEffect(() => {
-        console.log(sections)
-    }, [sections])
 
     const updateCriteriaName = (
         sectionIndex: number,
@@ -360,6 +361,7 @@ export function RubricBuilderDialog({
         <RubricBuilderContext.Provider
             value={{
                 sections,
+                errors,
                 setSections,
                 addSection,
                 updateSectionName,
@@ -440,7 +442,17 @@ export function RubricBuilderDialog({
                                     })
                                     console.log(data)
                                 } catch (e) {
-                                    console.log(e)
+                                    assert(e instanceof ZodError)
+                                    setErrors(
+                                        convertZodErrorToValidationErrorWithNestedPath(
+                                            e
+                                        )
+                                    )
+                                    console.log(
+                                        convertZodErrorToValidationErrorWithNestedPath(
+                                            e
+                                        )
+                                    )
                                 }
                             }}
                         >
@@ -619,19 +631,36 @@ export function RubricCriteria({
                                 <Trash2 />
                             </Button>
                         )}
-                        <Input
-                            value={criteria.name}
-                            onChange={(e) =>
-                                ctx.updateCriteriaName(
+                        <LabelWrapper
+                            label={null}
+                            error={getErrorMessageFromNestedPathValidationError(
+                                ctx.errors,
+                                [
+                                    'sections',
                                     sectionIndex,
+                                    'criterias',
                                     index,
-                                    e.target.value
-                                )
-                            }
-                            maxLength={50}
-                            className="text-sm font-medium w-48"
-                            placeholder="Criteria name"
-                        />
+                                    'name',
+                                ]
+                            )}
+                            options={{
+                                error_display: 'tooltip',
+                            }}
+                        >
+                            <Input
+                                value={criteria.name}
+                                onChange={(e) =>
+                                    ctx.updateCriteriaName(
+                                        sectionIndex,
+                                        index,
+                                        e.target.value
+                                    )
+                                }
+                                maxLength={50}
+                                className="text-sm font-medium w-48"
+                                placeholder="Criteria name"
+                            />
+                        </LabelWrapper>
                     </div>
 
                     {/* Score range blocks */}
@@ -643,19 +672,38 @@ export function RubricCriteria({
                                     className="border p-3 flex-shrink-0 relative"
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <Input
-                                            value={range.name}
-                                            onChange={(e) =>
-                                                ctx.updateScoreRangeLabel(
+                                        <LabelWrapper
+                                            label={null}
+                                            error={getErrorMessageFromNestedPathValidationError(
+                                                ctx.errors,
+                                                [
+                                                    'sections',
                                                     sectionIndex,
+                                                    'criterias',
                                                     index,
+                                                    'criteria_score_range',
                                                     rangeIndex,
-                                                    e.target.value
-                                                )
-                                            }
-                                            placeholder="Score Label"
-                                            className="border-0 p-0 h-auto max-w-[180px] focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400"
-                                        />
+                                                    'name',
+                                                ]
+                                            )}
+                                            options={{
+                                                error_display: 'tooltip',
+                                            }}
+                                        >
+                                            <Input
+                                                value={range.name}
+                                                onChange={(e) =>
+                                                    ctx.updateScoreRangeLabel(
+                                                        sectionIndex,
+                                                        index,
+                                                        rangeIndex,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                placeholder="Score Label"
+                                                className="border-0 p-1 h-auto max-w-[180px] focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400"
+                                            />
+                                        </LabelWrapper>
 
                                         {criteria.criteria_score_range.length >
                                             1 && (
@@ -677,60 +725,121 @@ export function RubricCriteria({
                                     </div>
 
                                     <div className="flex items-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                        <Input
-                                            type="number"
-                                            value={range.min_score}
-                                            onChange={(e) =>
-                                                ctx.updateScoreRangeMin(
+                                        <LabelWrapper
+                                            label={null}
+                                            error={getErrorMessageFromNestedPathValidationError(
+                                                ctx.errors,
+                                                [
+                                                    'sections',
                                                     sectionIndex,
+                                                    'criterias',
                                                     index,
+                                                    'criteria_score_range',
                                                     rangeIndex,
-                                                    Number.parseInt(
-                                                        e.target.value
-                                                    ) ?? 0
-                                                )
-                                            }
-                                            min={0}
-                                            max={1000}
-                                            maxLength={4}
-                                            className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
-                                        />
+                                                    'min_score',
+                                                ]
+                                            )}
+                                            options={{
+                                                error_display: 'tooltip',
+                                            }}
+                                        >
+                                            <Input
+                                                type="number"
+                                                defaultValue={
+                                                    range.min_score ?? ''
+                                                }
+                                                onBlur={(e) =>
+                                                    ctx.updateScoreRangeMin(
+                                                        sectionIndex,
+                                                        index,
+                                                        rangeIndex,
+                                                        Number.parseInt(
+                                                            e.target.value || ''
+                                                        )
+                                                    )
+                                                }
+                                                min={0}
+                                                max={1000}
+                                                maxLength={4}
+                                                className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
+                                            />
+                                        </LabelWrapper>
                                         -
-                                        <Input
-                                            type="number"
-                                            value={range.max_score}
-                                            onChange={(e) =>
-                                                ctx.updateScoreRangeMax(
+                                        <LabelWrapper
+                                            label={null}
+                                            error={getErrorMessageFromNestedPathValidationError(
+                                                ctx.errors,
+                                                [
+                                                    'sections',
                                                     sectionIndex,
+                                                    'criterias',
                                                     index,
+                                                    'criteria_score_range',
                                                     rangeIndex,
-                                                    Number.parseInt(
-                                                        e.target.value
-                                                    ) ?? 0
-                                                )
-                                            }
-                                            min={0}
-                                            max={1000}
-                                            maxLength={4}
-                                            className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
-                                        />
+                                                    'max_score',
+                                                ]
+                                            )}
+                                            options={{
+                                                error_display: 'tooltip',
+                                            }}
+                                        >
+                                            <Input
+                                                type="number"
+                                                defaultValue={
+                                                    range.max_score ?? ''
+                                                }
+                                                onBlur={(e) =>
+                                                    ctx.updateScoreRangeMax(
+                                                        sectionIndex,
+                                                        index,
+                                                        rangeIndex,
+                                                        Number.parseInt(
+                                                            e.target.value || ''
+                                                        )
+                                                    )
+                                                }
+                                                min={0}
+                                                max={1000}
+                                                maxLength={4}
+                                                className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
+                                            />
+                                        </LabelWrapper>
                                         <span className="ml-1">points</span>
                                     </div>
 
-                                    <Textarea
-                                        placeholder="Description (optional)"
-                                        value={range.description}
-                                        onChange={(e) =>
-                                            ctx.updateScoreRangeDescription(
+                                    <LabelWrapper
+                                        label={null}
+                                        error={getErrorMessageFromNestedPathValidationError(
+                                            ctx.errors,
+                                            [
+                                                'sections',
                                                 sectionIndex,
+                                                'criterias',
                                                 index,
+                                                'criteria_score_range',
                                                 rangeIndex,
-                                                e.target.value || ''
-                                            )
-                                        }
-                                        maxLength={255}
-                                        className="min-h-[80px] field-sizing-fixed resize-none text-sm"
-                                    />
+                                                'description',
+                                            ]
+                                        )}
+                                        options={{
+                                            error_display: 'tooltip',
+                                        }}
+                                    >
+                                        <Textarea
+                                            placeholder="Description (optional)"
+                                            value={range.description}
+                                            onChange={(e) =>
+                                                ctx.updateScoreRangeDescription(
+                                                    sectionIndex,
+                                                    index,
+                                                    rangeIndex,
+                                                    e.target.value || ''
+                                                )
+                                            }
+                                            maxLength={255}
+                                            className="min-h-[80px] field-sizing-fixed resize-none text-sm"
+                                        />
+                                    </LabelWrapper>
                                 </div>
                             )
                         )}
