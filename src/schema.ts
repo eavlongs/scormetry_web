@@ -370,8 +370,11 @@ export const RubricCriteriaScoreRangeSchema = z
     })
 
 export const RubricCriteriaSchema = z.object({
-    name: z.string().min(1, 'Criteria name is required'),
-    description: z.string().max(255).optional(),
+    name: z
+        .string()
+        .min(1, 'Criteria name is required')
+        .max(50, 'Criteria name cannot exceed 50 characters'),
+    // description: z.string().max(255).optional(),
     criteria_score_range: z
         .array(RubricCriteriaScoreRangeSchema)
         .min(1, 'At least 1 score range is required')
@@ -399,13 +402,13 @@ export const RubricSectionSchema = z.object({
     description: z.string().max(255).optional(),
     is_group_score: z.boolean(),
     score_percentage: z.coerce.number().nonnegative().lte(100),
-    criteria: z
+    criterias: z
         .array(RubricCriteriaSchema)
         .min(1, 'At least 1 criteria is required'),
 })
 
 export const RubricSchema = z.object({
-    remarks: z.string().optional(),
+    note: z.string().optional(),
     sections: z
         .array(RubricSectionSchema)
         .min(1, 'At least 1 section is required')
@@ -417,7 +420,7 @@ export const RubricSchema = z.object({
                 totalPercentage += section.score_percentage
             }
 
-            if (totalPercentage !== 100) {
+            if (totalPercentage !== 0 && totalPercentage !== 100) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: `Total score percentage must be 100%. Current total is ${totalPercentage}%`,

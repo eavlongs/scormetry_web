@@ -4,13 +4,17 @@ import { Button } from '@/components/ui/button'
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { RubricSchema } from '@/schema'
+import { Prettify } from '@/types/general'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Delta } from 'quill'
 import {
     createContext,
     SetStateAction,
@@ -20,23 +24,26 @@ import {
     useState,
 } from 'react'
 import QuillEditor from './quill-editor'
+import { LabelWrapper } from './ui/label-wrapper'
 
 interface ScoreRange {
-    label: string
-    min: number
-    max: number
+    name: string
+    min_score: number
+    max_score: number
     description: string
 }
 
 interface Criteria {
     name: string
-    scoreRanges: ScoreRange[]
+    criteria_score_range: ScoreRange[]
 }
 
 interface Section {
     name: string
-    criteria: Criteria[]
-    scoringType: 'individual' | 'group'
+    score_percentage: number
+    is_group_score: boolean
+    criterias: Criteria[]
+    description: string
 }
 
 interface RubricBuilderDialogProps {
@@ -50,10 +57,7 @@ type RubricBuilderContextType = {
     addSection: () => void
     updateSectionName: (sectionIndex: number, name: string) => void
     removeSection: (sectionIndex: number) => void
-    updateScoringType: (
-        sectionIndex: number,
-        scoringType: 'individual' | 'group'
-    ) => void
+    updateScoringType: (sectionIndex: number, is_group_score: boolean) => void
     addCriteria: (sectionIndex: number) => void
     updateCriteriaName: (
         sectionIndex: number,
@@ -97,12 +101,19 @@ const rubricBuilderDefaultValue: RubricBuilderContextType = {
     sections: [
         {
             name: 'Section 1',
-            scoringType: 'group',
-            criteria: [
+            score_percentage: 0,
+            is_group_score: true,
+            description: '',
+            criterias: [
                 {
                     name: '',
-                    scoreRanges: [
-                        { label: '', min: 1, max: 5, description: '' },
+                    criteria_score_range: [
+                        {
+                            name: '',
+                            min_score: 1,
+                            max_score: 5,
+                            description: '',
+                        },
                     ],
                 },
             ],
@@ -135,18 +146,41 @@ export function RubricBuilderDialog({
     const [sections, setSections] = useState<Section[]>(
         rubricBuilderDefaultValue.sections
     )
+    const [sectionToEdit, setSectionToEdit] = useState<Prettify<
+        Pick<Section, 'name' | 'score_percentage' | 'description'> & {
+            index: number
+        }
+    > | null>(null)
+
+    const [note, setNote] = useState<Delta>()
 
     const addCriteria = (sectionIndex: number) => {
-        const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria.push({
-            name: 'New Criteria',
-            scoreRanges: [
-                { label: 'Good', min: 1, max: 7, description: '' },
-                { label: 'Very Good', min: 6, max: 10, description: '' },
-            ],
+        setSections((prev) => {
+            const updatedSections = [...prev]
+            updatedSections[sectionIndex] = {
+                ...updatedSections[sectionIndex],
+                criterias: [
+                    ...updatedSections[sectionIndex].criterias,
+                    {
+                        name: '',
+                        criteria_score_range: [
+                            {
+                                name: '',
+                                min_score: 1,
+                                max_score: 5,
+                                description: '',
+                            },
+                        ],
+                    },
+                ],
+            }
+            return updatedSections
         })
-        setSections(updatedSections)
     }
+
+    useEffect(() => {
+        console.log(sections)
+    }, [sections])
 
     useEffect(() => {
         console.log(sections)
@@ -158,13 +192,13 @@ export function RubricBuilderDialog({
         name: string
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria[criteriaIndex].name = name
+        updatedSections[sectionIndex].criterias[criteriaIndex].name = name
         setSections(updatedSections)
     }
 
     const removeCriteria = (sectionIndex: number, criteriaIndex: number) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria.splice(criteriaIndex, 1)
+        updatedSections[sectionIndex].criterias.splice(criteriaIndex, 1)
         setSections(updatedSections)
     }
 
@@ -183,10 +217,10 @@ export function RubricBuilderDialog({
 
     const updateScoringType = (
         sectionIndex: number,
-        scoringType: 'individual' | 'group'
+        is_group_score: boolean
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].scoringType = scoringType
+        updatedSections[sectionIndex].is_group_score = is_group_score
         setSections(updatedSections)
     }
 
@@ -196,11 +230,13 @@ export function RubricBuilderDialog({
         rangeIndex: number,
         label: string
     ) => {
-        const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria[criteriaIndex].scoreRanges[
-            rangeIndex
-        ].label = label
-        setSections(updatedSections)
+        setSections((prev) => {
+            const updatedSections = [...prev]
+            updatedSections[sectionIndex].criterias[
+                criteriaIndex
+            ].criteria_score_range[rangeIndex].name = label
+            return updatedSections
+        })
     }
 
     const updateScoreRangeDescription = (
@@ -210,9 +246,9 @@ export function RubricBuilderDialog({
         description: string
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria[criteriaIndex].scoreRanges[
-            rangeIndex
-        ].description = description
+        updatedSections[sectionIndex].criterias[
+            criteriaIndex
+        ].criteria_score_range[rangeIndex].description = description
         setSections(updatedSections)
     }
 
@@ -223,9 +259,9 @@ export function RubricBuilderDialog({
         min: number
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria[criteriaIndex].scoreRanges[
-            rangeIndex
-        ].min = min
+        updatedSections[sectionIndex].criterias[
+            criteriaIndex
+        ].criteria_score_range[rangeIndex].min_score = min
         setSections(updatedSections)
     }
 
@@ -236,22 +272,25 @@ export function RubricBuilderDialog({
         max: number
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria[criteriaIndex].scoreRanges[
-            rangeIndex
-        ].max = max
+        updatedSections[sectionIndex].criterias[
+            criteriaIndex
+        ].criteria_score_range[rangeIndex].max_score = max
         setSections(updatedSections)
     }
 
     const addScoreRange = (sectionIndex: number, criteriaIndex: number) => {
         const updatedSections = [...sections]
-        const criteria = updatedSections[sectionIndex].criteria[criteriaIndex]
-        const lastRange = criteria.scoreRanges[criteria.scoreRanges.length - 1]
-        const diff = lastRange ? lastRange.max - lastRange.min : 0
+        const criteria = updatedSections[sectionIndex].criterias[criteriaIndex]
+        const lastRange =
+            criteria.criteria_score_range[
+                criteria.criteria_score_range.length - 1
+            ]
+        const diff = lastRange ? lastRange.max_score - lastRange.min_score : 0
 
-        criteria.scoreRanges.push({
-            label: '',
-            min: lastRange ? lastRange.max + 1 : 1,
-            max: lastRange ? lastRange.max + 1 + diff : 5,
+        criteria.criteria_score_range.push({
+            name: '',
+            min_score: lastRange ? lastRange.max_score + 1 : 1,
+            max_score: lastRange ? lastRange.max_score + 1 + diff : 5,
             description: '',
         })
 
@@ -264,9 +303,9 @@ export function RubricBuilderDialog({
         rangeIndex: number
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criteria[
+        updatedSections[sectionIndex].criterias[
             criteriaIndex
-        ].scoreRanges.splice(rangeIndex, 1)
+        ].criteria_score_range.splice(rangeIndex, 1)
         setSections(updatedSections)
     }
 
@@ -275,18 +314,22 @@ export function RubricBuilderDialog({
             ...prev,
             {
                 name: `Section ${prev.length + 1}`,
-                scoringType: 'group',
-                criteria: [
+                score_percentage: 0,
+                is_group_score: true,
+                description: '',
+                criterias: [
                     {
-                        name: prev[prev.length - 1].criteria[0].name,
-                        scoreRanges: [
+                        name: prev[prev.length - 1].criterias[0].name,
+                        criteria_score_range: [
                             {
-                                label: prev[prev.length - 1].criteria[0]
-                                    .scoreRanges[0].label,
-                                min: prev[prev.length - 1].criteria[0]
-                                    .scoreRanges[0].min,
-                                max: prev[prev.length - 1].criteria[0]
-                                    .scoreRanges[0].max,
+                                name: prev[prev.length - 1].criterias[0]
+                                    .criteria_score_range[0].name,
+                                min_score:
+                                    prev[prev.length - 1].criterias[0]
+                                        .criteria_score_range[0].min_score,
+                                max_score:
+                                    prev[prev.length - 1].criterias[0]
+                                        .criteria_score_range[0].max_score,
                                 description: '',
                             },
                         ],
@@ -294,6 +337,23 @@ export function RubricBuilderDialog({
                 ],
             },
         ])
+    }
+
+    const updateSection = (
+        sectionIndex: number,
+        name: string,
+        score_percentage: number,
+        description: string
+    ) => {
+        setSections((prev) => {
+            const updatedSections = [...prev]
+            updatedSections[sectionIndex].name = name
+            updatedSections[sectionIndex].score_percentage = score_percentage
+            updatedSections[sectionIndex].description = description
+            return updatedSections
+        })
+
+        setSectionToEdit(null)
     }
 
     return (
@@ -338,6 +398,15 @@ export function RubricBuilderDialog({
                                 key={sectionIndex}
                                 index={sectionIndex}
                                 section={section}
+                                onTriggerUpdateSection={() =>
+                                    setSectionToEdit({
+                                        index: sectionIndex,
+                                        name: section.name,
+                                        score_percentage:
+                                            section.score_percentage,
+                                        description: section.description,
+                                    })
+                                }
                             />
                         ))}
 
@@ -349,11 +418,12 @@ export function RubricBuilderDialog({
                             <Plus className="h-3 w-3 mr-2" /> ADD SECTION
                         </Button>
 
-                        <div className="px-4 ">
+                        <div className="px-4">
                             <h3 className="text-sm font-medium mb-2">Note</h3>
                             <QuillEditor
                                 // placeholder="Add any additional information about this rubric..."
-                                className="min-h-[120px] w-full"
+                                className="min-h-[180px] w-full"
+                                onContentChange={setNote}
                             />
                         </div>
                         {/*  */}
@@ -361,10 +431,29 @@ export function RubricBuilderDialog({
 
                     <div className="border-t p-2 fixed bottom-0 left-0 right-0 bg-background z-10 flex items-center justify-end gap-x-4">
                         <Button variant="destructive">Cancel</Button>
-                        <Button className=" ">Save Rubric</Button>
+                        <Button
+                            onClick={() => {
+                                try {
+                                    const data = RubricSchema.parse({
+                                        note: JSON.stringify(note),
+                                        sections: sections,
+                                    })
+                                    console.log(data)
+                                } catch (e) {
+                                    console.log(e)
+                                }
+                            }}
+                        >
+                            Save Rubric
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
+            <EditSectionDialog
+                section={sectionToEdit}
+                onClose={() => setSectionToEdit(null)}
+                onSubmit={updateSection}
+            />
         </RubricBuilderContext.Provider>
     )
 }
@@ -372,59 +461,75 @@ export function RubricBuilderDialog({
 function RubricSection({
     section,
     index,
+    onTriggerUpdateSection,
 }: {
     section: Section
     index: number
+    onTriggerUpdateSection: () => void
 }) {
-    const [editingSectionName, setIsEditingSectionName] = useState(false)
-    const sectionNameInputRef = useRef<HTMLInputElement>(null)
     const ctx = useContext(RubricBuilderContext)
 
-    useEffect(() => {
-        if (editingSectionName && sectionNameInputRef.current) {
-            sectionNameInputRef.current.focus()
-        }
-    }, [editingSectionName, sectionNameInputRef.current])
-
     return (
-        <div className="mb-8">
+        <div className="mb-4">
             <div className="flex">
-                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon hover:bg-paragon-hover text-white hover:text-white cursor-pointer">
-                    <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1">
-                        {editingSectionName ? (
-                            <Input
-                                className="flex-grow border-0 p-0 text-center font-semibold bg-transparent text-sm rotate-180"
-                                value={section.name}
-                                onChange={(e) =>
-                                    ctx.updateSectionName(index, e.target.value)
-                                }
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        setIsEditingSectionName(false)
-                                    }
-                                }}
-                                ref={sectionNameInputRef}
-                                onBlur={() => setIsEditingSectionName(false)}
-                            />
-                        ) : (
-                            <>
-                                {ctx.sections.length > 1 && (
-                                    <Trash2
-                                        className="inline-block -rotate-90 h-4 w-4"
-                                        onClick={() => ctx.removeSection(index)}
-                                    />
-                                )}
-                                <Pencil
-                                    className="inline-block rotate-y-180 h-4 w-4"
-                                    onClick={() =>
-                                        setIsEditingSectionName(true)
-                                    }
+                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white">
+                    <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
+                        {/* <div className="flex-grow flex flex-col items-center justify-center gap-y-2 relative">
+                                <Input
+                                    className="h-full text-center font-semibold bg-transparent text-sm rotate-180 placeholder:text-gray-300 hide-arrows"
+                                    placeholder="Score Percentage"
+                                    type="number"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            setIsEditingSectionName(false)
+                                        }
+                                    }}
+                                    min={0}
+                                    max={100}
                                 />
+                                <Input
+                                    className="h-full text-center font-semibold bg-transparent text-sm rotate-180 placeholder:text-gray-300"
+                                    value={section.name}
+                                    onChange={(e) =>
+                                        ctx.updateSectionName(
+                                            index,
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Section name"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            setIsEditingSectionName(false)
+                                        }
+                                    }}
+                                    ref={sectionNameInputRef}
+                                />
+                            </div> */}
+                        <div className="absolute flex flex-col items-center bottom-2 gap-y-1">
+                            {ctx.sections.length > 1 && (
+                                <Trash2
+                                    className="inline-block h-4 w-4 cursor-pointer"
+                                    onClick={() => ctx.removeSection(index)}
+                                />
+                            )}
+                            <Pencil
+                                className="inline-block h-4 w-4 cursor-pointer"
+                                onClick={onTriggerUpdateSection}
+                            />
+                        </div>
+
+                        <div>
+                            {ctx.sections.findIndex(
+                                (s) => s.score_percentage !== 0
+                            ) !== -1 && (
                                 <p className="text-center font-semibold bg-transparent text-sm rotate-180">
-                                    {section.name}
+                                    {section.score_percentage}%
                                 </p>
-                            </>
-                        )}
+                            )}
+                            <p className="text-center font-semibold bg-transparent text-sm rotate-180">
+                                {section.name}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -436,15 +541,12 @@ function RubricSection({
                                 <button
                                     className={cn(
                                         `px-2 py-1 rounded-full cursor-pointer`,
-                                        section.scoringType === 'individual'
+                                        !section.is_group_score
                                             ? 'bg-paragon text-white'
                                             : 'text-gray-700'
                                     )}
                                     onClick={() =>
-                                        ctx.updateScoringType(
-                                            index,
-                                            'individual'
-                                        )
+                                        ctx.updateScoringType(index, false)
                                     }
                                 >
                                     Individual
@@ -452,12 +554,12 @@ function RubricSection({
                                 <button
                                     className={cn(
                                         'px-2 py-1 rounded-full cursor-pointer',
-                                        section.scoringType === 'group'
+                                        section.is_group_score
                                             ? 'bg-paragon text-white'
                                             : 'text-gray-700'
                                     )}
                                     onClick={() =>
-                                        ctx.updateScoringType(index, 'group')
+                                        ctx.updateScoringType(index, true)
                                     }
                                 >
                                     Group
@@ -465,7 +567,7 @@ function RubricSection({
                             </div>
                         </div>
                     </div>
-                    {section.criteria.map((criteria, criteriaIndex) => (
+                    {section.criterias.map((criteria, criteriaIndex) => (
                         <RubricCriteria
                             key={criteriaIndex}
                             sectionIndex={index}
@@ -505,7 +607,7 @@ export function RubricCriteria({
                 <div className="flex-1 flex">
                     {/* Criteria name */}
                     <div className="border p-3 bg-muted/10 flex items-center text-xs gap-y-1 relative">
-                        {ctx.sections[sectionIndex].criteria.length > 1 && (
+                        {ctx.sections[sectionIndex].criterias.length > 1 && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -526,6 +628,7 @@ export function RubricCriteria({
                                     e.target.value
                                 )
                             }
+                            maxLength={50}
                             className="text-sm font-medium w-48"
                             placeholder="Criteria name"
                         />
@@ -533,90 +636,104 @@ export function RubricCriteria({
 
                     {/* Score range blocks */}
                     <div className="flex overflow-x-auto">
-                        {criteria.scoreRanges.map((range, rangeIndex) => (
-                            <div
-                                key={rangeIndex}
-                                className="border p-3 flex-shrink-0 relative"
-                            >
-                                <div className="flex justify-between items-start mb-2">
-                                    <Input
-                                        value={range.label}
-                                        onChange={(e) =>
-                                            ctx.updateScoreRangeLabel(
-                                                sectionIndex,
-                                                index,
-                                                rangeIndex,
-                                                e.target.value
-                                            )
-                                        }
-                                        placeholder="Label"
-                                        className="border-0 p-0 h-auto max-w-[180px] focus-visible:ring-0 text-sm font-medium"
-                                    />
-
-                                    {criteria.scoreRanges.length > 1 && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() =>
-                                                ctx.removeScoreRange(
+                        {criteria.criteria_score_range.map(
+                            (range, rangeIndex) => (
+                                <div
+                                    key={rangeIndex}
+                                    className="border p-3 flex-shrink-0 relative"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <Input
+                                            value={range.name}
+                                            onChange={(e) =>
+                                                ctx.updateScoreRangeLabel(
                                                     sectionIndex,
                                                     index,
-                                                    rangeIndex
+                                                    rangeIndex,
+                                                    e.target.value
                                                 )
                                             }
-                                        >
-                                            <Trash2 />
-                                        </Button>
-                                    )}
-                                </div>
+                                            placeholder="Score Label"
+                                            className="border-0 p-0 h-auto max-w-[180px] focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400"
+                                        />
 
-                                <div className="flex items-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                    <Input
-                                        type="number"
-                                        value={range.min}
+                                        {criteria.criteria_score_range.length >
+                                            1 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={() =>
+                                                    ctx.removeScoreRange(
+                                                        sectionIndex,
+                                                        index,
+                                                        rangeIndex
+                                                    )
+                                                }
+                                            >
+                                                <Trash2 />
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center mb-3 text-sm text-muted-foreground gap-x-1">
+                                        <Input
+                                            type="number"
+                                            value={range.min_score}
+                                            onChange={(e) =>
+                                                ctx.updateScoreRangeMin(
+                                                    sectionIndex,
+                                                    index,
+                                                    rangeIndex,
+                                                    Number.parseInt(
+                                                        e.target.value
+                                                    ) ?? 0
+                                                )
+                                            }
+                                            min={0}
+                                            max={1000}
+                                            maxLength={4}
+                                            className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
+                                        />
+                                        -
+                                        <Input
+                                            type="number"
+                                            value={range.max_score}
+                                            onChange={(e) =>
+                                                ctx.updateScoreRangeMax(
+                                                    sectionIndex,
+                                                    index,
+                                                    rangeIndex,
+                                                    Number.parseInt(
+                                                        e.target.value
+                                                    ) ?? 0
+                                                )
+                                            }
+                                            min={0}
+                                            max={1000}
+                                            maxLength={4}
+                                            className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
+                                        />
+                                        <span className="ml-1">points</span>
+                                    </div>
+
+                                    <Textarea
+                                        placeholder="Description (optional)"
+                                        value={range.description}
                                         onChange={(e) =>
-                                            ctx.updateScoreRangeMin(
+                                            ctx.updateScoreRangeDescription(
                                                 sectionIndex,
                                                 index,
                                                 rangeIndex,
-                                                Number.parseInt(e.target.value)
+                                                e.target.value || ''
                                             )
                                         }
-                                        className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
+                                        maxLength={255}
+                                        className="min-h-[80px] field-sizing-fixed resize-none text-sm"
                                     />
-                                    -
-                                    <Input
-                                        type="number"
-                                        value={range.max}
-                                        onChange={(e) =>
-                                            ctx.updateScoreRangeMax(
-                                                sectionIndex,
-                                                index,
-                                                rangeIndex,
-                                                Number.parseInt(e.target.value)
-                                            )
-                                        }
-                                        className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm hide-arrows"
-                                    />
-                                    <span className="ml-1">points</span>
                                 </div>
-
-                                <Textarea
-                                    placeholder="Description (optional)"
-                                    value={range.description}
-                                    onChange={(e) =>
-                                        ctx.updateScoreRangeDescription(
-                                            sectionIndex,
-                                            index,
-                                            rangeIndex,
-                                            e.target.value || ''
-                                        )
-                                    }
-                                    className="min-h-[80px] field-sizing-fixed resize-none text-sm"
-                                />
-                            </div>
-                        ))}
+                            )
+                        )}
                         <div className="flex flex-col justify-center">
                             <Button
                                 variant="outline"
@@ -635,5 +752,103 @@ export function RubricCriteria({
                 </div>
             </div>
         </div>
+    )
+}
+
+function EditSectionDialog({
+    section,
+    onClose,
+    onSubmit,
+}: {
+    section: Prettify<
+        Pick<Section, 'name' | 'score_percentage' | 'description'> & {
+            index: number
+        }
+    > | null
+    onClose: () => void
+    onSubmit: (
+        index: number,
+        name: string,
+        score_percentage: number,
+        description: string
+    ) => void
+}) {
+    const nameRef = useRef<HTMLInputElement>(null)
+    const scorePercentRef = useRef<HTMLInputElement>(null)
+    const descriptionRef = useRef<HTMLTextAreaElement>(null)
+
+    function handleSubmit() {
+        if (!section || !nameRef.current || !scorePercentRef.current) return
+
+        onSubmit(
+            section.index,
+            nameRef.current.value,
+            Number(scorePercentRef.current.value),
+            descriptionRef.current?.value || ''
+        )
+    }
+    if (section === null) return null
+    return (
+        <Dialog
+            open={section !== null}
+            onOpenChange={(val) => {
+                if (!val) onClose()
+            }}
+        >
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Section</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-y-4">
+                    <LabelWrapper
+                        label={{
+                            field: 'name',
+                            text: 'Section Name',
+                        }}
+                    >
+                        <Input defaultValue={section.name} ref={nameRef} />
+                    </LabelWrapper>
+                    <LabelWrapper
+                        label={{
+                            field: 'score_percentage',
+                            text: 'Score Percentage',
+                        }}
+                        options={{
+                            required: false,
+                            label_placement: 'inline',
+                        }}
+                    >
+                        <Input
+                            defaultValue={section.score_percentage}
+                            ref={scorePercentRef}
+                            type="number"
+                            className="hide-arrows w-auto max-w-[5rem] mr-2"
+                        />
+                        <span className="text-sm">%</span>
+                    </LabelWrapper>
+                    <LabelWrapper
+                        label={{
+                            field: 'description',
+                            text: 'Description',
+                        }}
+                        options={{ required: false }}
+                    >
+                        <Textarea
+                            defaultValue={section.description}
+                            ref={descriptionRef}
+                            className="min-h-[80px] field-sizing-fixed resize-none text-sm"
+                            placeholder="Description (optional)"
+                            maxLength={255}
+                        />
+                    </LabelWrapper>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSubmit}>Save</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }
