@@ -349,8 +349,11 @@ export const ImportGroupFileUploadSchema = z.object({
 
 export const RubricCriteriaScoreRangeSchema = z
     .object({
-        name: z.string().min(1, 'Score range name is required'),
-        description: z.string().max(255).optional(),
+        name: z
+            .string()
+            .min(1, 'Score range name is required')
+            .max(50, 'Score range name cannot exceed 50 characters'),
+        description: z.string().max(255),
         min_score: z.coerce.number().int().nonnegative(),
         max_score: z.coerce.number().int().nonnegative(),
     })
@@ -375,7 +378,7 @@ export const RubricCriteriaSchema = z.object({
         .min(1, 'Criteria name is required')
         .max(50, 'Criteria name cannot exceed 50 characters'),
     // description: z.string().max(255).optional(),
-    criteria_score_range: z
+    criteria_score_ranges: z
         .array(RubricCriteriaScoreRangeSchema)
         .min(1, 'At least 1 score range is required')
         .superRefine((val, ctx) => {
@@ -385,10 +388,10 @@ export const RubricCriteriaSchema = z.object({
             for (let i = 1; i < val.length; i++) {
                 const scoreRange = val[i]
 
-                if (scoreRange.min_score != last + 1) {
+                if (scoreRange.min_score < last + 1) {
                     ctx.addIssue({
                         code: z.ZodIssueCode.custom,
-                        message: `Score ranges must be continuous and non-overlapping. This minimum score here should be ${scoreRange.min_score + 1}`,
+                        message: `The minimum score of a score range must be greater than the previous max score`,
                         path: ['criteria_score_range', i, 'min_score'],
                     })
                     return
@@ -399,7 +402,7 @@ export const RubricCriteriaSchema = z.object({
 
 export const RubricSectionSchema = z.object({
     name: z.string().min(1, 'Section name is required').max(50),
-    description: z.string().max(255).optional(),
+    description: z.string().max(255),
     is_group_score: z.boolean(),
     score_percentage: z.coerce.number().nonnegative().lte(100),
     criterias: z
@@ -408,7 +411,7 @@ export const RubricSectionSchema = z.object({
 })
 
 export const RubricSchema = z.object({
-    note: z.string().optional(),
+    note: z.string(),
     sections: z
         .array(RubricSectionSchema)
         .min(1, 'At least 1 section is required')

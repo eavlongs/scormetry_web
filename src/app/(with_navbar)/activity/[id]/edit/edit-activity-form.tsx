@@ -1,7 +1,6 @@
 'use client'
 
 import { GetClassroomResponse } from '@/app/(with_navbar)/classroom/[id]/actions'
-import { CreateRubricDialog } from '@/app/(with_navbar)/classroom/[id]/activities/new/create-rubric-dialog'
 import { CreateCategoryDialog } from '@/app/(with_navbar)/classroom/[id]/categories/create-category-dialog'
 import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupings/create-grouping-dialog'
 import QuillEditor from '@/components/quill-editor'
@@ -49,7 +48,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 import { editActivity } from './actions'
-import { EditRubricDialog } from './edit-rubric-dialog'
+import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 
 // Mock data for rubrics
 const mockRubrics = [
@@ -82,15 +81,13 @@ export default function EditActivityForm({
         []
     )
     const [description, setDescription] = useState({})
-    const [rubricForDialog, setRubricForDialog] = useState<any>(null)
 
     // Form fields
     const titleRef = useRef<HTMLInputElement>(null)
     const [categoryId, setCategoryId] = useState<string>('')
     const [groupingId, setGroupingId] = useState<string>('individual')
     const [rubric, setRubric] = useState<any>(null)
-    const [isCreateRubricDialogOpen, setCreateRubricDialogOpen] =
-        useState(false)
+    const [isRubricDialogOpen, setIsRubricDialogOpen] = useState(false)
     const [selectedRubricId, setSelectedRubricId] = useState<string>('')
     const [scoringType, setScoringType] = useState<string>('none')
     const maxScoreRef = useRef<HTMLInputElement>(null)
@@ -244,8 +241,6 @@ export default function EditActivityForm({
     // Handle new rubric creation
     const handleRubricSave = (rubric: any) => {
         setRubric(rubric)
-        setRubricForDialog(null)
-        setCreateRubricDialogOpen(false)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -367,7 +362,7 @@ export default function EditActivityForm({
                                     <Button
                                         type="button"
                                         onClick={() =>
-                                            setCreateRubricDialogOpen(true)
+                                            setIsRubricDialogOpen(true)
                                         }
                                         className="flex-1"
                                     >
@@ -759,18 +754,6 @@ export default function EditActivityForm({
                 </div>
             </form>
 
-            <CreateRubricDialog
-                isOpen={isCreateRubricDialogOpen}
-                onClose={() => setCreateRubricDialogOpen(false)}
-                onSave={handleRubricSave}
-            />
-
-            <EditRubricDialog
-                rubric={rubricForDialog}
-                setRubric={setRubricForDialog}
-                onSave={handleRubricSave}
-            />
-
             <CreateCategoryDialog
                 classroom={classroom}
                 open={isCreateCategoryDialogOpen}
@@ -786,6 +769,13 @@ export default function EditActivityForm({
                         return updatedCategories
                     })
                 }}
+            />
+
+            <RubricBuilderDialog
+                open={isRubricDialogOpen}
+                initialData={rubric}
+                onOpenChange={setIsRubricDialogOpen}
+                onSave={handleRubricSave}
             />
 
             <CreateGroupingDialog

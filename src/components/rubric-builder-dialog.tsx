@@ -25,10 +25,11 @@ import {
     createContext,
     SetStateAction,
     useContext,
+    useEffect,
     useRef,
     useState,
 } from 'react'
-import { ZodError } from 'zod'
+import { z, ZodError } from 'zod'
 import QuillEditor from './quill-editor'
 import { LabelWrapper } from './ui/label-wrapper'
 
@@ -41,7 +42,7 @@ interface ScoreRange {
 
 interface Criteria {
     name: string
-    criteria_score_range: ScoreRange[]
+    criteria_score_ranges: ScoreRange[]
 }
 
 interface Section {
@@ -55,6 +56,8 @@ interface Section {
 interface RubricBuilderDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    initialData: z.infer<typeof RubricSchema> | null
+    onSave: (rubric: z.infer<typeof RubricSchema>) => void
 }
 
 type RubricBuilderContextType = {
@@ -114,7 +117,7 @@ const rubricBuilderDefaultValue: RubricBuilderContextType = {
             criterias: [
                 {
                     name: '',
-                    criteria_score_range: [
+                    criteria_score_ranges: [
                         {
                             name: '',
                             min_score: 1,
@@ -150,9 +153,11 @@ const RubricBuilderContext = createContext<RubricBuilderContextType>(
 export function RubricBuilderDialog({
     open,
     onOpenChange,
+    onSave,
+    initialData,
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
-        rubricBuilderDefaultValue.sections
+        initialData ? initialData.sections : rubricBuilderDefaultValue.sections
     )
     const [sectionToEdit, setSectionToEdit] = useState<Prettify<
         Pick<Section, 'name' | 'score_percentage' | 'description'> & {
@@ -161,7 +166,15 @@ export function RubricBuilderDialog({
     > | null>(null)
 
     const [note, setNote] = useState<Delta>()
+    const [quill, setQuill] = useState()
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
+
+    useEffect(() => {
+        if (open && quill && initialData?.note) {
+            // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
+            quill.setContents(JSON.parse(initialData.note))
+        }
+    }, [quill, initialData?.note])
 
     const addCriteria = (sectionIndex: number) => {
         setSections((prev) => {
@@ -172,7 +185,7 @@ export function RubricBuilderDialog({
                     ...updatedSections[sectionIndex].criterias,
                     {
                         name: '',
-                        criteria_score_range: [
+                        criteria_score_ranges: [
                             {
                                 name: '',
                                 min_score: 1,
@@ -235,7 +248,7 @@ export function RubricBuilderDialog({
             const updatedSections = [...prev]
             updatedSections[sectionIndex].criterias[
                 criteriaIndex
-            ].criteria_score_range[rangeIndex].name = label
+            ].criteria_score_ranges[rangeIndex].name = label
             return updatedSections
         })
     }
@@ -249,7 +262,7 @@ export function RubricBuilderDialog({
         const updatedSections = [...sections]
         updatedSections[sectionIndex].criterias[
             criteriaIndex
-        ].criteria_score_range[rangeIndex].description = description
+        ].criteria_score_ranges[rangeIndex].description = description
         setSections(updatedSections)
     }
 
@@ -262,7 +275,7 @@ export function RubricBuilderDialog({
         const updatedSections = [...sections]
         updatedSections[sectionIndex].criterias[
             criteriaIndex
-        ].criteria_score_range[rangeIndex].min_score = min
+        ].criteria_score_ranges[rangeIndex].min_score = min
         setSections(updatedSections)
     }
 
@@ -275,7 +288,7 @@ export function RubricBuilderDialog({
         const updatedSections = [...sections]
         updatedSections[sectionIndex].criterias[
             criteriaIndex
-        ].criteria_score_range[rangeIndex].max_score = max
+        ].criteria_score_ranges[rangeIndex].max_score = max
         setSections(updatedSections)
     }
 
@@ -283,12 +296,12 @@ export function RubricBuilderDialog({
         const updatedSections = [...sections]
         const criteria = updatedSections[sectionIndex].criterias[criteriaIndex]
         const lastRange =
-            criteria.criteria_score_range[
-                criteria.criteria_score_range.length - 1
+            criteria.criteria_score_ranges[
+                criteria.criteria_score_ranges.length - 1
             ]
         const diff = lastRange ? lastRange.max_score - lastRange.min_score : 0
 
-        criteria.criteria_score_range.push({
+        criteria.criteria_score_ranges.push({
             name: '',
             min_score: lastRange ? lastRange.max_score + 1 : 1,
             max_score: lastRange ? lastRange.max_score + 1 + diff : 5,
@@ -306,7 +319,7 @@ export function RubricBuilderDialog({
         const updatedSections = [...sections]
         updatedSections[sectionIndex].criterias[
             criteriaIndex
-        ].criteria_score_range.splice(rangeIndex, 1)
+        ].criteria_score_ranges.splice(rangeIndex, 1)
         setSections(updatedSections)
     }
 
@@ -320,17 +333,16 @@ export function RubricBuilderDialog({
                 description: '',
                 criterias: [
                     {
-                        name: prev[prev.length - 1].criterias[0].name,
-                        criteria_score_range: [
+                        name: '',
+                        criteria_score_ranges: [
                             {
-                                name: prev[prev.length - 1].criterias[0]
-                                    .criteria_score_range[0].name,
+                                name: '',
                                 min_score:
                                     prev[prev.length - 1].criterias[0]
-                                        .criteria_score_range[0].min_score,
+                                        .criteria_score_ranges[0].min_score,
                                 max_score:
                                     prev[prev.length - 1].criterias[0]
-                                        .criteria_score_range[0].max_score,
+                                        .criteria_score_ranges[0].max_score,
                                 description: '',
                             },
                         ],
@@ -426,23 +438,32 @@ export function RubricBuilderDialog({
                                 // placeholder="Add any additional information about this rubric..."
                                 className="min-h-[180px] w-full"
                                 onContentChange={setNote}
+                                initialContent={note}
+                                setQuillObject={setQuill}
                             />
                         </div>
                         {/*  */}
                     </div>
 
                     <div className="border-t p-2 fixed bottom-0 left-0 right-0 bg-background z-10 flex items-center justify-end gap-x-4">
-                        <Button variant="destructive">Cancel</Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            Cancel
+                        </Button>
                         <Button
                             onClick={() => {
                                 try {
+                                    setErrors([])
                                     const data = RubricSchema.parse({
-                                        note: JSON.stringify(note),
+                                        note: JSON.stringify(note || []),
                                         sections: sections,
                                     })
-                                    console.log(data)
+                                    onSave(data)
                                 } catch (e) {
                                     assert(e instanceof ZodError)
+                                    console.log(e)
                                     setErrors(
                                         convertZodErrorToValidationErrorWithNestedPath(
                                             e
@@ -665,7 +686,7 @@ export function RubricCriteria({
 
                     {/* Score range blocks */}
                     <div className="flex overflow-x-auto">
-                        {criteria.criteria_score_range.map(
+                        {criteria.criteria_score_ranges.map(
                             (range, rangeIndex) => (
                                 <div
                                     key={rangeIndex}
@@ -681,7 +702,7 @@ export function RubricCriteria({
                                                     sectionIndex,
                                                     'criterias',
                                                     index,
-                                                    'criteria_score_range',
+                                                    'criteria_score_ranges',
                                                     rangeIndex,
                                                     'name',
                                                 ]
@@ -705,7 +726,7 @@ export function RubricCriteria({
                                             />
                                         </LabelWrapper>
 
-                                        {criteria.criteria_score_range.length >
+                                        {criteria.criteria_score_ranges.length >
                                             1 && (
                                             <Button
                                                 variant="ghost"
@@ -734,7 +755,7 @@ export function RubricCriteria({
                                                     sectionIndex,
                                                     'criterias',
                                                     index,
-                                                    'criteria_score_range',
+                                                    'criteria_score_ranges',
                                                     rangeIndex,
                                                     'min_score',
                                                 ]
@@ -774,7 +795,7 @@ export function RubricCriteria({
                                                     sectionIndex,
                                                     'criterias',
                                                     index,
-                                                    'criteria_score_range',
+                                                    'criteria_score_ranges',
                                                     rangeIndex,
                                                     'max_score',
                                                 ]
@@ -816,7 +837,7 @@ export function RubricCriteria({
                                                 sectionIndex,
                                                 'criterias',
                                                 index,
-                                                'criteria_score_range',
+                                                'criteria_score_ranges',
                                                 rangeIndex,
                                                 'description',
                                             ]

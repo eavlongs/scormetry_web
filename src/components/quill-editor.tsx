@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-// import { Delta } from 'quill'
+import { v4 as uuidv4 } from 'uuid'
 import React, { useEffect, useRef, useState } from 'react'
 
 interface QuillEditorProps {
@@ -14,7 +14,7 @@ interface QuillEditorProps {
     setQuillObject?: React.Dispatch<React.SetStateAction<any>>
 }
 
-const quillEditorElementId = 'quill-editor'
+// const quillEditorElementId = 'quill-editor'
 const quillToolbarQuerySelectorString = '[role="toolbar"].ql-toolbar.ql-snow'
 
 export default function QuillEditor({
@@ -27,6 +27,7 @@ export default function QuillEditor({
     setQuillObject, // this exposes the quill object to be used by parents
 }: QuillEditorProps) {
     const containerRef = useRef<HTMLDivElement>(null)
+    const editorRef = useRef<HTMLDivElement>(null)
     const toolbarRef = useRef<HTMLDivElement>(null)
     const [quill, setQuill] = useState<any>(null)
     const [isLoaded, setIsLoaded] = useState(false)
@@ -53,29 +54,29 @@ export default function QuillEditor({
                         toolbar.remove()
                     }
                 }
-                const quillInstance = new Quill.default('#quill-editor', {
-                    theme: 'snow',
-                    modules: {
-                        toolbar: readOnly
-                            ? false
-                            : [
-                                  ['bold', 'italic', 'underline', 'strike'],
-                                  [{ color: [] }, { background: [] }],
-                                  [
-                                      { list: 'ordered' },
-                                      { list: 'bullet' },
-                                      { list: 'check' },
+                const quillInstance = new Quill.default(
+                    editorRef.current as HTMLElement,
+                    {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: readOnly
+                                ? false
+                                : [
+                                      ['bold', 'italic', 'underline', 'strike'],
+                                      [{ color: [] }, { background: [] }],
+                                      [
+                                          { list: 'ordered' },
+                                          { list: 'bullet' },
+                                          { list: 'check' },
+                                      ],
+                                      ['link'],
+                                      ['clean'],
                                   ],
-                                  ['link'],
-                                  ['clean'],
-                              ],
-                    },
-                    // formats: [
-
-                    // ]
-                    placeholder: placeholder,
-                    readOnly: readOnly,
-                })
+                        },
+                        placeholder: placeholder,
+                        readOnly: readOnly,
+                    }
+                )
 
                 setQuill(quillInstance)
                 if (setQuillObject) setQuillObject(quillInstance)
@@ -135,7 +136,7 @@ export default function QuillEditor({
             </div>
             <div ref={containerRef}>
                 <div
-                    id={quillEditorElementId}
+                    ref={editorRef}
                     className={cn(
                         'text-sm',
                         readOnly
