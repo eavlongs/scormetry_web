@@ -136,6 +136,7 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
 }
 
 export type GetActivity = Activity & {
+    rubric: GetRubric | null
     posted_by_user: ClassroomUserDetail
     groups: GetGroup[] | null
     students:
@@ -147,4 +148,56 @@ export type GetActivity = Activity & {
         | null
     judges: UserEssentialDetail[] | null
     group: GetGroup | null
+}
+
+export type GetRubric = Rubric & {
+    rubric_sections: (RubricSection & {
+        rubric_criterias: (CriteriaScoreRange & {
+            criteria_score_ranges: CriteriaScoreRange[]
+        })[]
+    })[]
+}
+
+export type Rubric = {
+    id: string
+    has_weightage: boolean
+    max_score: number
+    note: string
+    created_at: string
+    updated_at: string
+}
+
+export type RubricSection = {
+    id: string
+    rubric_id: string
+    name: string
+    description: string
+    is_group_score: boolean
+    score_percentage: number
+    max_score: number
+    order: number
+    created_at: string
+    updated_at: string
+}
+
+export type RubricCriteria = {
+    id: string
+    rubric_section_id: string
+    name: string
+    min_score: number
+    max_score: number
+    order: number
+    created_at: string
+    updated_at: string
+}
+
+export type CriteriaScoreRange = {
+    id: string
+    rubric_criteria_id: string
+    name: string
+    description: string
+    min_score: number
+    max_score: number
+    created_at: string
+    updated_at: string
 }

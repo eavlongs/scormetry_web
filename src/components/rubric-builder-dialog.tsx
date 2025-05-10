@@ -14,6 +14,7 @@ import {
     cn,
     convertZodErrorToValidationErrorWithNestedPath,
     getErrorMessageFromNestedPathValidationError,
+    getValidationErrorMessage,
 } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import { Prettify } from '@/types/general'
@@ -32,6 +33,7 @@ import {
 import { z, ZodError } from 'zod'
 import QuillEditor from './quill-editor'
 import { LabelWrapper } from './ui/label-wrapper'
+import { toast } from 'sonner'
 
 interface ScoreRange {
     name: string
@@ -49,7 +51,7 @@ interface Section {
     name: string
     score_percentage: number
     is_group_score: boolean
-    criterias: Criteria[]
+    rubric_criterias: Criteria[]
     description: string
 }
 
@@ -61,7 +63,7 @@ interface RubricBuilderDialogProps {
 }
 
 type RubricBuilderContextType = {
-    sections: Section[]
+    rubric_sections: Section[]
     errors: NestedPathValidationError[]
     setSections: React.Dispatch<SetStateAction<Section[]>>
     addSection: () => void
@@ -108,13 +110,13 @@ type RubricBuilderContextType = {
 }
 
 const rubricBuilderDefaultValue: RubricBuilderContextType = {
-    sections: [
+    rubric_sections: [
         {
             name: 'Section 1',
             score_percentage: 0,
             is_group_score: true,
             description: '',
-            criterias: [
+            rubric_criterias: [
                 {
                     name: '',
                     criteria_score_ranges: [
@@ -157,7 +159,9 @@ export function RubricBuilderDialog({
     initialData,
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
-        initialData ? initialData.sections : rubricBuilderDefaultValue.sections
+        initialData
+            ? initialData.rubric_sections
+            : rubricBuilderDefaultValue.rubric_sections
     )
     const [sectionToEdit, setSectionToEdit] = useState<Prettify<
         Pick<Section, 'name' | 'score_percentage' | 'description'> & {
@@ -181,8 +185,8 @@ export function RubricBuilderDialog({
             const updatedSections = [...prev]
             updatedSections[sectionIndex] = {
                 ...updatedSections[sectionIndex],
-                criterias: [
-                    ...updatedSections[sectionIndex].criterias,
+                rubric_criterias: [
+                    ...updatedSections[sectionIndex].rubric_criterias,
                     {
                         name: '',
                         criteria_score_ranges: [
@@ -206,13 +210,14 @@ export function RubricBuilderDialog({
         name: string
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criterias[criteriaIndex].name = name
+        updatedSections[sectionIndex].rubric_criterias[criteriaIndex].name =
+            name
         setSections(updatedSections)
     }
 
     const removeCriteria = (sectionIndex: number, criteriaIndex: number) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criterias.splice(criteriaIndex, 1)
+        updatedSections[sectionIndex].rubric_criterias.splice(criteriaIndex, 1)
         setSections(updatedSections)
     }
 
@@ -246,7 +251,7 @@ export function RubricBuilderDialog({
     ) => {
         setSections((prev) => {
             const updatedSections = [...prev]
-            updatedSections[sectionIndex].criterias[
+            updatedSections[sectionIndex].rubric_criterias[
                 criteriaIndex
             ].criteria_score_ranges[rangeIndex].name = label
             return updatedSections
@@ -260,7 +265,7 @@ export function RubricBuilderDialog({
         description: string
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criterias[
+        updatedSections[sectionIndex].rubric_criterias[
             criteriaIndex
         ].criteria_score_ranges[rangeIndex].description = description
         setSections(updatedSections)
@@ -273,7 +278,7 @@ export function RubricBuilderDialog({
         min: number
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criterias[
+        updatedSections[sectionIndex].rubric_criterias[
             criteriaIndex
         ].criteria_score_ranges[rangeIndex].min_score = min
         setSections(updatedSections)
@@ -286,7 +291,7 @@ export function RubricBuilderDialog({
         max: number
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criterias[
+        updatedSections[sectionIndex].rubric_criterias[
             criteriaIndex
         ].criteria_score_ranges[rangeIndex].max_score = max
         setSections(updatedSections)
@@ -294,7 +299,8 @@ export function RubricBuilderDialog({
 
     const addScoreRange = (sectionIndex: number, criteriaIndex: number) => {
         const updatedSections = [...sections]
-        const criteria = updatedSections[sectionIndex].criterias[criteriaIndex]
+        const criteria =
+            updatedSections[sectionIndex].rubric_criterias[criteriaIndex]
         const lastRange =
             criteria.criteria_score_ranges[
                 criteria.criteria_score_ranges.length - 1
@@ -317,7 +323,7 @@ export function RubricBuilderDialog({
         rangeIndex: number
     ) => {
         const updatedSections = [...sections]
-        updatedSections[sectionIndex].criterias[
+        updatedSections[sectionIndex].rubric_criterias[
             criteriaIndex
         ].criteria_score_ranges.splice(rangeIndex, 1)
         setSections(updatedSections)
@@ -331,17 +337,17 @@ export function RubricBuilderDialog({
                 score_percentage: 0,
                 is_group_score: true,
                 description: '',
-                criterias: [
+                rubric_criterias: [
                     {
                         name: '',
                         criteria_score_ranges: [
                             {
                                 name: '',
                                 min_score:
-                                    prev[prev.length - 1].criterias[0]
+                                    prev[prev.length - 1].rubric_criterias[0]
                                         .criteria_score_ranges[0].min_score,
                                 max_score:
-                                    prev[prev.length - 1].criterias[0]
+                                    prev[prev.length - 1].rubric_criterias[0]
                                         .criteria_score_ranges[0].max_score,
                                 description: '',
                             },
@@ -372,7 +378,7 @@ export function RubricBuilderDialog({
     return (
         <RubricBuilderContext.Provider
             value={{
-                sections,
+                rubric_sections: sections,
                 errors,
                 setSections,
                 addSection,
@@ -458,22 +464,22 @@ export function RubricBuilderDialog({
                                     setErrors([])
                                     const data = RubricSchema.parse({
                                         note: JSON.stringify(note || []),
-                                        sections: sections,
+                                        rubric_sections: sections,
                                     })
                                     onSave(data)
                                 } catch (e) {
                                     assert(e instanceof ZodError)
-                                    console.log(e)
-                                    setErrors(
+                                    const validationErrors =
                                         convertZodErrorToValidationErrorWithNestedPath(
                                             e
                                         )
-                                    )
-                                    console.log(
-                                        convertZodErrorToValidationErrorWithNestedPath(
-                                            e
+                                    setErrors(validationErrors)
+                                    toast.error(
+                                        getValidationErrorMessage(
+                                            validationErrors
                                         )
                                     )
+                                    console.log(validationErrors)
                                 }
                             }}
                         >
@@ -539,7 +545,7 @@ function RubricSection({
                                 />
                             </div> */}
                         <div className="absolute flex flex-col items-center bottom-2 gap-y-1">
-                            {ctx.sections.length > 1 && (
+                            {ctx.rubric_sections.length > 1 && (
                                 <Trash2
                                     className="inline-block h-4 w-4 cursor-pointer"
                                     onClick={() => ctx.removeSection(index)}
@@ -552,7 +558,7 @@ function RubricSection({
                         </div>
 
                         <div>
-                            {ctx.sections.findIndex(
+                            {ctx.rubric_sections.findIndex(
                                 (s) => s.score_percentage !== 0
                             ) !== -1 && (
                                 <p className="text-center font-semibold bg-transparent text-sm rotate-180">
@@ -600,7 +606,7 @@ function RubricSection({
                             </div>
                         </div>
                     </div>
-                    {section.criterias.map((criteria, criteriaIndex) => (
+                    {section.rubric_criterias.map((criteria, criteriaIndex) => (
                         <RubricCriteria
                             key={criteriaIndex}
                             sectionIndex={index}
@@ -640,7 +646,8 @@ export function RubricCriteria({
                 <div className="flex-1 flex">
                     {/* Criteria name */}
                     <div className="border p-3 bg-muted/10 flex items-center text-xs gap-y-1 relative">
-                        {ctx.sections[sectionIndex].criterias.length > 1 && (
+                        {ctx.rubric_sections[sectionIndex].rubric_criterias
+                            .length > 1 && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -657,9 +664,9 @@ export function RubricCriteria({
                             error={getErrorMessageFromNestedPathValidationError(
                                 ctx.errors,
                                 [
-                                    'sections',
+                                    'rubric_sections',
                                     sectionIndex,
-                                    'criterias',
+                                    'rubric_criterias',
                                     index,
                                     'name',
                                 ]
@@ -698,9 +705,9 @@ export function RubricCriteria({
                                             error={getErrorMessageFromNestedPathValidationError(
                                                 ctx.errors,
                                                 [
-                                                    'sections',
+                                                    'rubric_sections',
                                                     sectionIndex,
-                                                    'criterias',
+                                                    'rubric_criterias',
                                                     index,
                                                     'criteria_score_ranges',
                                                     rangeIndex,
@@ -751,9 +758,9 @@ export function RubricCriteria({
                                             error={getErrorMessageFromNestedPathValidationError(
                                                 ctx.errors,
                                                 [
-                                                    'sections',
+                                                    'rubric_sections',
                                                     sectionIndex,
-                                                    'criterias',
+                                                    'rubric_criterias',
                                                     index,
                                                     'criteria_score_ranges',
                                                     rangeIndex,
@@ -791,9 +798,9 @@ export function RubricCriteria({
                                             error={getErrorMessageFromNestedPathValidationError(
                                                 ctx.errors,
                                                 [
-                                                    'sections',
+                                                    'rubric_sections',
                                                     sectionIndex,
-                                                    'criterias',
+                                                    'rubric_criterias',
                                                     index,
                                                     'criteria_score_ranges',
                                                     rangeIndex,
@@ -833,9 +840,9 @@ export function RubricCriteria({
                                         error={getErrorMessageFromNestedPathValidationError(
                                             ctx.errors,
                                             [
-                                                'sections',
+                                                'rubric_sections',
                                                 sectionIndex,
-                                                'criterias',
+                                                'rubric_criterias',
                                                 index,
                                                 'criteria_score_ranges',
                                                 rangeIndex,

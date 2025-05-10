@@ -4,6 +4,7 @@ import { GetClassroomResponse } from '@/app/(with_navbar)/classroom/[id]/actions
 import { CreateCategoryDialog } from '@/app/(with_navbar)/classroom/[id]/categories/create-category-dialog'
 import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupings/create-grouping-dialog'
 import QuillEditor from '@/components/quill-editor'
+import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 import { Button } from '@/components/ui/button'
 import {
     FileUpload,
@@ -20,17 +21,17 @@ import { LabelWrapper } from '@/components/ui/label-wrapper'
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { RubricSchema } from '@/schema'
 import {
     Activity,
     Category,
+    GetActivity,
     Grouping,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
@@ -48,7 +49,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 import { editActivity } from './actions'
-import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
+import { z } from 'zod'
+import { set } from 'lodash'
 
 // Mock data for rubrics
 const mockRubrics = [
@@ -67,7 +69,7 @@ export default function EditActivityForm({
     activity,
 }: {
     classroom: GetClassroomResponse
-    activity: Activity
+    activity: GetActivity
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -86,7 +88,9 @@ export default function EditActivityForm({
     const titleRef = useRef<HTMLInputElement>(null)
     const [categoryId, setCategoryId] = useState<string>('')
     const [groupingId, setGroupingId] = useState<string>('individual')
-    const [rubric, setRubric] = useState<any>(null)
+    const [rubric, setRubric] = useState<z.infer<typeof RubricSchema> | null>(
+        activity.rubric
+    )
     const [isRubricDialogOpen, setIsRubricDialogOpen] = useState(false)
     const [selectedRubricId, setSelectedRubricId] = useState<string>('')
     const [scoringType, setScoringType] = useState<string>('none')
@@ -94,8 +98,8 @@ export default function EditActivityForm({
 
     const originalFiles = activity.files
 
-    // State for managing rubric options
-    const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
+    // // State for managing rubric options
+    // const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
     const [files, setFiles] = useState<
         { id: string; file: File; forcedSize?: number }[]
@@ -180,10 +184,7 @@ export default function EditActivityForm({
             setScoringType(activity.scoring_type || 'none')
 
             if (activity.rubric_id) {
-                setRubric({
-                    id: activity.rubric_id,
-                    name: 'temp',
-                }) // temporary
+                // setRubric(activity.rubric)
 
                 setSelectedRubricId(activity.rubric_id)
             }
@@ -216,6 +217,7 @@ export default function EditActivityForm({
         activity.description,
         activity.grouping_id,
         activity.rubric_id,
+        // activity.rubric,
         activity.scoring_type,
     ])
 
@@ -241,6 +243,7 @@ export default function EditActivityForm({
     // Handle new rubric creation
     const handleRubricSave = (rubric: any) => {
         setRubric(rubric)
+        setIsRubricDialogOpen(false)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -385,7 +388,7 @@ export default function EditActivityForm({
                                         )}
                                     </Button>
 
-                                    <Select
+                                    {/* <Select
                                         value={selectedRubricId}
                                         onValueChange={(val) => {
                                             setSelectedRubricId(val)
@@ -416,7 +419,7 @@ export default function EditActivityForm({
                                                 )}
                                             </SelectGroup>
                                         </SelectContent>
-                                    </Select>
+                                    </Select> */}
                                 </div>
                             </div>
                         </LabelWrapper>
@@ -428,7 +431,7 @@ export default function EditActivityForm({
     }, [
         scoringType,
         rubric,
-        availableRubrics,
+        // availableRubrics,
         validationErrors,
         activity.max_score,
         selectedRubricId,

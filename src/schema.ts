@@ -69,6 +69,93 @@ export const GroupingCompositionSchema = z.object({
         .min(1, 'there must be at least 1 group'),
 })
 
+export const RubricCriteriaScoreRangeSchema = z
+    .object({
+        name: z
+            .string()
+            .min(1, 'Score range name is required')
+            .max(50, 'Score range name cannot exceed 50 characters'),
+        description: z.string().max(255),
+        min_score: z.coerce.number().int().nonnegative(),
+        max_score: z.coerce.number().int().nonnegative(),
+    })
+    .superRefine((val, ctx) => {
+        if (val.min_score >= val.max_score) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.too_big,
+                message:
+                    'Min score cannot be greater than or equal to max score',
+                path: ['min_score'],
+                maximum: val.max_score,
+                inclusive: false,
+                type: 'number',
+            })
+            return
+        }
+    })
+
+export const RubricCriteriaSchema = z.object({
+    name: z
+        .string()
+        .min(1, 'Criteria name is required')
+        .max(50, 'Criteria name cannot exceed 50 characters'),
+    // description: z.string().max(255).optional(),
+    criteria_score_ranges: z
+        .array(RubricCriteriaScoreRangeSchema)
+        .min(1, 'At least 1 score range is required')
+        .superRefine((val, ctx) => {
+            assert(val.length > 0)
+            let last = val[0].max_score
+
+            for (let i = 1; i < val.length; i++) {
+                const scoreRange = val[i]
+
+                if (scoreRange.min_score < last + 1) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: `The minimum score of a score range must be greater than the previous max score`,
+                        path: ['criteria_score_ranges', i, 'min_score'],
+                    })
+                    return
+                }
+            }
+        }),
+})
+
+export const RubricSectionSchema = z.object({
+    name: z.string().min(1, 'Section name is required').max(50),
+    description: z.string().max(255),
+    is_group_score: z.boolean(),
+    score_percentage: z.coerce.number().nonnegative().lte(100),
+    rubric_criterias: z
+        .array(RubricCriteriaSchema)
+        .min(1, 'At least 1 criteria is required'),
+})
+
+export const RubricSchema = z.object({
+    note: z.string(),
+    rubric_sections: z
+        .array(RubricSectionSchema)
+        .min(1, 'At least 1 section is required')
+        .superRefine((val, ctx) => {
+            assert(val.length > 0)
+            let totalPercentage = 0
+
+            for (const section of val) {
+                totalPercentage += section.score_percentage
+            }
+
+            if (totalPercentage !== 0 && totalPercentage !== 100) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `Total score percentage must be 100%. Current total is ${totalPercentage}%`,
+                    path: ['sections'],
+                })
+                return
+            }
+        }),
+})
+
 export const ActivitySchema = z
     .object({
         title: z.string().min(1, 'Title is required').max(255),
@@ -137,7 +224,7 @@ export const ActivitySchema = z
         scoring_type: z.enum([...SCORING_TYPES, '']).nullable(),
         max_score: z.any(),
         // rubric_id: z.string().nullable(),
-        rubric: z.any().nullable(), // to be defined, RubricSchema,
+        rubric: z.any().nullable(),
     })
     .superRefine((val, ctx) => {
         if (val.scoring_type !== SCORING_TYPE_RANGE) return
@@ -170,18 +257,22 @@ export const ActivitySchema = z
             return
         }
     })
-    .refine(
-        (val) => {
-            if (val.scoring_type === SCORING_TYPE_RUBRIC) {
-                return !!JSON.parse(val.rubric)
+    .superRefine((val, ctx) => {
+        if (val.scoring_type === SCORING_TYPE_RUBRIC) {
+            const result = RubricSchema.safeParse(JSON.parse(val.rubric))
+
+            if (result.success) {
+                return true
             }
-            return true
-        },
-        {
-            message: "Rubric is required when scoring type is 'rubric-based'",
-            path: ['rubric'],
+
+            for (const issue of result.error.issues) {
+                ctx.addIssue(issue)
+            }
+
+            return false
         }
-    )
+        return true
+    })
 
 export const EditActivitySchema = z
     .object({
@@ -345,93 +436,6 @@ export const ImportGroupFileUploadSchema = z.object({
             })
         }
     }),
-})
-
-export const RubricCriteriaScoreRangeSchema = z
-    .object({
-        name: z
-            .string()
-            .min(1, 'Score range name is required')
-            .max(50, 'Score range name cannot exceed 50 characters'),
-        description: z.string().max(255),
-        min_score: z.coerce.number().int().nonnegative(),
-        max_score: z.coerce.number().int().nonnegative(),
-    })
-    .superRefine((val, ctx) => {
-        if (val.min_score >= val.max_score) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.too_big,
-                message:
-                    'Min score cannot be greater than or equal to max score',
-                path: ['min_score'],
-                maximum: val.max_score,
-                inclusive: false,
-                type: 'number',
-            })
-            return
-        }
-    })
-
-export const RubricCriteriaSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Criteria name is required')
-        .max(50, 'Criteria name cannot exceed 50 characters'),
-    // description: z.string().max(255).optional(),
-    criteria_score_ranges: z
-        .array(RubricCriteriaScoreRangeSchema)
-        .min(1, 'At least 1 score range is required')
-        .superRefine((val, ctx) => {
-            assert(val.length > 0)
-            let last = val[0].max_score
-
-            for (let i = 1; i < val.length; i++) {
-                const scoreRange = val[i]
-
-                if (scoreRange.min_score < last + 1) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: `The minimum score of a score range must be greater than the previous max score`,
-                        path: ['criteria_score_range', i, 'min_score'],
-                    })
-                    return
-                }
-            }
-        }),
-})
-
-export const RubricSectionSchema = z.object({
-    name: z.string().min(1, 'Section name is required').max(50),
-    description: z.string().max(255),
-    is_group_score: z.boolean(),
-    score_percentage: z.coerce.number().nonnegative().lte(100),
-    criterias: z
-        .array(RubricCriteriaSchema)
-        .min(1, 'At least 1 criteria is required'),
-})
-
-export const RubricSchema = z.object({
-    note: z.string(),
-    sections: z
-        .array(RubricSectionSchema)
-        .min(1, 'At least 1 section is required')
-        .superRefine((val, ctx) => {
-            assert(val.length > 0)
-            let totalPercentage = 0
-
-            for (const section of val) {
-                totalPercentage += section.score_percentage
-            }
-
-            if (totalPercentage !== 0 && totalPercentage !== 100) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: `Total score percentage must be 100%. Current total is ${totalPercentage}%`,
-                    path: ['sections'],
-                })
-                return
-            }
-        }),
 })
 
 export const customErrorMap: z.ZodErrorMap = (

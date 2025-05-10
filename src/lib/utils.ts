@@ -147,7 +147,9 @@ export function getValidationErrorActionResponse<T>(
     }
 }
 
-export function getValidationErrorMessage(e: ValidationError[]): string {
+export function getValidationErrorMessage(
+    e: ValidationError[] | NestedPathValidationError[]
+): string {
     return e.length > 0 ? e[0].message : ''
 }
 

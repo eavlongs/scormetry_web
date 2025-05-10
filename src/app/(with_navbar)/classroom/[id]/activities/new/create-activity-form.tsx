@@ -186,7 +186,7 @@ export default function CreateActivityForm({
     }, [])
 
     // Handle new rubric creation
-    const handleRubricSave = (rubric: any) => {
+    const handleRubricSave = (rubric: z.infer<typeof RubricSchema>) => {
         setRubric(rubric)
         setIsRubricDialogOpen(false)
     }
