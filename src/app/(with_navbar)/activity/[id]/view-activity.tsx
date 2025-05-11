@@ -2,6 +2,12 @@
 
 import QuillEditor from '@/components/quill-editor'
 import { SimpleToolTip } from '@/components/simple-tooltip'
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatBytes } from '@/components/ui/file-upload'
@@ -16,6 +22,7 @@ import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import ActivityCommentSection from './activity-comment-section'
 import ActivityGroups from './activity-groups'
 import ActivityScoreview from './activity-score-view'
+import ActivityScoringDetail from './activity-scoring-detail'
 import ActivityStudents from './activity-students'
 
 export default function ViewActivity({
@@ -41,23 +48,46 @@ export default function ViewActivity({
     }
 
     const renderSidePanel = useCallback(() => {
-        if (activity.groups) {
+        if (activity.groups || activity.students) {
             return (
-                <ActivityGroups
-                    activityID={activity.id}
-                    groups={activity.groups}
-                    judges={activity.judges || []}
-                />
+                <Accordion
+                    type="multiple"
+                    className="w-full"
+                    defaultValue={['item-1', 'item-2']}
+                >
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger className="cursor-pointer hover:no-underline text-base">
+                            Scoring Detail
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            <ActivityScoringDetail activity={activity} />
+                        </AccordionContent>
+                    </AccordionItem>
+                    {activity.scoring_type != null && (
+                        <AccordionItem value="item-2">
+                            <AccordionTrigger className="cursor-pointer hover:no-underline text-base">
+                                Judge Assignment
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                {activity.groups ? (
+                                    <ActivityGroups
+                                        activityID={activity.id}
+                                        groups={activity.groups}
+                                        judges={activity.judges || []}
+                                    />
+                                ) : (
+                                    <ActivityStudents
+                                        activity={activity}
+                                        judges={activity.judges || []}
+                                    />
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
+                </Accordion>
             )
         }
-        if (activity.students) {
-            return (
-                <ActivityStudents
-                    activity={activity}
-                    judges={activity.judges || []}
-                />
-            )
-        }
+
         return (
             <>
                 <ActivityScoreview activity={activity} />

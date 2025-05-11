@@ -439,7 +439,9 @@ export function RubricBuilderDialog({
                         </Button>
 
                         <div className="px-4">
-                            <h3 className="text-sm font-medium mb-2">Note</h3>
+                            <h3 className="text-base underline font-bol mb-2">
+                                Note
+                            </h3>
                             <QuillEditor
                                 // placeholder="Add any additional information about this rubric..."
                                 className="min-h-[180px] w-full"

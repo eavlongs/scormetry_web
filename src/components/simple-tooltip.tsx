@@ -20,9 +20,11 @@ export function SimpleToolTip({
                 <TooltipTrigger asChild className="cursor-pointer">
                     {children}
                 </TooltipTrigger>
-                <TooltipContent {...props}>
-                    <p>{text}</p>
-                </TooltipContent>
+                {text && (
+                    <TooltipContent {...props}>
+                        <p>{text}</p>
+                    </TooltipContent>
+                )}
             </Tooltip>
         </TooltipProvider>
     )
