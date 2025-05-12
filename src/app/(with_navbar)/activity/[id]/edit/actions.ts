@@ -8,23 +8,6 @@ import { Activity, GetActivity } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { ZodError } from 'zod'
 
-export async function getActivity(activityId: string) {
-    try {
-        const response = await apiWithAuth.get<
-            ApiResponse<{
-                activity: GetActivity
-                classroom: GetClassroomResponse
-            }>
-        >(`/activity/${activityId}`)
-
-        return {
-            ...response.data.data!,
-        }
-    } catch (e: any) {
-        return null
-    }
-}
-
 export async function editActivity(
     activityId: string,
     formData: FormData

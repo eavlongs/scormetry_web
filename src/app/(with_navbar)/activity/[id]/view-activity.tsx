@@ -71,7 +71,7 @@ export default function ViewActivity({
                             <AccordionContent>
                                 {activity.groups ? (
                                     <ActivityGroups
-                                        activityID={activity.id}
+                                        activity={activity}
                                         groups={activity.groups}
                                         judges={activity.judges || []}
                                     />

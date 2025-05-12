@@ -9,7 +9,11 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
-import { GetGroup } from '@/types/classroom'
+import {
+    GetActivity,
+    GetGroup,
+    GetGroupWithJudgePermission,
+} from '@/types/classroom'
 import { ChevronDown, Users } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -18,19 +22,20 @@ import { assignJudgesToGroup } from './actions'
 import AssignJudgeAll from './assign-judge-all'
 import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
+import { GiveScoreButton } from './give-score-button'
 
 export default function ActivityGroups({
-    activityID,
+    activity,
     groups,
     judges,
 }: {
-    activityID: string
-    groups: GetGroup[]
+    activity: GetActivity
+    groups: GetGroupWithJudgePermission[]
     judges: UserEssentialDetail[]
 }) {
     const [openGroups, setOpenGroups] = useState<string[]>([])
     const [groupToAssignJudges, setGroupToAssignJudges] =
-        useState<GetGroup | null>()
+        useState<GetGroupWithJudgePermission | null>()
 
     function toggleGroup(groupId: string) {
         setOpenGroups((prev) =>
@@ -44,7 +49,7 @@ export default function ActivityGroups({
         if (!groupToAssignJudges) return
 
         const response = await assignJudgesToGroup(
-            activityID,
+            activity.id,
             groupToAssignJudges.id,
             judgesId
         )
@@ -69,7 +74,7 @@ export default function ActivityGroups({
                     </Badge>
                 </div>
                 <div className="mb-4">
-                    <AssignJudgeAll activityID={activityID} judges={judges} />
+                    <AssignJudgeAll activityID={activity.id} judges={judges} />
                 </div>
                 <div className="space-y-3">
                     {groups.map((group) => (
@@ -88,19 +93,26 @@ export default function ActivityGroups({
                                         <Badge variant="secondary">
                                             {group.users.length} members
                                         </Badge>
+                                    </div>
+                                    <div className="ml-auto flex items-center gap-x-2">
                                         <AssignJudgeButton
                                             onClick={() =>
                                                 setGroupToAssignJudges(group)
                                             }
                                         />
-                                    </div>
-                                    <ChevronDown
-                                        className={cn(
-                                            'h-4 w-4 text-muted-foreground transition-transform',
-                                            openGroups.includes(group.id) &&
-                                                'transform rotate-180'
+                                        {group.permitted_to_judge && (
+                                            <GiveScoreButton
+                                                activityId={activity.id}
+                                            />
                                         )}
-                                    />
+                                        <ChevronDown
+                                            className={cn(
+                                                'h-4 w-4 text-muted-foreground transition-transform',
+                                                openGroups.includes(group.id) &&
+                                                    'transform rotate-180'
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                             </CollapsibleTrigger>
                             <CollapsibleContent className="divide-y divide-border">

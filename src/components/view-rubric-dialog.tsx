@@ -13,7 +13,7 @@ import {
 } from './ui/tooltip'
 import { Textarea } from './ui/textarea'
 
-interface RubricBuilderDialogProps {
+interface ViewRubricDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     rubric: GetRubric
@@ -23,19 +23,11 @@ export function ViewRubricDialog({
     open,
     onOpenChange,
     rubric,
-}: RubricBuilderDialogProps) {
+}: ViewRubricDialogProps) {
     const [sections] = useState<GetRubric['rubric_sections']>(
         rubric.rubric_sections
     )
     const [hasWeigtage] = useState<boolean>(rubric.has_weightage)
-    const [quill, setQuill] = useState()
-
-    useEffect(() => {
-        if (open && quill && rubric.note) {
-            // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-            quill.setContents(JSON.parse(rubric.note))
-        }
-    }, [quill, rubric.note])
 
     return (
         <>
@@ -57,9 +49,9 @@ export function ViewRubricDialog({
                             </h3>
                             <QuillEditor
                                 className=" w-full"
-                                setQuillObject={setQuill}
+                                initialContent={JSON.parse(rubric.note)}
                                 readOnly
-                                placeholder="Not availablae"
+                                placeholder="Not available"
                             />
                         </div>
                     </div>

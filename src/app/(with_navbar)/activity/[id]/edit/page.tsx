@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getActivity } from './actions'
+import { getActivity } from '../actions'
 import EditActivityForm from './edit-activity-form'
 
 export default async function Page({ params }: { params: { id: string } }) {

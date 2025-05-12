@@ -19,6 +19,7 @@ import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
 import { assignJudgesToStudent } from './actions'
 import { toast } from 'sonner'
+import { GiveScoreButton } from './give-score-button'
 
 export default function ActivityStudents({
     activity,
@@ -74,6 +75,7 @@ export default function ActivityStudents({
                 <div className="border rounded-lg bg-card divide-y divide-border">
                     {activity.students?.map((student) => (
                         <ListStudentWithJudges
+                            activity={activity}
                             open={openStudents.includes(student.id)}
                             onOpenChange={() => toggleGroup(student.id)}
                             student={student}
@@ -95,13 +97,14 @@ export default function ActivityStudents({
         </ScrollArea>
     )
 }
-
 function ListStudentWithJudges({
+    activity,
     student,
     open,
     onOpenChange,
     onAssign,
 }: {
+    activity: GetActivity
     student: NonNullable<GetActivity['students']>[number]
     open: boolean
     onOpenChange: () => void
@@ -136,15 +139,20 @@ function ListStudentWithJudges({
                         </p>
                     </div>
 
-                    <AssignJudgeButton onClick={onAssign} />
-
-                    <ChevronDown
-                        className={cn(
-                            'h-4 w-4 text-muted-foreground transition-transform',
-                            open && 'transform rotate-180',
-                            student.judges.length === 0 && 'opacity-0'
+                    <div className="ml-auto flex items-center gap-x-2">
+                        <AssignJudgeButton onClick={onAssign} />
+                        {student.permitted_to_judge && (
+                            <GiveScoreButton activityId={activity.id} />
                         )}
-                    />
+
+                        <ChevronDown
+                            className={cn(
+                                'h-4 w-4 text-muted-foreground transition-transform',
+                                open && 'transform rotate-180',
+                                student.judges.length === 0 && 'opacity-0'
+                            )}
+                        />
+                    </div>
                 </div>
             </CollapsibleTrigger>
             <CollapsibleContent className="divide-y divide-border">

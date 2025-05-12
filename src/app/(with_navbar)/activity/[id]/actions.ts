@@ -2,8 +2,27 @@
 
 import { apiWithAuth } from '@/lib/axios'
 import { UserEssentialDetail } from '@/types/auth'
+import { GetActivity } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
+import { GetClassroomResponse } from '../../classroom/[id]/actions'
+
+export async function getActivity(activityId: string) {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                activity: GetActivity
+                classroom: GetClassroomResponse
+            }>
+        >(`/activity/${activityId}`)
+
+        return {
+            ...response.data.data!,
+        }
+    } catch (e: any) {
+        return null
+    }
+}
 
 export async function assignJudgesToGroup(
     activityId: string,

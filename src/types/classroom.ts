@@ -135,13 +135,18 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
     judges: UserEssentialDetail[]
 }
 
+export type GetGroupWithJudgePermission = GetGroup & {
+    permitted_to_judge: boolean
+}
+
 export type GetActivity = Activity & {
     rubric: GetRubric | null
     posted_by_user: ClassroomUserDetail
-    groups: GetGroup[] | null
+    groups: GetGroupWithJudgePermission[] | null
     students:
         | Prettify<
               UserEssentialDetail & {
+                  permitted_to_judge: boolean
                   judges: UserEssentialDetail[]
               }
           >[]

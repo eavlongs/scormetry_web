@@ -84,6 +84,7 @@ export default function QuillEditor({
                 if (initialContent) {
                     if (quillInstance.editor.isBlank()) {
                         // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
+
                         quillInstance.setContents(initialContent)
                     }
                 } else {

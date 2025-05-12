@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getActivity } from './actions'
-import ViewActivity from './view-activity'
+import { getActivity } from '../actions'
+import ScoreActivity from './score-activity'
 
 export default async function ActivityPage({
     params,
@@ -16,7 +16,7 @@ export default async function ActivityPage({
 
     return (
         <main className="pt-2">
-            <ViewActivity activity={data.activity} classroom={data.classroom} />
+            <ScoreActivity activity={data.activity} />
         </main>
     )
 }
