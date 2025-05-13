@@ -1,40 +1,112 @@
 'use client'
 
 import QuillEditor from '@/components/quill-editor'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { GetRubric } from '@/types/classroom'
+import { GetRubric, ScoringEntity } from '@/types/classroom'
+import Image from 'next/image'
 import React, { useState } from 'react'
 
 interface RubricScoreInputProps {
     rubric: GetRubric
+    entity: ScoringEntity
 }
 
 export function RubricScoreInput({
     rubric,
+    entity,
     ...props
 }: RubricScoreInputProps & React.ComponentProps<'div'>) {
     const [sections] = useState<GetRubric['rubric_sections']>(
         rubric.rubric_sections
     )
+    const [groupScoreSections] = useState<GetRubric['rubric_sections']>(
+        rubric.rubric_sections.filter((s) => s.is_group_score)
+    )
+    const [individualScoreSections] = useState<GetRubric['rubric_sections']>(
+        rubric.rubric_sections.filter((s) => !s.is_group_score)
+    )
     const [hasWeigtage] = useState<boolean>(rubric.has_weightage)
 
     return (
         <div {...props} className="flex flex-col gap-y-4 ">
-            {sections.map((section) => (
-                <RubricSection
-                    key={section.id}
-                    section={section}
-                    hasWeightage={hasWeigtage}
-                />
-            ))}
+            {entity.type == 'group' ? (
+                <Tabs defaultValue="group" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="group">Group Score</TabsTrigger>
+                        <TabsTrigger value="individual">
+                            Individual Score
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="group" className="w-full">
+                        {groupScoreSections.map((section) => (
+                            <RubricSection
+                                key={section.id}
+                                section={section}
+                                hasWeightage={hasWeigtage}
+                            />
+                        ))}
+                    </TabsContent>
+                    <TabsContent value="individual">
+                        <div className="flex flex-col gap-y-6 mt-2">
+                            {entity.entity.users.map((student) => {
+                                return (
+                                    <div
+                                        key={student.id}
+                                        className="flex flex-col gap-y-2"
+                                    >
+                                        <div className="flex items-center gap-x-2">
+                                            <div className="relative h-8 w-8 cursor-pointer">
+                                                <Image
+                                                    src={
+                                                        student.profile_picture
+                                                    }
+                                                    alt={
+                                                        student.first_name +
+                                                        ' ' +
+                                                        student.last_name
+                                                    }
+                                                    fill
+                                                    className="rounded-full"
+                                                />
+                                            </div>
+                                            <span>
+                                                {student.first_name +
+                                                    ' ' +
+                                                    student.last_name}
+                                            </span>
+                                        </div>
+                                        {individualScoreSections.map(
+                                            (section) => (
+                                                <RubricSection
+                                                    key={section.id}
+                                                    section={section}
+                                                    hasWeightage={hasWeigtage}
+                                                />
+                                            )
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            ) : (
+                sections.map((section) => (
+                    <RubricSection
+                        key={section.id}
+                        section={section}
+                        hasWeightage={hasWeigtage}
+                    />
+                ))
+            )}
 
             <div>
                 <h3 className="text-base underline font-bold mb-2">Note</h3>
@@ -79,19 +151,21 @@ function RubricSection({
                     <TooltipContent className="max-w-[20rem]">
                         <p className="font-bold text-center text-base mb-1">
                             {section.name}
+                            {hasWeightage && ` (${section.score_percentage}%)`}
                         </p>
+
                         <p className="text-center">{section.description}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
 
             <div className="w-full min-w-0">
-                <div className="ml-2 mb-2 text-sm">
+                {/* <div className="ml-2 mb-2 text-sm">
                     <Badge variant="paragon">
                         {section.is_group_score ? 'Group' : 'Individual'}
                         {' Score'}
                     </Badge>
-                </div>
+                </div> */}
 
                 {section.rubric_criterias.map((criteria) => (
                     <RubricCriteria key={criteria.id} criteria={criteria} />
@@ -144,7 +218,7 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
 
                                 <TooltipContent className="max-w-[20rem]">
                                     <p className="font-bold text-center text-base mb-1">
-                                        {range.name}
+                                        {`${range.name} (${range.min_score} - ${range.max_score})`}
                                     </p>
                                     <p className="text-center">
                                         {range.description}

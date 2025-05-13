@@ -206,3 +206,16 @@ export type CriteriaScoreRange = {
     created_at: string
     updated_at: string
 }
+
+export type ScoringEntity = {
+    isScored: boolean
+} & (
+    | {
+          type: 'group'
+          entity: GetGroup
+      }
+    | {
+          type: 'individual'
+          entity: UserEssentialDetail
+      }
+)

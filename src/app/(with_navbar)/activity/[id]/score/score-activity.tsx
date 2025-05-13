@@ -7,25 +7,19 @@ import { Label } from '@/components/ui/label'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { UserEssentialDetail } from '@/types/auth'
 import {
     GetActivity,
+    GetGroup,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
+    ScoringEntity,
 } from '@/types/classroom'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { RubricScoreInput } from './rubric-score-input'
-
-type ScoringEntity = {
-    id: string
-    name: string
-    isGroup: boolean
-    isScored: boolean
-    profilePicture?: string
-    email?: string
-}
 
 type ScoreData = {
     score?: number
@@ -52,10 +46,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             activity.groups.forEach((group) => {
                 if (group.permitted_to_judge) {
                     entities.push({
-                        id: group.id,
-                        name: group.name,
-                        isGroup: true,
-                        isScored: false, // This would be set based on actual scoring data
+                        type: 'group',
+                        entity: group,
+                        isScored: false,
                     })
                 }
             })
@@ -63,12 +56,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             activity.students.forEach((student) => {
                 if (student.permitted_to_judge) {
                     entities.push({
-                        id: student.id,
-                        name: `${student.first_name} ${student.last_name}`,
-                        isGroup: false,
+                        type: 'individual',
+                        entity: student,
                         isScored: false, // This would be set based on actual scoring data
-                        profilePicture: student.profile_picture,
-                        email: student.email,
                     })
                 }
             })
@@ -90,11 +80,24 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             return
         }
 
-        const filtered = entities.filter(
-            (entity) =>
-                entity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                entity.email?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        const filtered = entities.filter((entity) => {
+            if (entity.type === 'group') {
+                return entity.entity.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+            } else {
+                return (
+                    (
+                        entity.entity.first_name.toLowerCase() +
+                        ' ' +
+                        entity.entity.last_name.toLowerCase()
+                    ).includes(searchQuery.toLowerCase()) ||
+                    entity.entity.email
+                        ?.toLowerCase()
+                        .includes(searchQuery.toLowerCase())
+                )
+            }
+        })
         setFilteredEntities(filtered)
     }, [searchQuery, entities])
 
@@ -133,20 +136,20 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             // Update the entities list to mark this one as scored
             setEntities((prev) =>
                 prev.map((entity) =>
-                    entity.id === selectedEntity.id
+                    entity.entity.id === selectedEntity.entity.id
                         ? { ...entity, isScored: true }
                         : entity
                 )
             )
             setFilteredEntities((prev) =>
                 prev.map((entity) =>
-                    entity.id === selectedEntity.id
+                    entity.entity.id === selectedEntity.entity.id
                         ? { ...entity, isScored: true }
                         : entity
                 )
             )
 
-            toast.success(`Score submitted for ${selectedEntity.name}`)
+            // toast.success(`Score submitted for ${selectedEntity.entity.name}`)
 
             // Clear form if needed or prepare for next entry
             // setScoreData({ comment: '' }) // Uncomment to clear after submission
@@ -194,10 +197,11 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                 ) : (
                                     filteredEntities.map((entity) => (
                                         <div
-                                            key={entity.id}
+                                            key={entity.entity.id}
                                             className={cn(
                                                 'flex items-center p-3 rounded-md cursor-pointer gap-3',
-                                                selectedEntity?.id === entity.id
+                                                selectedEntity?.entity.id ===
+                                                    entity.entity.id
                                                     ? 'bg-muted'
                                                     : 'hover:bg-muted/50 transition-colors'
                                             )}
@@ -215,39 +219,57 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                 }
                                             }}
                                         >
-                                            {entity.isGroup ? (
+                                            {entity.type == 'group' ? (
                                                 <div className="h-10 w-10 rounded-md bg-muted-foreground/10 flex items-center justify-center">
                                                     <Badge variant="outline">
-                                                        {entity.name.substring(
+                                                        {entity.entity.name.substring(
                                                             0,
                                                             2
                                                         )}
                                                     </Badge>
                                                 </div>
-                                            ) : entity.profilePicture ? (
+                                            ) : (
                                                 <div className="relative h-10 w-10">
                                                     <Image
                                                         src={
-                                                            entity.profilePicture
+                                                            entity.entity
+                                                                .profile_picture
                                                         }
-                                                        alt={entity.name}
+                                                        alt={
+                                                            entity.entity
+                                                                .first_name +
+                                                            ' ' +
+                                                            entity.entity
+                                                                .last_name
+                                                        }
                                                         fill
                                                         className="rounded-full object-cover"
                                                     />
                                                 </div>
-                                            ) : (
-                                                <div className="h-10 w-10 rounded-full bg-muted-foreground/10" />
                                             )}
 
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium truncate">
-                                                    {entity.name}
+                                                    {entity.type == 'group' ? (
+                                                        entity.entity.name
+                                                    ) : (
+                                                        <>
+                                                            {entity.entity
+                                                                .first_name +
+                                                                ' ' +
+                                                                entity.entity
+                                                                    .last_name}
+
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {
+                                                                    entity
+                                                                        .entity
+                                                                        .email
+                                                                }
+                                                            </p>
+                                                        </>
+                                                    )}
                                                 </p>
-                                                {entity.email && (
-                                                    <p className="text-xs text-muted-foreground truncate">
-                                                        {entity.email}
-                                                    </p>
-                                                )}
                                             </div>
 
                                             {entity.isScored ? (
@@ -273,20 +295,23 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                         </p>
                     </div>
                 ) : (
-                    <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-2 px-4">
+                    <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
                         <div className="h-full overflow-y-auto flex flex-col gap-y-4">
                             <p className="text-lg font-semibold">
-                                {selectedEntity.isGroup
-                                    ? 'Group: '
-                                    : 'Student: '}
-                                {selectedEntity.name}
-                            </p>
-                            {!selectedEntity.isGroup &&
-                                selectedEntity.email && (
-                                    <p className="text-sm text-muted-foreground">
-                                        {selectedEntity.email}
-                                    </p>
+                                {selectedEntity.type == 'group' ? (
+                                    selectedEntity.entity.name
+                                ) : (
+                                    <>
+                                        {selectedEntity.entity.first_name +
+                                            ' ' +
+                                            selectedEntity.entity.last_name}
+                                        <p className="text-sm text-muted-foreground">
+                                            {selectedEntity.entity.email}
+                                        </p>
+                                    </>
                                 )}
+                            </p>
+
                             <div className="w-full flex flex-col flex-grow">
                                 {activity.scoring_type ===
                                     SCORING_TYPE_RANGE && (
@@ -319,8 +344,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                     activity.rubric && (
                                         <div>
                                             <RubricScoreInput
-                                                className=""
                                                 rubric={activity.rubric}
+                                                entity={selectedEntity}
                                             />
                                         </div>
                                     )}
@@ -350,7 +375,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                         <Button
                                             onClick={handleSubmit}
                                             disabled={isSubmitting}
-                                            // className="ml-auto"
+                                            className="block ml-auto"
                                         >
                                             {isSubmitting ? (
                                                 <>
