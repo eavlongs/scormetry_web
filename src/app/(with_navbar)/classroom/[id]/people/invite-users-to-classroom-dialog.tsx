@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { getErrorMessageFromValidationErrorMultipleKeys } from '@/lib/utils'
 import { ClassroomRole } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
 import { useEffect, useState } from 'react'
@@ -209,7 +209,7 @@ export function InviteUsersToClassroomDialog({
                     <div className="grid gap-2">
                         <LabelWrapper
                             label={{ text: 'Email Addresses', field: 'email' }}
-                            error={getErrorMessageFromValidationError(
+                            error={getErrorMessageFromValidationErrorMultipleKeys(
                                 validationError,
                                 ['email', 'users']
                             )}

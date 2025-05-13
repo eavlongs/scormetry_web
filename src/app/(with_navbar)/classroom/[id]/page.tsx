@@ -7,13 +7,13 @@ export default async function Page({
     params,
     searchParams,
 }: {
-    params: {
+    params: Promise<{
         id: string
-    }
-    searchParams: {
+    }>
+    searchParams: Promise<{
         success_message: string
         error_message: string
-    }
+    }>
 }) {
     const { success_message, error_message } = await searchParams
     const { id } = await params

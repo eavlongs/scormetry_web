@@ -111,6 +111,19 @@ export function convertZodErrorToValidationError<T>(
     return validationErrors
 }
 
+export function getErrorMessageFromValidationErrorMultipleKeys(
+    e: ValidationError[],
+    keys: string[]
+): string {
+    for (const key of keys) {
+        const error = e.find((error) => error.field === key)
+        if (error) {
+            return error.message
+        }
+    }
+    return ''
+}
+
 export function getErrorMessageFromValidationError(
     e: ValidationError[],
     key: string

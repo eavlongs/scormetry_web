@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 

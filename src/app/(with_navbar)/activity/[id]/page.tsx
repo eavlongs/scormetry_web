@@ -5,7 +5,7 @@ import ViewActivity from './view-activity'
 export default async function ActivityPage({
     params,
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
     const { id } = await params
     const data = await getActivity(id)

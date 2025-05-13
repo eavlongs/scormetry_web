@@ -578,7 +578,7 @@ function RubricSection({
                     <div className="flex-none pl-2 ">
                         <div className="flex items-center gap-2 mb-2 text-sm">
                             <span className="mr-2">Scoring Type:</span>
-                            <div className="flex bg-white rounded-full  border">
+                            <div className="flex bg-white rounded-full border">
                                 <button
                                     className={cn(
                                         `px-2 py-1 rounded-full cursor-pointer`,
