@@ -219,3 +219,5 @@ export type ScoringEntity = {
           entity: UserEssentialDetail
       }
 )
+
+export type IndividualOrGroup = 'individual' | 'group'

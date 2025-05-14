@@ -7,10 +7,8 @@ import { Label } from '@/components/ui/label'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { UserEssentialDetail } from '@/types/auth'
 import {
     GetActivity,
-    GetGroup,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
     ScoringEntity,

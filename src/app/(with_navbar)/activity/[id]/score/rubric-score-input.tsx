@@ -10,9 +10,17 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { GetRubric, ScoringEntity } from '@/types/classroom'
+import { getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
+import { RubricScoreSchema } from '@/schema'
+import { GetRubric, IndividualOrGroup, ScoringEntity } from '@/types/classroom'
+import { NestedPathValidationError } from '@/types/response'
 import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { z } from 'zod'
+import {
+    RubricScoreProvider,
+    useRubricScoreContext,
+} from './rubric-score-provider'
 
 interface RubricScoreInputProps {
     rubric: GetRubric
@@ -24,6 +32,150 @@ export function RubricScoreInput({
     entity,
     ...props
 }: RubricScoreInputProps & React.ComponentProps<'div'>) {
+    const [scores, setScores] = useState<z.infer<typeof RubricScoreSchema>[]>(
+        []
+    )
+
+    const [errors, setErrors] = useState<NestedPathValidationError[]>([])
+
+    const [sync, setSync] = useState(false)
+
+    function updateScore(
+        id: string,
+        type: IndividualOrGroup,
+        criteria_id: string,
+        scoreStr: string
+    ) {
+        if (scoreStr === '') {
+            setScores((prev) => {
+                const index = prev.findIndex(
+                    (s) => s.assignee_id === id && s.type == type
+                )
+                if (index !== -1) {
+                    const updatedScores = [...prev]
+                    updatedScores[index].scores = updatedScores[
+                        index
+                    ].scores.filter((s) => s.rubric_criteria_id !== criteria_id)
+                    return updatedScores
+                }
+                return prev
+            })
+            return
+        }
+
+        const score = parseFloat(scoreStr)
+
+        if (isNaN(score)) {
+            throw new Error('Score must be a number')
+        }
+
+        setScores((prev) => {
+            const index = prev.findIndex(
+                (s) => s.assignee_id === id && s.type == type
+            )
+            if (index !== -1) {
+                const updatedScores = [...prev]
+                const hasExistingScore = updatedScores[index].scores.find(
+                    (s) => s.rubric_criteria_id === criteria_id
+                )
+
+                let newScoresArray: (typeof prev)[number]['scores']
+                if (hasExistingScore) {
+                    newScoresArray = updatedScores[index].scores.map((s) => {
+                        if (s.rubric_criteria_id === criteria_id) {
+                            return {
+                                ...s,
+                                score: score,
+                            }
+                        }
+
+                        return s
+                    })
+                } else {
+                    newScoresArray = [
+                        ...updatedScores[index].scores,
+                        {
+                            rubric_criteria_id: criteria_id,
+                            score: score,
+                        },
+                    ]
+                }
+
+                updatedScores[index] = {
+                    ...updatedScores[index],
+                    scores: newScoresArray,
+                }
+                return updatedScores
+            } else {
+                return [
+                    ...prev,
+                    {
+                        assignee_id: id,
+                        type: type,
+                        scores: [
+                            {
+                                rubric_criteria_id: criteria_id,
+                                score: score,
+                            },
+                        ],
+                    },
+                ]
+            }
+        })
+    }
+
+    function addOrReplaceError(error: NestedPathValidationError) {
+        setErrors((prev) => {
+            const index = prev.findIndex(
+                (e) => e.field.join(',') === error.field.join(',')
+            )
+            if (index !== -1) {
+                prev[index] = error
+                return [...prev]
+            }
+            return [...prev, error]
+        })
+    }
+
+    function removeError(path: NestedPathValidationError['field']) {
+        setErrors((prev) => {
+            const filtered = prev.filter(
+                (e) => e.field.join(',') !== path.join(',')
+            )
+
+            return filtered
+        })
+    }
+
+    return (
+        <RubricScoreProvider
+            value={{
+                assignment_type: entity.type,
+                scores: scores,
+                errors: errors,
+
+                updateScore: updateScore,
+                syncStatus: sync,
+                syncScore: () => {
+                    setSync((prev) => !prev)
+                },
+                setErrors: setErrors,
+                addOrReplaceError: addOrReplaceError,
+                removeError: removeError,
+            }}
+        >
+            <_RubricScoreInput {...props} rubric={rubric} entity={entity} />
+        </RubricScoreProvider>
+    )
+}
+
+function _RubricScoreInput({
+    rubric,
+    entity,
+    ...props
+}: RubricScoreInputProps & React.ComponentProps<'div'>) {
+    const [tab, setTab] = useState<string>('group')
+
     const [sections] = useState<GetRubric['rubric_sections']>(
         rubric.rubric_sections
     )
@@ -35,10 +187,20 @@ export function RubricScoreInput({
     )
     const [hasWeigtage] = useState<boolean>(rubric.has_weightage)
 
+    const ctx = useRubricScoreContext()
     return (
         <div {...props} className="flex flex-col gap-y-4 ">
             {entity.type == 'group' ? (
-                <Tabs defaultValue="group" className="w-full">
+                <Tabs
+                    value={tab}
+                    onValueChange={(val) => {
+                        ctx.syncScore()
+                        setTimeout(() => {
+                            setTab(val)
+                        }, 0)
+                    }}
+                    className="w-full"
+                >
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="group">Group Score</TabsTrigger>
                         <TabsTrigger value="individual">
@@ -51,6 +213,8 @@ export function RubricScoreInput({
                                 key={section.id}
                                 section={section}
                                 hasWeightage={hasWeigtage}
+                                assignee_id={entity.entity.id}
+                                type="group"
                             />
                         ))}
                     </TabsContent>
@@ -89,6 +253,8 @@ export function RubricScoreInput({
                                                     key={section.id}
                                                     section={section}
                                                     hasWeightage={hasWeigtage}
+                                                    assignee_id={student.id}
+                                                    type="individual"
                                                 />
                                             )
                                         )}
@@ -104,6 +270,8 @@ export function RubricScoreInput({
                         key={section.id}
                         section={section}
                         hasWeightage={hasWeigtage}
+                        assignee_id={entity.entity.id}
+                        type="individual"
                     />
                 ))
             )}
@@ -124,9 +292,13 @@ export function RubricScoreInput({
 function RubricSection({
     section,
     hasWeightage,
+    assignee_id,
+    type,
 }: {
     section: GetRubric['rubric_sections'][number]
     hasWeightage: boolean
+    assignee_id: string
+    type: IndividualOrGroup
 }) {
     return (
         <div className="flex w-full">
@@ -168,7 +340,12 @@ function RubricSection({
                 </div> */}
 
                 {section.rubric_criterias.map((criteria) => (
-                    <RubricCriteria key={criteria.id} criteria={criteria} />
+                    <RubricCriteria
+                        key={criteria.id}
+                        criteria={criteria}
+                        assignee_id={assignee_id}
+                        type={type}
+                    />
                 ))}
             </div>
         </div>
@@ -177,9 +354,36 @@ function RubricSection({
 
 interface RubricCriteriaProps {
     criteria: GetRubric['rubric_sections'][number]['rubric_criterias'][number]
+    assignee_id: string
+    type: IndividualOrGroup
 }
 
-export function RubricCriteria({ criteria }: RubricCriteriaProps) {
+export function RubricCriteria({
+    criteria,
+    assignee_id,
+    type,
+}: RubricCriteriaProps) {
+    const ctx = useRubricScoreContext()
+    const [score, setScore] = useState<string>(() => {
+        const idx = ctx.scores.findIndex(
+            (s) => s.assignee_id === assignee_id && s.type === type
+        )
+
+        if (idx === -1) return ''
+
+        const scoreIdx = ctx.scores[idx].scores.findIndex(
+            (s) => s.rubric_criteria_id === criteria.id
+        )
+
+        if (scoreIdx === -1) return ''
+
+        return ctx.scores[idx].scores[scoreIdx].score.toString()
+    })
+
+    useEffect(() => {
+        ctx.updateScore(assignee_id, type, criteria.id, score)
+    }, [ctx.syncStatus])
+
     return (
         <div className="flex">
             {/* Criteria name */}
@@ -191,69 +395,203 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
 
             {/* Score range blocks */}
             <div className="flex w-full overflow-x-auto">
-                {criteria.criteria_score_ranges.map((range) => (
-                    <div
-                        key={range.id}
-                        className="border p-3 flex-shrink-0 relative w-[15rem]"
-                    >
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div>
-                                        <p className="border-0 p-1 h-auto focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
-                                            {range.name}
-                                        </p>
+                {criteria.criteria_score_ranges.map((range, rangeIndex) => {
+                    const isLastIndex =
+                        rangeIndex === criteria.criteria_score_ranges.length - 1
+                    const path = [
+                        'criteria',
+                        criteria.id,
+                        'assignee',
+                        assignee_id,
+                        rangeIndex,
+                    ]
 
-                                        <div className="flex items-center justify-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                            <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                {range.min_score}
-                                            </p>
-                                            -
-                                            <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                {range.max_score}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </TooltipTrigger>
-
-                                <TooltipContent className="max-w-[20rem]">
-                                    <p className="font-bold text-center text-base mb-1">
-                                        {`${range.name} (${range.min_score} - ${range.max_score})`}
-                                    </p>
-                                    <p className="text-center">
-                                        {range.description}
-                                    </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-
-                        <LabelWrapper
-                            label={null}
-                            error={
-                                ''
-                                //     getErrorMessageFromNestedPathValidationError(
-                                //     ctx.errors,
-                                //     [
-                                //         'rubric_sections',
-                                //         sectionIndex,
-                                //         'rubric_criterias',
-                                //         index,
-                                //         'name',
-                                //     ]
-                                // )
-                            }
-                            options={{
-                                error_display: 'tooltip',
-                            }}
+                    return (
+                        <div
+                            key={range.id}
+                            className="border p-3 flex-shrink-0 relative w-[15rem]"
                         >
-                            <Input
-                                className="text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
-                                type="number"
-                            />
-                        </LabelWrapper>
-                    </div>
-                ))}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div>
+                                            <p className="border-0 p-1 h-auto focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
+                                                {range.name}
+                                            </p>
+
+                                            <div className="flex items-center justify-center mb-3 text-sm text-muted-foreground gap-x-1">
+                                                <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                                    {range.min_score}
+                                                </p>
+                                                -
+                                                <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                                    {range.max_score}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent className="max-w-[20rem]">
+                                        <p className="font-bold text-center text-base mb-1">
+                                            {`${range.name} (${range.min_score} - ${range.max_score})`}
+                                        </p>
+                                        <p className="text-center">
+                                            {range.description}
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            <LabelWrapper
+                                label={null}
+                                error={getErrorMessageFromNestedPathValidationError(
+                                    ctx.errors,
+                                    path
+                                )}
+                                options={{
+                                    error_display: 'tooltip',
+                                }}
+                            >
+                                <Input
+                                    id={range.id + assignee_id}
+                                    className="text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
+                                    type="number"
+                                    min={range.min_score}
+                                    max={(() => {
+                                        if (isLastIndex) {
+                                            return range.max_score
+                                        }
+                                        return range.max_score + 1
+                                    })()}
+                                    defaultValue={(() => {
+                                        const scoreNum = parseFloat(score)
+                                        if (isNaN(scoreNum)) return ''
+
+                                        const isLastIndex =
+                                            rangeIndex ===
+                                            criteria.criteria_score_ranges
+                                                .length -
+                                                1
+
+                                        if (isLastIndex) {
+                                            if (
+                                                scoreNum >= range.min_score &&
+                                                scoreNum <= range.max_score
+                                            )
+                                                return score
+                                            return ''
+                                        }
+
+                                        if (
+                                            scoreNum >= range.min_score &&
+                                            scoreNum < range.max_score + 1
+                                        )
+                                            return score
+                                        return ''
+                                    })()}
+                                    onBlur={(e) => {
+                                        if (e.target.value == '') {
+                                            setScore('')
+                                            ctx.removeError(path)
+                                            asyncFocusElementById(range.id)
+                                            return
+                                        }
+                                        const scoreNum = parseFloat(
+                                            e.target.value
+                                        )
+                                        if (isNaN(scoreNum)) {
+                                            ctx.addOrReplaceError({
+                                                field: path,
+                                                message:
+                                                    'Score must be a number',
+                                            })
+                                            asyncFocusElementById(range.id)
+                                            return
+                                        }
+
+                                        if (
+                                            scoreNum >= criteria.min_score &&
+                                            scoreNum <= criteria.max_score
+                                        ) {
+                                            setScore(e.target.value)
+                                            rewriteScorePosition(
+                                                scoreNum,
+                                                assignee_id,
+                                                criteria.criteria_score_ranges
+                                            )
+                                            ctx.removeError(path)
+                                            asyncFocusElementById(range.id)
+                                        } else {
+                                            setScore(e.target.value)
+                                            ctx.addOrReplaceError({
+                                                field: path,
+                                                message:
+                                                    'Score should be between ' +
+                                                    criteria.min_score +
+                                                    ' and ' +
+                                                    criteria.max_score,
+                                            })
+                                            asyncFocusElementById(range.id)
+                                        }
+
+                                        ctx.updateScore(
+                                            assignee_id,
+                                            type,
+                                            criteria.id,
+                                            e.target.value
+                                        )
+                                    }}
+                                />
+                            </LabelWrapper>
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )
+}
+
+function asyncFocusElementById(id: string) {
+    setTimeout(() => {
+        const element = document.getElementById(id)
+        if (element) element.focus()
+    }, 0)
+}
+
+function rewriteScorePosition(
+    score: number,
+    assignee_id: string,
+    criteria_score_ranges: GetRubric['rubric_sections'][number]['rubric_criterias'][number]['criteria_score_ranges']
+) {
+    for (let i = 0; i < criteria_score_ranges.length; i++) {
+        const isLastIndex = i === criteria_score_ranges.length - 1
+        const range = criteria_score_ranges[i]
+        const id = range.id + assignee_id
+
+        if (!isLastIndex) {
+            if (score >= range.min_score && score < range.max_score + 1) {
+                insertValueIntoInputById(id, score.toString())
+                continue
+            }
+        } else if (score >= range.min_score && score <= range.max_score) {
+            insertValueIntoInputById(id, score.toString())
+            continue
+        }
+
+        removeValueFromInputById(id)
+    }
+}
+
+function removeValueFromInputById(id: string) {
+    const element = document.getElementById(id)
+    if (element && element instanceof HTMLInputElement) {
+        element.value = ''
+    }
+}
+
+function insertValueIntoInputById(id: string, value: string) {
+    const element = document.getElementById(id)
+    if (element && element instanceof HTMLInputElement) {
+        element.value = value
+    }
 }
