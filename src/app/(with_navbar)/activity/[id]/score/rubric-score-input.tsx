@@ -380,6 +380,34 @@ export function RubricCriteria({
         return ctx.scores[idx].scores[scoreIdx].score.toString()
     })
 
+    const path = ['criteria', criteria.id, 'assignee', assignee_id]
+    let scoreRange = null
+    const scoreNum = parseFloat(score)
+    if (!isNaN(scoreNum)) {
+        for (let i = 0; i < criteria.criteria_score_ranges.length; i++) {
+            const isLastIndex = i === criteria.criteria_score_ranges.length - 1
+            const range = criteria.criteria_score_ranges[i]
+
+            if (
+                !isLastIndex &&
+                scoreNum >= range.min_score &&
+                scoreNum < range.max_score + 1
+            ) {
+                scoreRange = range
+                break
+            }
+
+            if (
+                isLastIndex &&
+                scoreNum >= range.min_score &&
+                scoreNum <= range.max_score
+            ) {
+                scoreRange = range
+                break
+            }
+        }
+    }
+
     useEffect(() => {
         ctx.updateScore(assignee_id, type, criteria.id, score)
     }, [ctx.syncStatus])
@@ -387,11 +415,121 @@ export function RubricCriteria({
     return (
         <div className="flex">
             {/* Criteria name */}
-            <div className="border p-3 bg-muted/10 flex items-center text-xs gap-y-1 relative">
-                <p className="text-base font-medium w-32 lg:w-40 text-center">
-                    {criteria.name}
-                </p>
-            </div>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div className="border py-4 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4">
+                        <div>
+                            <p className="text-base font-medium w-[15rem] text-center">
+                                {criteria.name}
+                            </p>
+                            {/* {(() => {
+                                const scoreNum = parseFloat(score)
+                                if (
+                                    getErrorMessageFromNestedPathValidationError(
+                                        ctx.errors,
+                                        path
+                                    ) ||
+                                    isNaN(scoreNum) ||
+                                    !(
+                                        scoreNum >= criteria.min_score &&
+                                        scoreNum <= criteria.max_score
+                                    )
+                                )
+                                    return null
+
+                                if (!scoreRange) return null
+                                return (
+                                    <p className="text-center text-sm text-muted-foreground">
+                                        {scoreRange.name}
+                                    </p>
+                                )
+                            })()} */}
+                        </div>
+                        <LabelWrapper
+                            label={null}
+                            error={getErrorMessageFromNestedPathValidationError(
+                                ctx.errors,
+                                path
+                            )}
+                            options={{
+                                error_display: 'tooltip',
+                            }}
+                            className="w-4/5"
+                        >
+                            <Input
+                                id={criteria.id + assignee_id}
+                                className="w-full text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
+                                type="number"
+                                min={criteria.min_score}
+                                max={criteria.max_score}
+                                defaultValue={(() => {
+                                    const scoreNum = parseFloat(score)
+                                    if (isNaN(scoreNum)) return ''
+
+                                    if (
+                                        scoreNum >= criteria.min_score &&
+                                        scoreNum <= criteria.max_score
+                                    )
+                                        return score
+                                    return ''
+                                })()}
+                                onBlur={(e) => {
+                                    if (e.target.value == '') {
+                                        setScore('')
+                                        ctx.removeError(path)
+                                        return
+                                    }
+                                    const scoreNum = parseFloat(e.target.value)
+                                    if (isNaN(scoreNum)) {
+                                        ctx.addOrReplaceError({
+                                            field: path,
+                                            message: 'Score must be a number',
+                                        })
+                                        return
+                                    }
+
+                                    if (
+                                        scoreNum >= criteria.min_score &&
+                                        scoreNum <= criteria.max_score
+                                    ) {
+                                        setScore(e.target.value)
+                                        ctx.removeError(path)
+                                    } else {
+                                        setScore(e.target.value)
+                                        // removeValueFromInputById(id)
+                                        ctx.addOrReplaceError({
+                                            field: path,
+                                            message:
+                                                'Score should be between ' +
+                                                criteria.min_score +
+                                                ' and ' +
+                                                criteria.max_score,
+                                        })
+                                    }
+
+                                    ctx.updateScore(
+                                        assignee_id,
+                                        type,
+                                        criteria.id,
+                                        e.target.value
+                                    )
+                                }}
+                            />
+                        </LabelWrapper>
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[20rem]">
+                    <p className="font-bold text-center text-base mb-1">
+                        {criteria.name}
+                    </p>
+
+                    {!isNaN(scoreNum) && (
+                        <p className="text-center">
+                            {`${scoreNum}${scoreRange ? ` (${scoreRange.name})` : ''}`}
+                        </p>
+                    )}
+                </TooltipContent>
+            </Tooltip>
 
             {/* Score range blocks */}
             <div className="flex w-full overflow-x-auto">
@@ -409,13 +547,13 @@ export function RubricCriteria({
                     return (
                         <div
                             key={range.id}
-                            className="border p-3 flex-shrink-0 relative w-[15rem]"
+                            className="border p-3 flex-shrink-0 w-[10rem] flex flex-col justify-center"
                         >
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div>
-                                            <p className="border-0 p-1 h-auto focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
+                                            <p className="border-0 p-1  focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
                                                 {range.name}
                                             </p>
 
@@ -441,108 +579,6 @@ export function RubricCriteria({
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
-
-                            <LabelWrapper
-                                label={null}
-                                error={getErrorMessageFromNestedPathValidationError(
-                                    ctx.errors,
-                                    path
-                                )}
-                                options={{
-                                    error_display: 'tooltip',
-                                }}
-                            >
-                                <Input
-                                    id={range.id + assignee_id}
-                                    className="text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
-                                    type="number"
-                                    min={range.min_score}
-                                    max={(() => {
-                                        if (isLastIndex) {
-                                            return range.max_score
-                                        }
-                                        return range.max_score + 1
-                                    })()}
-                                    defaultValue={(() => {
-                                        const scoreNum = parseFloat(score)
-                                        if (isNaN(scoreNum)) return ''
-
-                                        const isLastIndex =
-                                            rangeIndex ===
-                                            criteria.criteria_score_ranges
-                                                .length -
-                                                1
-
-                                        if (isLastIndex) {
-                                            if (
-                                                scoreNum >= range.min_score &&
-                                                scoreNum <= range.max_score
-                                            )
-                                                return score
-                                            return ''
-                                        }
-
-                                        if (
-                                            scoreNum >= range.min_score &&
-                                            scoreNum < range.max_score + 1
-                                        )
-                                            return score
-                                        return ''
-                                    })()}
-                                    onBlur={(e) => {
-                                        if (e.target.value == '') {
-                                            setScore('')
-                                            ctx.removeError(path)
-                                            asyncFocusElementById(range.id)
-                                            return
-                                        }
-                                        const scoreNum = parseFloat(
-                                            e.target.value
-                                        )
-                                        if (isNaN(scoreNum)) {
-                                            ctx.addOrReplaceError({
-                                                field: path,
-                                                message:
-                                                    'Score must be a number',
-                                            })
-                                            asyncFocusElementById(range.id)
-                                            return
-                                        }
-
-                                        if (
-                                            scoreNum >= criteria.min_score &&
-                                            scoreNum <= criteria.max_score
-                                        ) {
-                                            setScore(e.target.value)
-                                            rewriteScorePosition(
-                                                scoreNum,
-                                                assignee_id,
-                                                criteria.criteria_score_ranges
-                                            )
-                                            ctx.removeError(path)
-                                            asyncFocusElementById(range.id)
-                                        } else {
-                                            setScore(e.target.value)
-                                            ctx.addOrReplaceError({
-                                                field: path,
-                                                message:
-                                                    'Score should be between ' +
-                                                    criteria.min_score +
-                                                    ' and ' +
-                                                    criteria.max_score,
-                                            })
-                                            asyncFocusElementById(range.id)
-                                        }
-
-                                        ctx.updateScore(
-                                            assignee_id,
-                                            type,
-                                            criteria.id,
-                                            e.target.value
-                                        )
-                                    }}
-                                />
-                            </LabelWrapper>
                         </div>
                     )
                 })}
