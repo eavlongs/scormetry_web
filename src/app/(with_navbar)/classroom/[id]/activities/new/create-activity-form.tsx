@@ -605,6 +605,19 @@ export default function CreateActivityForm({
                                             return
                                         }
                                         setGroupingId(val)
+                                        if (
+                                            rubric &&
+                                            groupingId === 'individual'
+                                        ) {
+                                            let tmp = structuredClone(rubric)
+                                            if (groupingId === 'individual') {
+                                                for (const section of tmp.rubric_sections) {
+                                                    section.is_group_score =
+                                                        false
+                                                }
+                                            }
+                                            setRubric(tmp)
+                                        }
                                     }}
                                 >
                                     <SelectTrigger>
@@ -724,6 +737,7 @@ export default function CreateActivityForm({
                         const updatedGroupings = [...prevGroupings, grouping]
                         // Then set the grouping ID in the next tick
                         // This still uses React's scheduling but is more intentional
+                        const tmp = structuredClone(rubric)
                         Promise.resolve().then(() => {
                             setGroupingId(groupingId)
 
@@ -752,6 +766,7 @@ export default function CreateActivityForm({
             />
 
             <RubricBuilderDialog
+                isIndividual={groupingId === 'individual'}
                 open={isRubricDialogOpen}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}

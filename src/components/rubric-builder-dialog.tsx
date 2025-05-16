@@ -30,10 +30,10 @@ import {
     useRef,
     useState,
 } from 'react'
+import { toast } from 'sonner'
 import { z, ZodError } from 'zod'
 import QuillEditor from './quill-editor'
 import { LabelWrapper } from './ui/label-wrapper'
-import { toast } from 'sonner'
 
 interface ScoreRange {
     name: string
@@ -59,6 +59,7 @@ interface RubricBuilderDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     initialData: z.infer<typeof RubricSchema> | null
+    isIndividual: boolean
     onSave: (rubric: z.infer<typeof RubricSchema>) => void
 }
 
@@ -114,7 +115,7 @@ const rubricBuilderDefaultValue: RubricBuilderContextType = {
         {
             name: 'Section 1',
             score_percentage: 0,
-            is_group_score: true,
+            is_group_score: false,
             description: '',
             rubric_criterias: [
                 {
@@ -156,6 +157,7 @@ export function RubricBuilderDialog({
     open,
     onOpenChange,
     onSave,
+    isIndividual,
     initialData,
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
@@ -335,7 +337,7 @@ export function RubricBuilderDialog({
             {
                 name: `Section ${prev.length + 1}`,
                 score_percentage: 0,
-                is_group_score: true,
+                is_group_score: false,
                 description: '',
                 rubric_criterias: [
                     {
@@ -417,6 +419,7 @@ export function RubricBuilderDialog({
                             <RubricSection
                                 key={sectionIndex}
                                 index={sectionIndex}
+                                isIndividual={isIndividual}
                                 section={section}
                                 onTriggerUpdateSection={() =>
                                     setSectionToEdit({
@@ -503,9 +506,11 @@ function RubricSection({
     section,
     index,
     onTriggerUpdateSection,
+    isIndividual,
 }: {
     section: Section
     index: number
+    isIndividual: boolean
     onTriggerUpdateSection: () => void
 }) {
     const ctx = useContext(RubricBuilderContext)
@@ -576,37 +581,48 @@ function RubricSection({
 
                 <div>
                     <div className="flex-none pl-2 ">
-                        <div className="flex items-center gap-2 mb-2 text-sm">
-                            <span className="mr-2">Scoring Type:</span>
-                            <div className="flex bg-white rounded-full border">
-                                <button
-                                    className={cn(
-                                        `px-2 py-1 rounded-full cursor-pointer`,
-                                        !section.is_group_score
-                                            ? 'bg-paragon text-white'
-                                            : 'text-gray-700'
-                                    )}
-                                    onClick={() =>
-                                        ctx.updateScoringType(index, false)
-                                    }
-                                >
-                                    Individual
-                                </button>
-                                <button
-                                    className={cn(
-                                        'px-2 py-1 rounded-full cursor-pointer',
-                                        section.is_group_score
-                                            ? 'bg-paragon text-white'
-                                            : 'text-gray-700'
-                                    )}
-                                    onClick={() =>
-                                        ctx.updateScoringType(index, true)
-                                    }
-                                >
-                                    Group
-                                </button>
-                            </div>
-                        </div>
+                        {!isIndividual && (
+                            <>
+                                <div className="flex items-center gap-2 mb-2 text-sm">
+                                    {isIndividual}
+                                    <span className="mr-2">Scoring Type:</span>
+                                    <div className="flex bg-white rounded-full border">
+                                        <button
+                                            className={cn(
+                                                `px-2 py-1 rounded-full cursor-pointer`,
+                                                !section.is_group_score
+                                                    ? 'bg-paragon text-white'
+                                                    : 'text-gray-700'
+                                            )}
+                                            onClick={() =>
+                                                ctx.updateScoringType(
+                                                    index,
+                                                    false
+                                                )
+                                            }
+                                        >
+                                            Individual
+                                        </button>
+                                        <button
+                                            className={cn(
+                                                'px-2 py-1 rounded-full cursor-pointer',
+                                                section.is_group_score
+                                                    ? 'bg-paragon text-white'
+                                                    : 'text-gray-700'
+                                            )}
+                                            onClick={() =>
+                                                ctx.updateScoringType(
+                                                    index,
+                                                    true
+                                                )
+                                            }
+                                        >
+                                            Group
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                     {section.rubric_criterias.map((criteria, criteriaIndex) => (
                         <RubricCriteria
