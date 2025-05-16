@@ -16,7 +16,6 @@ import {
     SCORING_TYPES,
     ScoringEntity,
 } from '@/types/classroom'
-import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import Image from 'next/image'
@@ -26,6 +25,7 @@ import { z } from 'zod'
 import { saveScoringData } from './actions'
 import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
+import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 
 type ScoreData = {
     range_based_score?: number
@@ -184,14 +184,16 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             toast.success('Scores saved successfully')
         } else {
             if (response.error && response.error.length > 0) {
-                // for (const error of response.error) {
-                //     if (error.field.join(',') == PATH_FOR_ERROR_TO_TOAST) {
-                //         toast.error(error.message)
-                //         return
-                //     }
-                // }
+                for (const error of response.error) {
+                    if (error.field.join(',') == PATH_FOR_ERROR_TO_TOAST) {
+                        toast.error(error.message)
+                        return
+                    }
+                }
                 toast.error(response.error[0].message)
+                return
             }
+            toast.error(response.message)
         }
     }
 
@@ -283,27 +285,28 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                             )}
 
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium truncate">
-                                                    {entity.type == 'group' ? (
-                                                        entity.entity.name
-                                                    ) : (
-                                                        <>
+                                                {entity.type == 'group' ? (
+                                                    <p className="text-sm font-medium truncate">
+                                                        {entity.entity.name}
+                                                    </p>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-sm font-medium truncate">
+                                                            {' '}
                                                             {entity.entity
                                                                 .first_name +
                                                                 ' ' +
                                                                 entity.entity
                                                                     .last_name}
-
-                                                            <p className="text-xs text-muted-foreground truncate">
-                                                                {
-                                                                    entity
-                                                                        .entity
-                                                                        .email
-                                                                }
-                                                            </p>
-                                                        </>
-                                                    )}
-                                                </p>
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground truncate">
+                                                            {
+                                                                entity.entity
+                                                                    .email
+                                                            }
+                                                        </p>
+                                                    </>
+                                                )}
                                             </div>
 
                                             {entity.isScored ? (
@@ -331,20 +334,24 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                 ) : (
                     <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
                         <div className="h-full overflow-y-auto flex flex-col gap-y-4">
-                            <p className="text-lg font-semibold">
+                            <div>
                                 {selectedEntity.type == 'group' ? (
-                                    selectedEntity.entity.name
+                                    <p className="text-lg font-semibold">
+                                        {selectedEntity.entity.name}
+                                    </p>
                                 ) : (
                                     <>
-                                        {selectedEntity.entity.first_name +
-                                            ' ' +
-                                            selectedEntity.entity.last_name}
+                                        <p className="text-lg font-semibold">
+                                            {selectedEntity.entity.first_name +
+                                                ' ' +
+                                                selectedEntity.entity.last_name}
+                                        </p>
                                         <p className="text-sm text-muted-foreground">
                                             {selectedEntity.entity.email}
                                         </p>
                                     </>
                                 )}
-                            </p>
+                            </div>
 
                             <div className="w-full flex flex-col flex-grow">
                                 {activity.scoring_type ===
@@ -396,7 +403,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                         </div>
                                     )}
 
-                                <div className="flex-grow flex flex-col justify-end">
+                                <div className="flex-grow flex flex-col justify-end mt-4">
                                     <div className="space-y-4">
                                         <LabelWrapper
                                             label={{
