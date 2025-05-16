@@ -1,0 +1,54 @@
+'use server'
+
+import { apiWithAuth } from '@/lib/axios'
+import { getValidationErrorWithNestedPathActionResponse } from '@/lib/utils'
+import { CreateActivityScoreSchema } from '@/schema'
+import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
+import {
+    ActionResponse,
+    ApiResponse,
+    NestedPathValidationError,
+} from '@/types/response'
+import { z, ZodError } from 'zod'
+
+export async function saveScoringData(
+    activity_assignment_id: string,
+    paramsForValidationSchema: Parameters<typeof CreateActivityScoreSchema>[0],
+    data: z.infer<ReturnType<typeof CreateActivityScoreSchema>>
+): Promise<ActionResponse<any, NestedPathValidationError[]>> {
+    try {
+        const parsedData = CreateActivityScoreSchema(
+            paramsForValidationSchema
+        ).parse(data)
+
+        const route =
+            paramsForValidationSchema.type == 'rubric'
+                ? `/activity_assignment/${activity_assignment_id}/score/rubric`
+                : `/activity_assignment/${activity_assignment_id}/score/range`
+
+        const response = await apiWithAuth.post<ApiResponse>(
+            `/activity_assignment/${activity_assignment_id}/score/rubric`,
+            parsedData
+        )
+
+        return {
+            success: true,
+            message: response.data.message,
+            data: response.data.data,
+        }
+    } catch (e: any) {
+        if (e instanceof ZodError) {
+            return getValidationErrorWithNestedPathActionResponse(e, {
+                [['scores', PATH_FOR_ERROR_TO_TOAST].join(',')]: [
+                    PATH_FOR_ERROR_TO_TOAST,
+                ],
+            })
+        }
+
+        return {
+            success: false,
+            message: e.response.data.message,
+            error: e.response?.data?.error,
+        }
+    }
+}

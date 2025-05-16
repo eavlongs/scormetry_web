@@ -7,21 +7,29 @@ import { Label } from '@/components/ui/label'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { CreateActivityScoreSchema } from '@/schema'
 import {
     GetActivity,
+    GetRubric,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
+    SCORING_TYPES,
     ScoringEntity,
 } from '@/types/classroom'
+import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
+import { NestedPathValidationError } from '@/types/response'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { z } from 'zod'
+import { saveScoringData } from './actions'
 import { RubricScoreInput } from './rubric-score-input'
+import { RubricScoreContextType } from './rubric-score-provider'
 
 type ScoreData = {
-    score?: number
-    comment: string
+    range_based_score?: number
+    rubric_score?: RubricScoreContextType['scores']
 }
 
 export default function ScoreActivity({ activity }: { activity: GetActivity }) {
@@ -29,12 +37,16 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         null
     )
     const [entities, setEntities] = useState<ScoringEntity[]>([])
-    const [scoreData, setScoreData] = useState<ScoreData>({ comment: '' })
+    const [scoreData, setScoreData] = useState<ScoreData>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [filteredEntities, setFilteredEntities] = useState<ScoringEntity[]>(
         []
     )
+
+    const [errors, setErrors] = useState<NestedPathValidationError[]>([])
+
+    const commentRef = useRef<HTMLTextAreaElement>(null)
 
     // Initialize entities based on activity type (groups or individual students)
     useEffect(() => {
@@ -47,6 +59,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                         type: 'group',
                         entity: group,
                         isScored: false,
+                        activity_assignment_id: group.activity_assignment_id,
                     })
                 }
             })
@@ -56,6 +69,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                     entities.push({
                         type: 'individual',
                         entity: student,
+                        activity_assignment_id: student.activity_assignment_id,
                         isScored: false, // This would be set based on actual scoring data
                     })
                 }
@@ -99,63 +113,85 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         setFilteredEntities(filtered)
     }, [searchQuery, entities])
 
-    const handleScoreChange = (value: string) => {
+    const handleRangeBasedScoreChange = (value: string) => {
         const numValue = value === '' ? undefined : Number(value)
-        setScoreData((prev) => ({ ...prev, score: numValue }))
+        setScoreData((prev) => ({ ...prev, range_based_score: numValue }))
     }
 
-    const handleCommentChange = (value: string) => {
-        setScoreData((prev) => ({ ...prev, comment: value }))
-    }
-
-    const handleSubmit = async () => {
+    async function handleSubmit() {
         if (!selectedEntity) return
 
-        // Validation
-        if (activity.scoring_type === SCORING_TYPE_RANGE) {
-            if (scoreData.score === undefined) {
-                toast.error('Please enter a score')
-                return
+        const comment = commentRef.current ? commentRef.current.value : ''
+
+        const scoringType = activity.scoring_type
+
+        if (
+            !scoringType ||
+            !(Array.from(SCORING_TYPES) as string[]).includes(scoringType)
+        )
+            return null
+
+        let data:
+            | (z.infer<ReturnType<typeof CreateActivityScoreSchema>> & {
+                  rubric_criterias?: GetRubric['rubric_sections'][number]['rubric_criterias']
+              })
+            | null = null
+
+        let paramForValidationSchema:
+            | Parameters<typeof CreateActivityScoreSchema>[0]
+            | null = null
+        if (scoringType == 'range') {
+            // TODO handle range scoring
+            data = {
+                comment: comment,
+                data: [],
+            }
+            paramForValidationSchema = {
+                type: 'range',
+                max_score: activity.max_score ?? 0,
+            }
+        } else if (scoringType == 'rubric') {
+            const rubricCriterias = activity.rubric
+                ? activity.rubric.rubric_sections.flatMap(
+                      (s) => s.rubric_criterias
+                  )
+                : []
+            paramForValidationSchema = {
+                type: 'rubric',
+                rubric_criterias: rubricCriterias,
             }
 
-            const maxScore = activity.max_score || 100
-            if (scoreData.score < 0 || scoreData.score > maxScore) {
-                toast.error(`Score must be between 0 and ${maxScore}`)
-                return
+            if (!scoreData.rubric_score) {
+                data = {
+                    comment: comment,
+                    data: [],
+                }
+            } else {
+                data = {
+                    comment: comment,
+                    data: scoreData.rubric_score,
+                }
             }
-        }
+        } else return
 
-        setIsSubmitting(true)
+        const response = await saveScoringData(
+            selectedEntity.activity_assignment_id,
+            paramForValidationSchema,
+            data
+        )
 
-        try {
-            // This would be an actual API call to submit the score
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            // Update the entities list to mark this one as scored
-            setEntities((prev) =>
-                prev.map((entity) =>
-                    entity.entity.id === selectedEntity.entity.id
-                        ? { ...entity, isScored: true }
-                        : entity
-                )
-            )
-            setFilteredEntities((prev) =>
-                prev.map((entity) =>
-                    entity.entity.id === selectedEntity.entity.id
-                        ? { ...entity, isScored: true }
-                        : entity
-                )
-            )
-
-            // toast.success(`Score submitted for ${selectedEntity.entity.name}`)
-
-            // Clear form if needed or prepare for next entry
-            // setScoreData({ comment: '' }) // Uncomment to clear after submission
-        } catch (error) {
-            toast.error('Failed to submit score. Please try again.')
-            console.error('Error submitting score:', error)
-        } finally {
-            setIsSubmitting(false)
+        if (response.success) {
+            toast.success('Scores saved successfully')
+        } else {
+            if (response.error && response.error.length > 0) {
+                // for (const error of response.error) {
+                //     if (error.field.join(',') == PATH_FOR_ERROR_TO_TOAST) {
+                //         toast.error(error.message)
+                //         return
+                //     }
+                // }
+                toast.error(response.error[0].message)
+            }
         }
     }
 
@@ -323,12 +359,13 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                             type="number"
                                             placeholder={`Enter score (0-${activity.max_score || 100})`}
                                             value={
-                                                scoreData.score === undefined
+                                                scoreData.range_based_score ===
+                                                undefined
                                                     ? ''
-                                                    : scoreData.score
+                                                    : scoreData.range_based_score
                                             }
                                             onChange={(e) =>
-                                                handleScoreChange(
+                                                handleRangeBasedScoreChange(
                                                     e.target.value
                                                 )
                                             }
@@ -344,6 +381,17 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                             <RubricScoreInput
                                                 rubric={activity.rubric}
                                                 entity={selectedEntity}
+                                                parentErrors={errors}
+                                                onScoreUpdate={(scores) =>
+                                                    setScoreData({
+                                                        range_based_score:
+                                                            undefined,
+                                                        rubric_score: scores,
+                                                    })
+                                                }
+                                                onSetParentErrors={() =>
+                                                    setErrors([])
+                                                }
                                             />
                                         </div>
                                     )}
@@ -360,13 +408,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                             <Textarea
                                                 id="comment"
                                                 placeholder="Provide detailed feedback..."
-                                                value={scoreData.comment}
-                                                onChange={(e) =>
-                                                    handleCommentChange(
-                                                        e.target.value
-                                                    )
-                                                }
                                                 rows={6}
+                                                ref={commentRef}
                                                 className="resize-none field-sizing-fixed"
                                             />
                                         </LabelWrapper>

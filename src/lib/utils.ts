@@ -48,7 +48,8 @@ export async function copyUrlToClipboard(path: string) {
 }
 
 export function convertZodErrorToValidationErrorWithNestedPath<T>(
-    err: ZodError<T>
+    err: ZodError<T>,
+    customPathMap: Record<string, string[]> = {}
 ): NestedPathValidationError[] {
     if (!(err instanceof ZodError)) return []
 
@@ -66,8 +67,9 @@ export function convertZodErrorToValidationErrorWithNestedPath<T>(
             continue
         }
 
+        const p = customPathMap[path.join(',')] || path
         validationErrors.push({
-            field: path,
+            field: p,
             message: issues[i].message,
         })
     }
@@ -157,6 +159,20 @@ export function getValidationErrorActionResponse<T>(
         success: false,
         message: VALIDATION_ERROR_MESSAGE,
         error: convertZodErrorToValidationError(err),
+    }
+}
+
+export function getValidationErrorWithNestedPathActionResponse<T>(
+    err: ZodError<T>,
+    customPathMap: Record<string, string[]> = {}
+): ActionResponse<any, NestedPathValidationError[]> {
+    return {
+        success: false,
+        message: VALIDATION_ERROR_MESSAGE,
+        error: convertZodErrorToValidationErrorWithNestedPath(
+            err,
+            customPathMap
+        ),
     }
 }
 

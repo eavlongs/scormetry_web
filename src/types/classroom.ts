@@ -136,6 +136,7 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
 }
 
 export type GetGroupWithJudgePermission = GetGroup & {
+    activity_assignment_id: string
     permitted_to_judge: boolean
 }
 
@@ -146,6 +147,7 @@ export type GetActivity = Activity & {
     students:
         | Prettify<
               UserEssentialDetail & {
+                  activity_assignment_id: string
                   permitted_to_judge: boolean
                   judges: UserEssentialDetail[]
               }
@@ -212,10 +214,12 @@ export type ScoringEntity = {
 } & (
     | {
           type: 'group'
+          activity_assignment_id: string
           entity: GetGroup
       }
     | {
           type: 'individual'
+          activity_assignment_id: string
           entity: UserEssentialDetail
       }
 )

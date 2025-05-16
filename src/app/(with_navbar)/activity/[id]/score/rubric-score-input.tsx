@@ -18,6 +18,7 @@ import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
 import {
+    RubricScoreContextType,
     RubricScoreProvider,
     useRubricScoreContext,
 } from './rubric-score-provider'
@@ -30,8 +31,15 @@ interface RubricScoreInputProps {
 export function RubricScoreInput({
     rubric,
     entity,
+    onScoreUpdate,
+    parentErrors,
+    onSetParentErrors,
     ...props
-}: RubricScoreInputProps & React.ComponentProps<'div'>) {
+}: RubricScoreInputProps & {
+    onScoreUpdate: (scores: RubricScoreContextType['scores']) => void
+    parentErrors: NestedPathValidationError[]
+    onSetParentErrors: () => void
+} & React.ComponentProps<'div'>) {
     const [scores, setScores] = useState<z.infer<typeof RubricScoreSchema>[]>(
         []
     )
@@ -40,6 +48,15 @@ export function RubricScoreInput({
 
     const [sync, setSync] = useState(false)
 
+    useEffect(() => {
+        if (parentErrors.length > 0) {
+            for (const error of parentErrors) {
+                addOrReplaceError(error)
+            }
+            onSetParentErrors()
+        }
+    }, [parentErrors])
+
     function updateScore(
         id: string,
         type: IndividualOrGroup,
@@ -47,18 +64,34 @@ export function RubricScoreInput({
         scoreStr: string
     ) {
         if (scoreStr === '') {
-            setScores((prev) => {
-                const index = prev.findIndex(
-                    (s) => s.assignee_id === id && s.type == type
-                )
-                if (index !== -1) {
-                    const updatedScores = [...prev]
-                    updatedScores[index].scores = updatedScores[
-                        index
-                    ].scores.filter((s) => s.rubric_criteria_id !== criteria_id)
-                    return updatedScores
+            const promise = new Promise<z.infer<typeof RubricScoreSchema>[]>(
+                (resolve) => {
+                    setScores((prev) => {
+                        const index = prev.findIndex(
+                            (s) => s.assignee_id === id && s.type == type
+                        )
+                        if (index !== -1) {
+                            const updatedScores = [...prev]
+                            updatedScores[index].scores = updatedScores[
+                                index
+                            ].scores.filter(
+                                (s) => s.rubric_criteria_id !== criteria_id
+                            )
+
+                            if (updatedScores[index].scores.length === 0) {
+                                updatedScores.splice(index, 1)
+                            }
+                            resolve(updatedScores) // Call resolve with updated scores
+                            return updatedScores
+                        }
+                        resolve(prev) // Make sure to resolve even if no changes
+                        return prev
+                    })
                 }
-                return prev
+            )
+
+            promise.then((updatedScores) => {
+                onScoreUpdate(updatedScores) // Use the resolved value
             })
             return
         }
@@ -69,58 +102,75 @@ export function RubricScoreInput({
             throw new Error('Score must be a number')
         }
 
-        setScores((prev) => {
-            const index = prev.findIndex(
-                (s) => s.assignee_id === id && s.type == type
-            )
-            if (index !== -1) {
-                const updatedScores = [...prev]
-                const hasExistingScore = updatedScores[index].scores.find(
-                    (s) => s.rubric_criteria_id === criteria_id
-                )
+        const promise = new Promise<z.infer<typeof RubricScoreSchema>[]>(
+            (resolve) => {
+                setScores((prev) => {
+                    const index = prev.findIndex(
+                        (s) => s.assignee_id === id && s.type == type
+                    )
+                    let newScores
 
-                let newScoresArray: (typeof prev)[number]['scores']
-                if (hasExistingScore) {
-                    newScoresArray = updatedScores[index].scores.map((s) => {
-                        if (s.rubric_criteria_id === criteria_id) {
-                            return {
-                                ...s,
-                                score: score,
-                            }
+                    if (index !== -1) {
+                        const updatedScores = [...prev]
+                        const hasExistingScore = updatedScores[
+                            index
+                        ].scores.find(
+                            (s) => s.rubric_criteria_id === criteria_id
+                        )
+
+                        let newScoresArray: (typeof prev)[number]['scores']
+                        if (hasExistingScore) {
+                            newScoresArray = updatedScores[index].scores.map(
+                                (s) => {
+                                    if (s.rubric_criteria_id === criteria_id) {
+                                        return {
+                                            ...s,
+                                            score: score,
+                                        }
+                                    }
+
+                                    return s
+                                }
+                            )
+                        } else {
+                            newScoresArray = [
+                                ...updatedScores[index].scores,
+                                {
+                                    rubric_criteria_id: criteria_id,
+                                    score: score,
+                                },
+                            ]
                         }
 
-                        return s
-                    })
-                } else {
-                    newScoresArray = [
-                        ...updatedScores[index].scores,
-                        {
-                            rubric_criteria_id: criteria_id,
-                            score: score,
-                        },
-                    ]
-                }
-
-                updatedScores[index] = {
-                    ...updatedScores[index],
-                    scores: newScoresArray,
-                }
-                return updatedScores
-            } else {
-                return [
-                    ...prev,
-                    {
-                        assignee_id: id,
-                        type: type,
-                        scores: [
+                        updatedScores[index] = {
+                            ...updatedScores[index],
+                            scores: newScoresArray,
+                        }
+                        console.log(newScoresArray)
+                        newScores = updatedScores
+                    } else {
+                        newScores = [
+                            ...prev,
                             {
-                                rubric_criteria_id: criteria_id,
-                                score: score,
+                                assignee_id: id,
+                                type: type,
+                                scores: [
+                                    {
+                                        rubric_criteria_id: criteria_id,
+                                        score: score,
+                                    },
+                                ],
                             },
-                        ],
-                    },
-                ]
+                        ]
+                    }
+                    resolve(newScores) // Call resolve with updated scores
+                    return newScores
+                })
             }
+        )
+
+        promise.then((updatedScores) => {
+            onScoreUpdate(updatedScores) // Use the resolved value
         })
     }
 
@@ -477,6 +527,12 @@ export function RubricCriteria({
                                     if (e.target.value == '') {
                                         setScore('')
                                         ctx.removeError(path)
+                                        ctx.updateScore(
+                                            assignee_id,
+                                            type,
+                                            criteria.id,
+                                            e.target.value
+                                        )
                                         return
                                     }
                                     const scoreNum = parseFloat(e.target.value)
@@ -488,6 +544,7 @@ export function RubricCriteria({
                                         return
                                     }
 
+                                    console.log('scoreNum', scoreNum)
                                     if (
                                         scoreNum >= criteria.min_score &&
                                         scoreNum <= criteria.max_score
@@ -496,15 +553,17 @@ export function RubricCriteria({
                                         ctx.removeError(path)
                                     } else {
                                         setScore(e.target.value)
-                                        // removeValueFromInputById(id)
-                                        ctx.addOrReplaceError({
-                                            field: path,
-                                            message:
-                                                'Score should be between ' +
-                                                criteria.min_score +
-                                                ' and ' +
-                                                criteria.max_score,
-                                        })
+
+                                        setTimeout(() => {
+                                            ctx.addOrReplaceError({
+                                                field: path,
+                                                message:
+                                                    'Score should be between ' +
+                                                    criteria.min_score +
+                                                    ' and ' +
+                                                    criteria.max_score,
+                                            })
+                                        }, 0)
                                     }
 
                                     ctx.updateScore(
@@ -533,17 +592,7 @@ export function RubricCriteria({
 
             {/* Score range blocks */}
             <div className="flex w-full overflow-x-auto">
-                {criteria.criteria_score_ranges.map((range, rangeIndex) => {
-                    const isLastIndex =
-                        rangeIndex === criteria.criteria_score_ranges.length - 1
-                    const path = [
-                        'criteria',
-                        criteria.id,
-                        'assignee',
-                        assignee_id,
-                        rangeIndex,
-                    ]
-
+                {criteria.criteria_score_ranges.map((range) => {
                     return (
                         <div
                             key={range.id}
@@ -585,49 +634,4 @@ export function RubricCriteria({
             </div>
         </div>
     )
-}
-
-function asyncFocusElementById(id: string) {
-    setTimeout(() => {
-        const element = document.getElementById(id)
-        if (element) element.focus()
-    }, 0)
-}
-
-function rewriteScorePosition(
-    score: number,
-    assignee_id: string,
-    criteria_score_ranges: GetRubric['rubric_sections'][number]['rubric_criterias'][number]['criteria_score_ranges']
-) {
-    for (let i = 0; i < criteria_score_ranges.length; i++) {
-        const isLastIndex = i === criteria_score_ranges.length - 1
-        const range = criteria_score_ranges[i]
-        const id = range.id + assignee_id
-
-        if (!isLastIndex) {
-            if (score >= range.min_score && score < range.max_score + 1) {
-                insertValueIntoInputById(id, score.toString())
-                continue
-            }
-        } else if (score >= range.min_score && score <= range.max_score) {
-            insertValueIntoInputById(id, score.toString())
-            continue
-        }
-
-        removeValueFromInputById(id)
-    }
-}
-
-function removeValueFromInputById(id: string) {
-    const element = document.getElementById(id)
-    if (element && element instanceof HTMLInputElement) {
-        element.value = ''
-    }
-}
-
-function insertValueIntoInputById(id: string, value: string) {
-    const element = document.getElementById(id)
-    if (element && element instanceof HTMLInputElement) {
-        element.value = value
-    }
 }

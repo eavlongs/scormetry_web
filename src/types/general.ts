@@ -25,3 +25,5 @@ export const ACCEPTED_IMPORT_FILE_TYPES = [
     EXCEL_MIME_TYPE,
     EXCEL_XLSX_MIME_TYPE,
 ]
+
+export const PATH_FOR_ERROR_TO_TOAST = '_toast'

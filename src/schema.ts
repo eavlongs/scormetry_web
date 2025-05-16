@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
     ALL_CLASSROOM_ROLES,
     CLASSROOM_COLORS,
+    GetRubric,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
     SCORING_TYPES,
@@ -11,6 +12,7 @@ import {
     ACCEPTED_IMPORT_FILE_TYPES,
     MAX_IMPORT_FILE_SIZE_MB,
     MAX_REQUEST_BODY_SIZE_MB,
+    PATH_FOR_ERROR_TO_TOAST,
 } from './types/general'
 
 export const ClassroomSchema = z.object({
@@ -450,6 +452,117 @@ export const RubricScoreSchema = z.object({
         )
         .min(1, 'At least 1 score is required'),
 })
+
+export const RangeScoreSchema = z.object({
+    assignee_id: z.string(),
+    type: z.enum(['individual', 'group']),
+    score: z.coerce.number().nonnegative(),
+})
+
+export const ActivityScoreBaseSchema = z.object({
+    comment: z.string().optional(),
+})
+
+export function CreateActivityScoreSchema(
+    data:
+        | {
+              type: 'rubric'
+              rubric_criterias: GetRubric['rubric_sections'][number]['rubric_criterias']
+          }
+        | {
+              type: 'range'
+              max_score: number
+          }
+) {
+    if (data.type == 'range') {
+        return ActivityScoreBaseSchema.extend({
+            data: z
+                .array(
+                    z.object({
+                        assignee_id: RangeScoreSchema.shape.assignee_id,
+                        type: RangeScoreSchema.shape.type,
+                        score: RangeScoreSchema.shape.score.max(data.max_score),
+                    })
+                )
+                .superRefine((val, ctx) => {
+                    if (val.length === 0) {
+                        ctx.addIssue({
+                            code: z.ZodIssueCode.custom,
+                            message: 'At least 1 score is required',
+                            path: [PATH_FOR_ERROR_TO_TOAST],
+                        })
+                    }
+                }),
+        })
+    }
+
+    if (data.type == 'rubric') {
+        return ActivityScoreBaseSchema.extend({
+            data: z
+                .array(
+                    z
+                        .object({
+                            assignee_id: RubricScoreSchema.shape.assignee_id,
+                            type: RubricScoreSchema.shape.type,
+                            scores: RubricScoreSchema.shape.scores,
+                        })
+                        .superRefine((val, ctx) => {
+                            for (const score of val.scores) {
+                                const criteria = data.rubric_criterias.find(
+                                    (criteria) =>
+                                        criteria.id === score.rubric_criteria_id
+                                )
+
+                                if (!criteria) {
+                                    ctx.addIssue({
+                                        code: z.ZodIssueCode.custom,
+                                        message: `Invalid rubric criteria ID: ${score.rubric_criteria_id}`,
+                                        path: [PATH_FOR_ERROR_TO_TOAST],
+                                    })
+                                    continue
+                                }
+
+                                const scoreErrorPath = [
+                                    'criteria',
+                                    criteria.id,
+                                    'assignee',
+                                    val.assignee_id,
+                                ]
+
+                                if (score.score < criteria.min_score) {
+                                    ctx.addIssue({
+                                        code: z.ZodIssueCode.custom,
+                                        message: `Score must be greater than or equal to ${criteria.min_score}`,
+                                        path: scoreErrorPath,
+                                    })
+                                    continue
+                                }
+
+                                if (score.score > criteria.max_score) {
+                                    ctx.addIssue({
+                                        code: z.ZodIssueCode.custom,
+                                        message: `Score must be less than or equal to ${criteria.max_score}`,
+                                        path: scoreErrorPath,
+                                    })
+                                    continue
+                                }
+                            }
+                        })
+                )
+                .superRefine((val, ctx) => {
+                    if (val.length === 0) {
+                        ctx.addIssue({
+                            code: z.ZodIssueCode.custom,
+                            message: 'At least 1 score is required',
+                            path: [PATH_FOR_ERROR_TO_TOAST],
+                        })
+                    }
+                }),
+        })
+    }
+
+    throw new Error('Invalid score type')
+}
 
 export const customErrorMap: z.ZodErrorMap = (
     issue: z.ZodIssueOptionalMessage,
