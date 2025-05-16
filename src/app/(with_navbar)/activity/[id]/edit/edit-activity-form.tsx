@@ -669,6 +669,25 @@ export default function EditActivityForm({
                                             return
                                         }
                                         setGroupingId(val)
+                                        if (rubric && val === 'individual') {
+                                            let tmp = structuredClone(rubric)
+                                            let shouldInformChange = false
+                                            for (const section of tmp.rubric_sections) {
+                                                if (
+                                                    !shouldInformChange &&
+                                                    section.is_group_score
+                                                ) {
+                                                    shouldInformChange = true
+                                                }
+                                                section.is_group_score = false
+                                            }
+                                            if (shouldInformChange) {
+                                                toast.info(
+                                                    'The rubric sections have been changed to individual scores'
+                                                )
+                                            }
+                                            setRubric(tmp)
+                                        }
                                     }}
                                 >
                                     <SelectTrigger>
@@ -776,6 +795,7 @@ export default function EditActivityForm({
 
             <RubricBuilderDialog
                 open={isRubricDialogOpen}
+                isIndividual={groupingId === 'individual'}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}
                 onSave={handleRubricSave}

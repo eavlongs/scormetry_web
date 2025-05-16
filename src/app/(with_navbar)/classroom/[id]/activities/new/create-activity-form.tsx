@@ -192,7 +192,6 @@ export default function CreateActivityForm({
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
-        console.log(rubric)
         e.preventDefault()
 
         setIsSubmitting(true)
@@ -605,16 +604,22 @@ export default function CreateActivityForm({
                                             return
                                         }
                                         setGroupingId(val)
-                                        if (
-                                            rubric &&
-                                            groupingId === 'individual'
-                                        ) {
+                                        if (rubric && val === 'individual') {
                                             let tmp = structuredClone(rubric)
-                                            if (groupingId === 'individual') {
-                                                for (const section of tmp.rubric_sections) {
-                                                    section.is_group_score =
-                                                        false
+                                            let shouldInformChange = false
+                                            for (const section of tmp.rubric_sections) {
+                                                if (
+                                                    !shouldInformChange &&
+                                                    section.is_group_score
+                                                ) {
+                                                    shouldInformChange = true
                                                 }
+                                                section.is_group_score = false
+                                            }
+                                            if (shouldInformChange) {
+                                                toast.info(
+                                                    'The rubric sections have been changed to individual scores'
+                                                )
                                             }
                                             setRubric(tmp)
                                         }

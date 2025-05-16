@@ -182,6 +182,12 @@ export function RubricBuilderDialog({
         }
     }, [quill, initialData?.note])
 
+    useEffect(() => {
+        if (initialData) {
+            setSections(initialData?.rubric_sections || [])
+        }
+    }, [initialData])
+
     const addCriteria = (sectionIndex: number) => {
         setSections((prev) => {
             const updatedSections = [...prev]
