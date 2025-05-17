@@ -16,6 +16,7 @@ import {
     SCORING_TYPES,
     ScoringEntity,
 } from '@/types/classroom'
+import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import Image from 'next/image'
@@ -25,10 +26,10 @@ import { z } from 'zod'
 import { saveScoringData } from './actions'
 import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
-import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
+import RangeScoreInput, { RangeScore } from './range-score-input'
 
 type ScoreData = {
-    range_based_score?: number
+    range_based_scores?: RangeScore[]
     rubric_score?: RubricScoreContextType['scores']
 }
 
@@ -113,11 +114,6 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         setFilteredEntities(filtered)
     }, [searchQuery, entities])
 
-    const handleRangeBasedScoreChange = (value: string) => {
-        const numValue = value === '' ? undefined : Number(value)
-        setScoreData((prev) => ({ ...prev, range_based_score: numValue }))
-    }
-
     async function handleSubmit() {
         if (!selectedEntity) return
 
@@ -140,15 +136,14 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         let paramForValidationSchema:
             | Parameters<typeof CreateActivityScoreSchema>[0]
             | null = null
-        if (scoringType == 'range') {
-            // TODO handle range scoring
+        if (scoringType == 'range' && activity.max_score !== null) {
             data = {
                 comment: comment,
-                data: [],
+                data: scoreData.range_based_scores ?? [],
             }
             paramForValidationSchema = {
                 type: 'range',
-                max_score: activity.max_score ?? 0,
+                max_score: activity.max_score,
             }
         } else if (scoringType == 'rubric') {
             const rubricCriterias = activity.rubric
@@ -185,7 +180,10 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         } else {
             if (response.error && response.error.length > 0) {
                 for (const error of response.error) {
-                    if (error.field.join(',') == PATH_FOR_ERROR_TO_TOAST) {
+                    if (
+                        Array.isArray(error.field) &&
+                        error.field.join(',') == PATH_FOR_ERROR_TO_TOAST
+                    ) {
                         toast.error(error.message)
                         return
                     }
@@ -354,32 +352,19 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                             </div>
 
                             <div className="w-full flex flex-col flex-grow">
-                                {activity.scoring_type ===
-                                    SCORING_TYPE_RANGE && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="score">
-                                            Score (max:{' '}
-                                            {activity.max_score || 100})
-                                        </Label>
-                                        <Input
-                                            id="score"
-                                            type="number"
-                                            placeholder={`Enter score (0-${activity.max_score || 100})`}
-                                            value={
-                                                scoreData.range_based_score ===
-                                                undefined
-                                                    ? ''
-                                                    : scoreData.range_based_score
-                                            }
-                                            onChange={(e) =>
-                                                handleRangeBasedScoreChange(
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="max-w-xs"
+                                {activity.scoring_type === SCORING_TYPE_RANGE &&
+                                    activity.max_score !== null && (
+                                        <RangeScoreInput
+                                            entity={selectedEntity}
+                                            onScoreUpdate={(scores) => {
+                                                setScoreData({
+                                                    rubric_score: undefined,
+                                                    range_based_scores: scores,
+                                                })
+                                            }}
+                                            maxScore={activity.max_score}
                                         />
-                                    </div>
-                                )}
+                                    )}
 
                                 {activity.scoring_type ===
                                     SCORING_TYPE_RUBRIC &&
@@ -391,7 +376,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                 parentErrors={errors}
                                                 onScoreUpdate={(scores) =>
                                                     setScoreData({
-                                                        range_based_score:
+                                                        range_based_scores:
                                                             undefined,
                                                         rubric_score: scores,
                                                     })

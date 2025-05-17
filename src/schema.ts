@@ -454,8 +454,7 @@ export const RubricScoreSchema = z.object({
 })
 
 export const RangeScoreSchema = z.object({
-    assignee_id: z.string(),
-    type: z.enum(['individual', 'group']),
+    student_id: z.string(),
     score: z.coerce.number().nonnegative(),
 })
 
@@ -479,8 +478,7 @@ export function CreateActivityScoreSchema(
             data: z
                 .array(
                     z.object({
-                        assignee_id: RangeScoreSchema.shape.assignee_id,
-                        type: RangeScoreSchema.shape.type,
+                        student_id: RangeScoreSchema.shape.student_id,
                         score: RangeScoreSchema.shape.score.max(data.max_score),
                     })
                 )

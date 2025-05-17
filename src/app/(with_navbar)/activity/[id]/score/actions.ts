@@ -16,20 +16,25 @@ export async function saveScoringData(
     paramsForValidationSchema: Parameters<typeof CreateActivityScoreSchema>[0],
     data: z.infer<ReturnType<typeof CreateActivityScoreSchema>>
 ): Promise<ActionResponse<any, NestedPathValidationError[]>> {
+    if (
+        paramsForValidationSchema.type != 'rubric' &&
+        paramsForValidationSchema.type != 'range'
+    ) {
+        throw new Error("only support 'rubric' and 'range' type")
+    }
     try {
         const parsedData = CreateActivityScoreSchema(
             paramsForValidationSchema
         ).parse(data)
+
+        console.log(data)
 
         const route =
             paramsForValidationSchema.type == 'rubric'
                 ? `/activity_assignment/${activity_assignment_id}/score/rubric`
                 : `/activity_assignment/${activity_assignment_id}/score/range`
 
-        const response = await apiWithAuth.post<ApiResponse>(
-            `/activity_assignment/${activity_assignment_id}/score/rubric`,
-            parsedData
-        )
+        const response = await apiWithAuth.post<ApiResponse>(route, parsedData)
 
         return {
             success: true,
