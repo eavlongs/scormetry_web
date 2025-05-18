@@ -2,7 +2,8 @@
 
 import { apiWithAuth } from '@/lib/axios'
 import { getValidationErrorWithNestedPathActionResponse } from '@/lib/utils'
-import { CreateActivityScoreSchema } from '@/schema'
+import { ActivityScoreBaseSchema, CreateActivityScoreSchema } from '@/schema'
+import { ScoringEntity } from '@/types/classroom'
 import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import {
     ActionResponse,
@@ -50,6 +51,42 @@ export async function saveScoringData(
             })
         }
 
+        return {
+            success: false,
+            message: e.response.data.message,
+            error: e.response?.data?.error,
+        }
+    }
+}
+
+export async function getActivityAssignmentScoreForStudent(
+    entity: ScoringEntity,
+    scoringType: 'rubric' | 'range'
+): Promise<
+    ActionResponse<{
+        comment: z.infer<typeof ActivityScoreBaseSchema>['comment']
+        data: z.infer<ReturnType<typeof CreateActivityScoreSchema>>
+    }>
+> {
+    const route =
+        scoringType == 'rubric'
+            ? `/activity_assignment/${entity.activity_assignment_id}/score/rubric`
+            : `/activity_assignment/${entity.activity_assignment_id}/score/range`
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                comment: z.infer<typeof ActivityScoreBaseSchema>['comment']
+                data: z.infer<ReturnType<typeof CreateActivityScoreSchema>>
+            }>
+        >(route)
+
+        return {
+            success: true,
+            message: response.data.message,
+            data: response.data.data,
+        }
+    } catch (e: any) {
+        console.error(e)
         return {
             success: false,
             message: e.response.data.message,

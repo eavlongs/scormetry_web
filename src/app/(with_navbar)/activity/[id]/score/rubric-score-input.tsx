@@ -34,14 +34,16 @@ export function RubricScoreInput({
     onScoreUpdate,
     parentErrors,
     onSetParentErrors,
+    initialScores,
     ...props
 }: RubricScoreInputProps & {
+    initialScores: z.infer<typeof RubricScoreSchema>[] | undefined
     onScoreUpdate: (scores: RubricScoreContextType['scores']) => void
     parentErrors: NestedPathValidationError[]
     onSetParentErrors: () => void
 } & React.ComponentProps<'div'>) {
     const [scores, setScores] = useState<z.infer<typeof RubricScoreSchema>[]>(
-        []
+        initialScores ?? []
     )
 
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])

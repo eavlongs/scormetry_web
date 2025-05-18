@@ -15,19 +15,25 @@ export type RangeScore = {
 
 export default function RangeScoreInput({
     entity,
+    initialScores,
     onScoreUpdate,
     maxScore,
 }: {
+    initialScores: RangeScore[] | undefined
     entity: ScoringEntity
     onScoreUpdate: (scores: RangeScore[]) => void
     maxScore: number
 }) {
-    const [scores, setScores] = useState<RangeScore[]>([])
+    const [scores, setScores] = useState<RangeScore[]>(initialScores ?? [])
     const [errors, setErrors] = useState<ValidationError[]>([])
 
     useEffect(() => {
         onScoreUpdate(scores)
     }, [scores])
+
+    useEffect(() => {
+        console.log('initialScores', initialScores)
+    }, [initialScores])
 
     function addOrReplaceScore(student_id: string, score: number) {
         const newScores = [...scores]

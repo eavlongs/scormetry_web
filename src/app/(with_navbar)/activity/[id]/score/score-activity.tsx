@@ -3,14 +3,12 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { CreateActivityScoreSchema } from '@/schema'
 import {
     GetActivity,
-    GetRubric,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
     SCORING_TYPES,
@@ -20,13 +18,16 @@ import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { saveScoringData } from './actions'
+import {
+    getActivityAssignmentScoreForStudent,
+    saveScoringData,
+} from './actions'
+import RangeScoreInput, { RangeScore } from './range-score-input'
 import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
-import RangeScoreInput, { RangeScore } from './range-score-input'
 
 type ScoreData = {
     range_based_scores?: RangeScore[]
@@ -44,6 +45,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     const [filteredEntities, setFilteredEntities] = useState<ScoringEntity[]>(
         []
     )
+    const [initialScore, setInitialScore] = useState<ScoreData>({})
+    const [scoreFetched, setScoreFetched] = useState(false)
 
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
 
@@ -86,6 +89,73 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         }
     }, [activity])
 
+    useEffect(() => {
+        fetchScoreData()
+    }, [selectedEntity])
+
+    useEffect(() => {
+        console.log({ initialScore })
+    }, [initialScore])
+
+    const fetchScoreData = useCallback(async () => {
+        if (
+            activity.scoring_type != SCORING_TYPE_RUBRIC &&
+            activity.scoring_type != SCORING_TYPE_RANGE
+        )
+            return
+        if (!selectedEntity) return
+
+        setScoreFetched(false)
+        const response = await getActivityAssignmentScoreForStudent(
+            selectedEntity,
+            activity.scoring_type as 'rubric' | 'range'
+        )
+
+        if (response.success) {
+            if (!response.data) {
+                setScoreData({
+                    range_based_scores: undefined,
+                    rubric_score: undefined,
+                })
+                return
+            }
+            // console.log('useeffect', { data: response.data.data })
+            console.log(activity.scoring_type == 'range')
+            console.log(Array.isArray(response.data.data.data))
+            // console.log(response.data.data.data)
+            console.log('score to be set', {
+                range_based_scores:
+                    activity.scoring_type == 'range' &&
+                    Array.isArray(response.data.data.data)
+                        ? (response.data.data.data as unknown as RangeScore[])
+                        : undefined,
+                rubric_score:
+                    activity.scoring_type == 'rubric' &&
+                    Array.isArray(response.data.data.data)
+                        ? (response.data.data
+                              .data as unknown as RubricScoreContextType['scores'])
+                        : undefined,
+            })
+            setInitialScore({
+                range_based_scores:
+                    activity.scoring_type == 'range' &&
+                    Array.isArray(response.data.data.data)
+                        ? (response.data.data.data as unknown as RangeScore[])
+                        : undefined,
+                rubric_score:
+                    activity.scoring_type == 'rubric' &&
+                    Array.isArray(response.data.data.data)
+                        ? (response.data.data
+                              .data as unknown as RubricScoreContextType['scores'])
+                        : undefined,
+            })
+        } else {
+            toast.error(response.message)
+        }
+
+        setScoreFetched(true)
+    }, [selectedEntity, activity.scoring_type])
+
     // Filter entities based on search query
     useEffect(() => {
         if (!searchQuery.trim()) {
@@ -127,11 +197,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         )
             return null
 
-        let data:
-            | (z.infer<ReturnType<typeof CreateActivityScoreSchema>> & {
-                  rubric_criterias?: GetRubric['rubric_sections'][number]['rubric_criterias']
-              })
-            | null = null
+        let data: z.infer<ReturnType<typeof CreateActivityScoreSchema>> | null =
+            null
 
         let paramForValidationSchema:
             | Parameters<typeof CreateActivityScoreSchema>[0]
@@ -353,8 +420,12 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
 
                             <div className="w-full flex flex-col flex-grow">
                                 {activity.scoring_type === SCORING_TYPE_RANGE &&
-                                    activity.max_score !== null && (
+                                    activity.max_score !== null &&
+                                    scoreFetched && (
                                         <RangeScoreInput
+                                            initialScores={
+                                                initialScore.range_based_scores
+                                            }
                                             entity={selectedEntity}
                                             onScoreUpdate={(scores) => {
                                                 setScoreData({
@@ -368,11 +439,15 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
 
                                 {activity.scoring_type ===
                                     SCORING_TYPE_RUBRIC &&
+                                    scoreFetched &&
                                     activity.rubric && (
                                         <div>
                                             <RubricScoreInput
                                                 rubric={activity.rubric}
                                                 entity={selectedEntity}
+                                                initialScores={
+                                                    initialScore.rubric_score
+                                                }
                                                 parentErrors={errors}
                                                 onScoreUpdate={(scores) =>
                                                     setScoreData({
