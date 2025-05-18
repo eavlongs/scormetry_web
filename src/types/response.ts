@@ -10,6 +10,11 @@ export type ValidationError = {
     message: string
 }
 
+export type NestedPathValidationError = {
+    field: (string | number)[]
+    message: string
+}
+
 export const VALIDATION_ERROR = 'validation'
 export const VALIDATION_ERROR_MESSAGE =
     'Validation failed. Please check your input.'

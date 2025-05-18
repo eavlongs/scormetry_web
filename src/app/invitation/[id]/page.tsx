@@ -10,7 +10,11 @@ import { redirect } from 'next/navigation'
 import { acceptInvitation } from './actions'
 import ChangeAccountButton from './change-account-button'
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({
+    params,
+}: {
+    params: Promise<{ id: string }>
+}) {
     const { id } = await params
 
     const response = await acceptInvitation(id)

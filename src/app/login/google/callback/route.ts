@@ -79,8 +79,8 @@ export async function GET(request: Request): Promise<Response> {
 
     try {
         await createSession(
-            response.data.data.tokens.access_token,
-            response.data.data.tokens.refresh_token
+            response.data.data!.tokens.access_token,
+            response.data.data!.tokens.refresh_token
         )
     } catch (e) {
         return new Response(null, {

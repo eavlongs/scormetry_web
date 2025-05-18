@@ -4,9 +4,9 @@ import { REDIRECT_URL_NAME } from '@/types/auth'
 export default async function Page({
     searchParams,
 }: {
-    searchParams: {
+    searchParams: Promise<{
         [REDIRECT_URL_NAME]: string
-    }
+    }>
 }) {
     const { [REDIRECT_URL_NAME]: redirectUrl } = await searchParams
     return (

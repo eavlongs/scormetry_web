@@ -1,6 +1,7 @@
 import { classroomColorsWithType } from '@/types/classroom'
 import {
     ActionResponse,
+    NestedPathValidationError,
     VALIDATION_ERROR_MESSAGE,
     ValidationError,
 } from '@/types/response'
@@ -46,6 +47,36 @@ export async function copyUrlToClipboard(path: string) {
     await copyToClipboard(url)
 }
 
+export function convertZodErrorToValidationErrorWithNestedPath<T>(
+    err: ZodError<T>,
+    customPathMap: Record<string, string[]> = {}
+): NestedPathValidationError[] {
+    if (!(err instanceof ZodError)) return []
+
+    const issues = err.issues
+    const validationErrors: NestedPathValidationError[] = []
+
+    for (const i in issues) {
+        const path = issues[i].path
+
+        if (!path) {
+            validationErrors.push({
+                field: [i + 1],
+                message: issues[i].message,
+            })
+            continue
+        }
+
+        const p = customPathMap[path.join(',')] || path
+        validationErrors.push({
+            field: p,
+            message: issues[i].message,
+        })
+    }
+
+    return validationErrors
+}
+
 export function convertZodErrorToValidationError<T>(
     err: ZodError<T>
 ): ValidationError[] {
@@ -82,19 +113,35 @@ export function convertZodErrorToValidationError<T>(
     return validationErrors
 }
 
-export function getErrorMessageFromValidationError(
+export function getErrorMessageFromValidationErrorMultipleKeys(
     e: ValidationError[],
-    key: string | string[]
+    keys: string[]
 ): string {
-    if (Array.isArray(key)) {
-        const error = e.find((error) => key.includes(error.field))
+    for (const key of keys) {
+        const error = e.find((error) => error.field === key)
         if (error) {
             return error.message
         }
-        return ''
     }
+    return ''
+}
 
+export function getErrorMessageFromValidationError(
+    e: ValidationError[],
+    key: string
+): string {
     const error = e.find((error) => error.field === key)
+    if (error) {
+        return error.message
+    }
+    return ''
+}
+
+export function getErrorMessageFromNestedPathValidationError(
+    e: NestedPathValidationError[],
+    key: (string | number)[]
+): string {
+    const error = e.find((e) => e.field.join('.') === key.join('.'))
     if (error) {
         return error.message
     }
@@ -115,7 +162,23 @@ export function getValidationErrorActionResponse<T>(
     }
 }
 
-export function getValidationErrorMessage(e: ValidationError[]): string {
+export function getValidationErrorWithNestedPathActionResponse<T>(
+    err: ZodError<T>,
+    customPathMap: Record<string, string[]> = {}
+): ActionResponse<any, NestedPathValidationError[]> {
+    return {
+        success: false,
+        message: VALIDATION_ERROR_MESSAGE,
+        error: convertZodErrorToValidationErrorWithNestedPath(
+            err,
+            customPathMap
+        ),
+    }
+}
+
+export function getValidationErrorMessage(
+    e: ValidationError[] | NestedPathValidationError[]
+): string {
     return e.length > 0 ? e[0].message : ''
 }
 

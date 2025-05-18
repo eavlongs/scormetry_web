@@ -2,6 +2,12 @@
 
 import QuillEditor from '@/components/quill-editor'
 import { SimpleToolTip } from '@/components/simple-tooltip'
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatBytes } from '@/components/ui/file-upload'
@@ -11,10 +17,13 @@ import type { GetActivity } from '@/types/classroom'
 import { ArrowLeft, FileText, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useCallback } from 'react'
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import ActivityCommentSection from './activity-comment-section'
 import ActivityGroups from './activity-groups'
 import ActivityScoreview from './activity-score-view'
+import ActivityScoringDetail from './activity-scoring-detail'
+import ActivityStudents from './activity-students'
 
 export default function ViewActivity({
     activity,
@@ -37,6 +46,55 @@ export default function ViewActivity({
             day: 'numeric',
         })
     }
+
+    const renderSidePanel = useCallback(() => {
+        if (activity.groups || activity.students) {
+            return (
+                <Accordion
+                    type="multiple"
+                    className="w-full"
+                    defaultValue={['item-1', 'item-2']}
+                >
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger className="cursor-pointer hover:no-underline text-base">
+                            Scoring Detail
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            <ActivityScoringDetail activity={activity} />
+                        </AccordionContent>
+                    </AccordionItem>
+                    {activity.scoring_type != null && (
+                        <AccordionItem value="item-2">
+                            <AccordionTrigger className="cursor-pointer hover:no-underline text-base">
+                                Judge Assignment
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                {activity.groups ? (
+                                    <ActivityGroups
+                                        activity={activity}
+                                        groups={activity.groups}
+                                        judges={activity.judges || []}
+                                    />
+                                ) : (
+                                    <ActivityStudents
+                                        activity={activity}
+                                        judges={activity.judges || []}
+                                    />
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
+                </Accordion>
+            )
+        }
+
+        return (
+            <>
+                <ActivityScoreview activity={activity} />
+                <ActivityCommentSection activity={activity} />
+            </>
+        )
+    }, [activity.groups, activity.students])
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-10">
@@ -92,10 +150,6 @@ export default function ViewActivity({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {activity.files &&
                         activity.files.length > 0 &&
-                        // <h2 className="text-lg font-semibold mb-2">
-                        //     Attachments
-                        // </h2>
-                        // <div className="space-y-2">
                         activity.files.map((file) => (
                             <div
                                 key={file.id}
@@ -103,7 +157,9 @@ export default function ViewActivity({
                             >
                                 <FileText className="h-5 w-5 text-muted-foreground" />
                                 <div className="flex-1">
-                                    <p className="text-sm">{file.file_name}</p>
+                                    <p className="text-sm line-clamp-1">
+                                        {file.file_name}
+                                    </p>
                                     <p className="text-xs text-muted-foreground">
                                         {formatBytes(file.file_size)}
                                     </p>
@@ -171,14 +227,7 @@ export default function ViewActivity({
                     <Separator orientation="vertical" className="h-full" />
                 </div>
 
-                {activity.groups ? (
-                    <ActivityGroups groups={activity.groups} />
-                ) : (
-                    <>
-                        <ActivityScoreview activity={activity} />
-                        <ActivityCommentSection activity={activity} />
-                    </>
-                )}
+                {renderSidePanel()}
             </div>
         </div>
     )

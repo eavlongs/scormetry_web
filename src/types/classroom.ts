@@ -1,4 +1,5 @@
 import { ClassroomUserDetail, UserEssentialDetail } from './auth'
+import { Prettify } from './general'
 
 export type Classroom = {
     id: string
@@ -85,7 +86,6 @@ export type Grouping = {
     classroom_id: string
     name: string
     description: string
-    is_default: boolean
     created_at: string
     updated_at: string
 }
@@ -132,10 +132,96 @@ export type CustomFile = {
 
 export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
     users: UserEssentialDetail[]
+    judges: UserEssentialDetail[]
+}
+
+export type GetGroupWithJudgePermission = GetGroup & {
+    activity_assignment_id: string
+    permitted_to_judge: boolean
 }
 
 export type GetActivity = Activity & {
+    rubric: GetRubric | null
     posted_by_user: ClassroomUserDetail
-    groups: GetGroup[] | null
+    groups: GetGroupWithJudgePermission[] | null
+    students:
+        | Prettify<
+              UserEssentialDetail & {
+                  activity_assignment_id: string
+                  permitted_to_judge: boolean
+                  judges: UserEssentialDetail[]
+              }
+          >[]
+        | null
+    judges: UserEssentialDetail[] | null
     group: GetGroup | null
 }
+
+export type GetRubric = Rubric & {
+    rubric_sections: (RubricSection & {
+        rubric_criterias: (CriteriaScoreRange & {
+            criteria_score_ranges: CriteriaScoreRange[]
+        })[]
+    })[]
+}
+
+export type Rubric = {
+    id: string
+    has_weightage: boolean
+    max_score: number
+    note: string
+    created_at: string
+    updated_at: string
+}
+
+export type RubricSection = {
+    id: string
+    rubric_id: string
+    name: string
+    description: string
+    is_group_score: boolean
+    score_percentage: number
+    max_score: number
+    order: number
+    created_at: string
+    updated_at: string
+}
+
+export type RubricCriteria = {
+    id: string
+    rubric_section_id: string
+    name: string
+    min_score: number
+    max_score: number
+    order: number
+    created_at: string
+    updated_at: string
+}
+
+export type CriteriaScoreRange = {
+    id: string
+    rubric_criteria_id: string
+    name: string
+    description: string
+    min_score: number
+    max_score: number
+    created_at: string
+    updated_at: string
+}
+
+export type ScoringEntity = {
+    isScored: boolean
+} & (
+    | {
+          type: 'group'
+          activity_assignment_id: string
+          entity: GetGroup
+      }
+    | {
+          type: 'individual'
+          activity_assignment_id: string
+          entity: UserEssentialDetail
+      }
+)
+
+export type IndividualOrGroup = 'individual' | 'group'

@@ -23,6 +23,7 @@ export default function ActivityScoreview({
                             <div className="flex flex-col items-center">
                                 <div className="flex items-baseline">
                                     <span className="text-4xl font-bold text-primary">
+                                        {/* @ts-ignore */}
                                         {9 || '-'}
                                     </span>
                                     <span className="text-lg text-muted-foreground mx-2">
@@ -40,6 +41,7 @@ export default function ActivityScoreview({
                             <div className="flex flex-col items-center">
                                 <div className="flex items-baseline">
                                     <span className="text-3xl font-bold text-primary">
+                                        {/* @ts-ignore */}
                                         {'90' || '-'}
                                     </span>
                                     <span className="text-lg text-muted-foreground mx-2">

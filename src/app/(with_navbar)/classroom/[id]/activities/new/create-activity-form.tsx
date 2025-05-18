@@ -1,7 +1,7 @@
 'use client'
 
-import { v4 as uuidv4 } from 'uuid'
 import QuillEditor from '@/components/quill-editor'
+import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 import { Button } from '@/components/ui/button'
 import {
     FileUpload,
@@ -18,14 +18,13 @@ import { LabelWrapper } from '@/components/ui/label-wrapper'
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { RubricSchema } from '@/schema'
 import {
     Category,
     Grouping,
@@ -44,11 +43,12 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Delta } from 'quill'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { v4 as uuidv4 } from 'uuid'
+import { z } from 'zod'
 import { GetClassroomResponse } from '../../actions'
 import { CreateCategoryDialog } from '../../categories/create-category-dialog'
 import { CreateGroupingDialog } from '../../groupings/create-grouping-dialog'
 import { createActivity } from './actions'
-import { CreateRubricDialog } from './create-rubric-dialog'
 
 // Mock data for rubrics
 const mockRubrics = [
@@ -86,13 +86,14 @@ export default function CreateActivityForm({
     const titleRef = useRef<HTMLInputElement>(null)
     const [categoryId, setCategoryId] = useState<string>('')
     const [groupingId, setGroupingId] = useState<string>('individual')
-    const [rubric, setRubric] = useState<any>(null)
+    const [rubric, setRubric] = useState<z.infer<typeof RubricSchema> | null>(
+        null
+    )
     const [selectedRubricId, setSelectedRubricId] = useState<string>('')
     const [scoringType, setScoringType] = useState<string>('none')
     const maxScoreRef = useRef<HTMLInputElement>(null)
 
-    // State for managing rubric options
-    const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
+    // const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
     const [files, setFiles] = useState<{ id: string; file: File }[]>([])
 
@@ -185,7 +186,7 @@ export default function CreateActivityForm({
     }, [])
 
     // Handle new rubric creation
-    const handleRubricSave = (rubric: any) => {
+    const handleRubricSave = (rubric: z.infer<typeof RubricSchema>) => {
         setRubric(rubric)
         setIsRubricDialogOpen(false)
     }
@@ -201,7 +202,7 @@ export default function CreateActivityForm({
         formData.append('title', titleRef.current?.value || '')
         formData.append(
             'description',
-            description ? JSON.stringify(description) : '{}'
+            description ? JSON.stringify(description) : '[]'
         )
         formData.append('category_id', categoryId)
         formData.append(
@@ -240,7 +241,27 @@ export default function CreateActivityForm({
                 response.message === VALIDATION_ERROR_MESSAGE &&
                 response.error
             ) {
-                setValidationErrors(response.error)
+                const rubricErrorKeys = [
+                    'rubric',
+                    'sections',
+                    'criterias',
+                    'criteria_score_ranges',
+                    'min_score',
+                    'max_score',
+                ]
+                let message = ''
+                const validationErrors = response.error.filter(
+                    (e: ValidationError) => {
+                        if (!rubricErrorKeys.includes(e.field)) return true
+                        if (!message) message = e.message
+                        return false
+                    }
+                )
+
+                console.log(validationErrors)
+
+                setValidationErrors(validationErrors)
+                if (message !== '') toast.error(message)
                 return
             }
 
@@ -324,7 +345,7 @@ export default function CreateActivityForm({
                                         )}
                                     </Button>
 
-                                    <Select
+                                    {/* <Select
                                         value={selectedRubricId}
                                         onValueChange={(val) => {
                                             setSelectedRubricId(val)
@@ -355,7 +376,7 @@ export default function CreateActivityForm({
                                                 )}
                                             </SelectGroup>
                                         </SelectContent>
-                                    </Select>
+                                    </Select> */}
                                 </div>
                             </div>
                         </LabelWrapper>
@@ -367,7 +388,7 @@ export default function CreateActivityForm({
     }, [
         scoringType,
         rubric,
-        availableRubrics,
+        // availableRubrics,
         validationErrors,
         selectedRubricId,
     ])
@@ -583,6 +604,25 @@ export default function CreateActivityForm({
                                             return
                                         }
                                         setGroupingId(val)
+                                        if (rubric && val === 'individual') {
+                                            let tmp = structuredClone(rubric)
+                                            let shouldInformChange = false
+                                            for (const section of tmp.rubric_sections) {
+                                                if (
+                                                    !shouldInformChange &&
+                                                    section.is_group_score
+                                                ) {
+                                                    shouldInformChange = true
+                                                }
+                                                section.is_group_score = false
+                                            }
+                                            if (shouldInformChange) {
+                                                toast.info(
+                                                    'The rubric sections have been changed to individual scores'
+                                                )
+                                            }
+                                            setRubric(tmp)
+                                        }
                                     }}
                                 >
                                     <SelectTrigger>
@@ -674,13 +714,6 @@ export default function CreateActivityForm({
                 </div>
             </form>
 
-            {/* Rubric Creation Dialog */}
-            <CreateRubricDialog
-                isOpen={isRubricDialogOpen}
-                onClose={() => setIsRubricDialogOpen(false)}
-                onSave={handleRubricSave}
-            />
-
             <CreateCategoryDialog
                 classroom={classroom}
                 open={isCreateCategoryDialogOpen}
@@ -709,12 +742,13 @@ export default function CreateActivityForm({
                         const updatedGroupings = [...prevGroupings, grouping]
                         // Then set the grouping ID in the next tick
                         // This still uses React's scheduling but is more intentional
+                        const tmp = structuredClone(rubric)
                         Promise.resolve().then(() => {
                             setGroupingId(groupingId)
 
                             const dataKey = saveDataToSessionStorage({
                                 title: titleRef.current?.value || '',
-                                description: JSON.stringify(description),
+                                description: JSON.stringify(description || []),
                                 category_id: categoryId,
                                 grouping_id: grouping.id,
                                 scoring_type: scoringType,
@@ -734,6 +768,14 @@ export default function CreateActivityForm({
                         return updatedGroupings
                     })
                 }}
+            />
+
+            <RubricBuilderDialog
+                isIndividual={groupingId === 'individual'}
+                open={isRubricDialogOpen}
+                initialData={rubric}
+                onOpenChange={setIsRubricDialogOpen}
+                onSave={handleRubricSave}
             />
         </>
     )

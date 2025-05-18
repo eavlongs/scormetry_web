@@ -14,7 +14,7 @@ export default async function Layout({
             <AppSidebar classrooms={classrooms} />
             <SidebarInset>
                 <Navbar />
-                <div className="px-6">{children}</div>
+                <div className="px-6 flex-grow">{children}</div>
             </SidebarInset>
         </SidebarProvider>
     )

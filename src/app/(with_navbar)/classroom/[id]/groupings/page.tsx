@@ -6,9 +6,9 @@ import GroupingsTab from './groupings-tab'
 export default async function Page({
     params,
 }: {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }) {
     const { id } = await params
     const classroom = await getClassroom(id)

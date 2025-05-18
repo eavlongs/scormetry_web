@@ -6,7 +6,11 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { joinClassroomByCode } from './actions'
 
-export default async function Page({ params }: { params: { code: string } }) {
+export default async function Page({
+    params,
+}: {
+    params: Promise<{ code: string }>
+}) {
     const { code } = await params
 
     const response = await joinClassroomByCode(code)
