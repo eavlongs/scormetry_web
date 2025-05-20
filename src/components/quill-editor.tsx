@@ -1,7 +1,6 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { v4 as uuidv4 } from 'uuid'
 import React, { useEffect, useRef, useState } from 'react'
 
 interface QuillEditorProps {
@@ -43,7 +42,7 @@ export default function QuillEditor({
             !isLoaded
         ) {
             // Dynamically import Quill to avoid SSR issues
-            import('quill').then((Quill) => {
+            import('quill').then((QuillModule) => {
                 if (containerRef.current) {
                     setContainerElement(containerRef.current)
                     const toolbar = containerRef.current.querySelector(
@@ -54,7 +53,7 @@ export default function QuillEditor({
                         toolbar.remove()
                     }
                 }
-                const quillInstance = new Quill.default(
+                const quillInstance = new QuillModule.default(
                     editorRef.current as HTMLElement,
                     {
                         theme: 'snow',
@@ -95,7 +94,6 @@ export default function QuillEditor({
                 if (!readOnly) {
                     if (onContentChange) {
                         quillInstance.on('text-change', () => {
-                            // console.log(quillInstance.editor.getDelta())
                             onContentChange(quillInstance.editor.getDelta())
                         })
                     }

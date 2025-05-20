@@ -144,8 +144,12 @@
     font-style: normal;
 }
 
-.ql-hidden {
+.ql-cursor {
     display: none;
+}
+
+input[data-formula="e=mc^2"][data-link="https://quilljs.com"][data-video="Embed URL"][placeholder="https://quilljs.com"]::placeholder {
+    color: transparent;
 }
 
 .ql-editor {
@@ -163,6 +167,10 @@
 /* to prevent quilljs editor placeholder from misaligning */
 .ql-editor.ql-blank::before {
     position: unset !important;
+}
+
+.ql-editor a {
+    cursor: pointer;
 }
 
 ::-webkit-scrollbar-track

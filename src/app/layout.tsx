@@ -1,11 +1,10 @@
 import { Toaster } from '@/components/ui/sonner'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import type React from 'react'
 import AppProvider from './AppProvider'
 import AuthProvider from './AuthProvider'
-import './globals.css'
 import { font } from './font'
+import './globals.css'
 
 const fontToDisplay = font
 
