@@ -38,7 +38,7 @@ export async function copyUrlToClipboard(path: string) {
     const port = window.location.port
 
     let url = ''
-    if (port != '80' && port != '443') {
+    if (port != '' && port != '80' && port != '443') {
         url = `${hostname}:${port}${path}`
     } else {
         url = `${hostname}${path}`
