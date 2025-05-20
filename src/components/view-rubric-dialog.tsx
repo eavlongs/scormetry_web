@@ -2,26 +2,28 @@
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { GetRubric } from '@/types/classroom'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import QuillEditor from './quill-editor'
 import { Badge } from './ui/badge'
+import { Textarea } from './ui/textarea'
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from './ui/tooltip'
-import { Textarea } from './ui/textarea'
 
 interface ViewRubricDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    isIndividualWork: boolean
     rubric: GetRubric
 }
 
 export function ViewRubricDialog({
     open,
     onOpenChange,
+    isIndividualWork,
     rubric,
 }: ViewRubricDialogProps) {
     const [sections] = useState<GetRubric['rubric_sections']>(
@@ -30,43 +32,44 @@ export function ViewRubricDialog({
     const [hasWeigtage] = useState<boolean>(rubric.has_weightage)
 
     return (
-        <>
-            <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="min-w-[900px] max-w-[70vw] max-h-[calc(100vh-2rem)] overflow-y-auto">
-                    <DialogTitle>Rubric</DialogTitle>
-                    <div className="flex-1 overflow-auto p-4 px-0 pt-0 flex flex-col gap-y-4">
-                        {sections.map((section) => (
-                            <RubricSection
-                                key={section.id}
-                                section={section}
-                                hasWeightage={hasWeigtage}
-                            />
-                        ))}
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="min-w-[900px] max-w-[70vw] max-h-[calc(100vh-2rem)] overflow-y-auto">
+                <DialogTitle>Rubric</DialogTitle>
+                <div className="flex-1 overflow-auto p-4 px-0 pt-0 flex flex-col gap-y-4">
+                    {sections.map((section) => (
+                        <RubricSection
+                            key={section.id}
+                            section={section}
+                            isIndividualWork={isIndividualWork}
+                            hasWeightage={hasWeigtage}
+                        />
+                    ))}
 
-                        <div>
-                            <h3 className="text-base underline font-bold mb-2">
-                                Note
-                            </h3>
-                            <QuillEditor
-                                className=" w-full"
-                                initialContent={JSON.parse(rubric.note)}
-                                readOnly
-                                placeholder="Not available"
-                            />
-                        </div>
+                    <div>
+                        <h3 className="text-base underline font-bold mb-2">
+                            Note
+                        </h3>
+                        <QuillEditor
+                            className=" w-full"
+                            initialContent={JSON.parse(rubric.note)}
+                            readOnly
+                            placeholder="Not available"
+                        />
                     </div>
-                </DialogContent>
-            </Dialog>
-        </>
+                </div>
+            </DialogContent>
+        </Dialog>
     )
 }
 
 function RubricSection({
     section,
     hasWeightage,
+    isIndividualWork,
 }: {
     section: GetRubric['rubric_sections'][number]
     hasWeightage: boolean
+    isIndividualWork: boolean
 }) {
     return (
         <div>
@@ -88,14 +91,16 @@ function RubricSection({
 
                 <div>
                     <div>
-                        <div className="flex items-center gap-2 ml-2 mb-2 text-sm">
-                            <Badge variant="paragon">
-                                {section.is_group_score
-                                    ? 'Group'
-                                    : 'Individual'}
-                                {' Score'}
-                            </Badge>
-                        </div>
+                        {!isIndividualWork && (
+                            <div className="flex items-center gap-2 ml-2 mb-2 text-sm">
+                                <Badge variant="paragon">
+                                    {section.is_group_score
+                                        ? 'Group'
+                                        : 'Individual'}
+                                    {' Score'}
+                                </Badge>
+                            </div>
+                        )}
                     </div>
                     {section.rubric_criterias.map((criteria) => (
                         <RubricCriteria key={criteria.id} criteria={criteria} />
