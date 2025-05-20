@@ -31,11 +31,13 @@ import {
     useState,
 } from 'react'
 import { toast } from 'sonner'
+import { v4 as uuidv4 } from 'uuid'
 import { z, ZodError } from 'zod'
 import QuillEditor from './quill-editor'
 import { LabelWrapper } from './ui/label-wrapper'
 
 interface ScoreRange {
+    id: string
     name: string
     min_score: number
     max_score: number
@@ -43,11 +45,13 @@ interface ScoreRange {
 }
 
 interface Criteria {
+    id: string
     name: string
     criteria_score_ranges: ScoreRange[]
 }
 
 interface Section {
+    id: string
     name: string
     score_percentage: number
     is_group_score: boolean
@@ -113,15 +117,18 @@ type RubricBuilderContextType = {
 const rubricBuilderDefaultValue: RubricBuilderContextType = {
     rubric_sections: [
         {
+            id: uuidv4(),
             name: 'Section 1',
             score_percentage: 0,
             is_group_score: false,
             description: '',
             rubric_criterias: [
                 {
+                    id: uuidv4(),
                     name: '',
                     criteria_score_ranges: [
                         {
+                            id: uuidv4(),
                             name: '',
                             min_score: 1,
                             max_score: 5,
@@ -162,7 +169,21 @@ export function RubricBuilderDialog({
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
         initialData
-            ? initialData.rubric_sections
+            ? initialData.rubric_sections.map((section) => ({
+                  id: uuidv4(),
+                  ...section,
+                  rubric_criterias: section.rubric_criterias.map(
+                      (criteria) => ({
+                          id: uuidv4(),
+                          ...criteria,
+                          criteria_score_ranges:
+                              criteria.criteria_score_ranges.map((range) => ({
+                                  id: uuidv4(),
+                                  ...range,
+                              })),
+                      })
+                  ),
+              }))
             : rubricBuilderDefaultValue.rubric_sections
     )
     const [sectionToEdit, setSectionToEdit] = useState<Prettify<
@@ -184,7 +205,23 @@ export function RubricBuilderDialog({
 
     useEffect(() => {
         if (initialData) {
-            setSections(initialData?.rubric_sections || [])
+            setSections(
+                initialData.rubric_sections.map((section) => ({
+                    id: uuidv4(),
+                    ...section,
+                    rubric_criterias: section.rubric_criterias.map(
+                        (criteria) => ({
+                            id: uuidv4(),
+                            ...criteria,
+                            criteria_score_ranges:
+                                criteria.criteria_score_ranges.map((range) => ({
+                                    id: uuidv4(),
+                                    ...range,
+                                })),
+                        })
+                    ),
+                })) || []
+            )
         }
     }, [initialData])
 
@@ -196,9 +233,11 @@ export function RubricBuilderDialog({
                 rubric_criterias: [
                     ...updatedSections[sectionIndex].rubric_criterias,
                     {
+                        id: uuidv4(),
                         name: '',
                         criteria_score_ranges: [
                             {
+                                id: uuidv4(),
                                 name: '',
                                 min_score: 1,
                                 max_score: 5,
@@ -224,9 +263,22 @@ export function RubricBuilderDialog({
     }
 
     const removeCriteria = (sectionIndex: number, criteriaIndex: number) => {
-        const updatedSections = [...sections]
-        updatedSections[sectionIndex].rubric_criterias.splice(criteriaIndex, 1)
-        setSections(updatedSections)
+        setSections((prev) => {
+            const updatedSections = [...prev]
+            updatedSections[sectionIndex] = {
+                ...updatedSections[sectionIndex],
+                rubric_criterias: [
+                    ...updatedSections[sectionIndex].rubric_criterias.slice(
+                        0,
+                        criteriaIndex
+                    ),
+                    ...updatedSections[sectionIndex].rubric_criterias.slice(
+                        criteriaIndex + 1
+                    ),
+                ],
+            }
+            return updatedSections
+        })
     }
 
     const updateSectionName = (sectionIndex: number, name: string) => {
@@ -316,6 +368,7 @@ export function RubricBuilderDialog({
         const diff = lastRange ? lastRange.max_score - lastRange.min_score : 0
 
         criteria.criteria_score_ranges.push({
+            id: uuidv4(),
             name: '',
             min_score: lastRange ? lastRange.max_score + 1 : 1,
             max_score: lastRange ? lastRange.max_score + 1 + diff : 5,
@@ -341,15 +394,18 @@ export function RubricBuilderDialog({
         setSections((prev) => [
             ...prev,
             {
+                id: uuidv4(),
                 name: `Section ${prev.length + 1}`,
                 score_percentage: 0,
                 is_group_score: false,
                 description: '',
                 rubric_criterias: [
                     {
+                        id: uuidv4(),
                         name: '',
                         criteria_score_ranges: [
                             {
+                                id: uuidv4(),
                                 name: '',
                                 min_score:
                                     prev[prev.length - 1].rubric_criterias[0]
@@ -423,7 +479,7 @@ export function RubricBuilderDialog({
                     <div className="flex-1 overflow-auto p-4 px-0 pt-0 pb-20 flex flex-col gap-y-4">
                         {sections.map((section, sectionIndex) => (
                             <RubricSection
-                                key={sectionIndex}
+                                key={section.id}
                                 index={sectionIndex}
                                 isIndividual={isIndividual}
                                 section={section}
@@ -632,7 +688,7 @@ function RubricSection({
                     </div>
                     {section.rubric_criterias.map((criteria, criteriaIndex) => (
                         <RubricCriteria
-                            key={criteriaIndex}
+                            key={criteria.id}
                             sectionIndex={index}
                             index={criteriaIndex}
                             criteria={criteria}
@@ -720,7 +776,7 @@ export function RubricCriteria({
                         {criteria.criteria_score_ranges.map(
                             (range, rangeIndex) => (
                                 <div
-                                    key={rangeIndex}
+                                    key={range.id}
                                     className="border p-3 flex-shrink-0 relative"
                                 >
                                     <div className="flex justify-between items-start mb-2">
