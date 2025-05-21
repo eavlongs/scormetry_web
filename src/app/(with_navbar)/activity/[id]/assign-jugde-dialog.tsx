@@ -13,6 +13,7 @@ import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { UserEssentialDetail } from '@/types/auth'
 import React, { useState } from 'react'
 import { SelectJudges } from './select-judges'
+import useSession from '@/hooks/useSession'
 
 export function AssignJudgeDialog({
     open,

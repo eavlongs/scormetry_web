@@ -733,6 +733,7 @@ const FileUploadDropzone = React.forwardRef<
             store.dispatch({ variant: 'SET_DRAG_OVER', dragOver: false })
 
             const files = Array.from(event.dataTransfer.files)
+            console.log(files)
             const inputElement = context.inputRef.current
             if (!inputElement) return
 

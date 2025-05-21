@@ -14,6 +14,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import useSession from '@/hooks/useSession'
 import { UserEssentialDetail } from '@/types/auth'
 import { Check } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -29,6 +30,7 @@ export function SelectJudges({
     selectedJudges = [],
     onSelectedJudgeValueChange,
 }: SelectJudgesProps) {
+    const session = useSession()
     const [search, setSearch] = useState('')
     const [open, setOpen] = useState(false)
     const [selected, setSelected] =
@@ -95,7 +97,14 @@ export function SelectJudges({
                                         className="flex items-center justify-between"
                                     >
                                         <div className="cursor-pointer">
-                                            <div>{`${judge.first_name} ${judge.last_name}`}</div>
+                                            <div>
+                                                {`${judge.first_name} ${judge.last_name}`}
+                                                {session &&
+                                                    session.user &&
+                                                    session.user.id ==
+                                                        judge.id &&
+                                                    ' (Me)'}
+                                            </div>
                                             <div className="text-sm text-muted-foreground">
                                                 {judge.email}
                                             </div>
