@@ -12,19 +12,9 @@ const api = axios.create({
 
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     console.log(
-        `${config.method?.toUpperCase()}: ${config.baseURL}${config.url}`
+        `API Call - ${config.method?.toUpperCase()}: ${config.baseURL}${config.url}`
     )
     return config
-})
-
-api.interceptors.response.use((response) => {
-    try {
-        const data = response.data
-        return data
-    } catch (error) {
-        console.error('Error parsing response data:', error)
-        throw error
-    }
 })
 
 const apiWithAuth = axios.create({
@@ -38,7 +28,7 @@ const apiWithAuth = axios.create({
 apiWithAuth.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
         console.log(
-            `${config.method?.toUpperCase()}: ${config.baseURL}${config.url}`
+            `API Call - ${config.method?.toUpperCase()}: ${config.baseURL}${config.url}`
         )
         const session = await getSession()
         if (session && session.isAuthenticated) {
@@ -47,16 +37,6 @@ apiWithAuth.interceptors.request.use(
         return config
     }
 )
-
-apiWithAuth.interceptors.response.use((response) => {
-    try {
-        const data = response.data
-        return data
-    } catch (error) {
-        console.error('Error parsing response data:', error)
-        throw error
-    }
-})
 
 // add interceptors to add token to request, if on frontend, it can be extracted from getSession(), if on server, it can be extracted from the cookie in the request
 
