@@ -7,18 +7,18 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { cn, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
 import { GetActivity } from '@/types/classroom'
 import { ChevronDown, Users } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { toast } from 'sonner'
+import { assignJudgesToStudent } from './actions'
 import { ListUser } from './activity-groups'
 import AssignJudgeAll from './assign-judge-all'
 import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
-import { assignJudgesToStudent } from './actions'
-import { toast } from 'sonner'
 import { GiveScoreButton } from './give-score-button'
 
 export default function ActivityStudents({
@@ -140,6 +140,27 @@ function ListStudentWithJudges({
                     </div>
 
                     <div className="ml-auto flex items-center gap-x-2">
+                        {activity.rubric_id !== null ? (
+                            student.score_percentage !== null && (
+                                <Badge variant="outline">
+                                    {formatDecimalNumber(
+                                        student.score_percentage
+                                    )}
+                                    /100
+                                </Badge>
+                            )
+                        ) : student.score !== null ? (
+                            <Badge variant="outline">
+                                {formatDecimalNumber(student.score)}/
+                                {activity.max_score}
+                            </Badge>
+                        ) : student.score_percentage !== null ? (
+                            <Badge variant="outline">
+                                {formatDecimalNumber(student.score_percentage)}
+                                /100
+                            </Badge>
+                        ) : null}
+
                         <AssignJudgeButton onClick={onAssign} />
                         {student.permitted_to_judge && (
                             <GiveScoreButton activityId={activity.id} />

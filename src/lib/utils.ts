@@ -47,6 +47,14 @@ export async function copyUrlToClipboard(path: string) {
     await copyToClipboard(url)
 }
 
+export function formatDecimalNumber(num: number): string {
+    if (Number.isInteger(num)) {
+        return num.toString()
+    } else {
+        return num.toFixed(2)
+    }
+}
+
 export function convertZodErrorToValidationErrorWithNestedPath<T>(
     err: ZodError<T>,
     customPathMap: Record<string, string[]> = {}

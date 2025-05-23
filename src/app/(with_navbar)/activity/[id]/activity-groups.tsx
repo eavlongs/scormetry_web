@@ -7,13 +7,9 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { cn, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
-import {
-    GetActivity,
-    GetGroup,
-    GetGroupWithJudgePermission,
-} from '@/types/classroom'
+import { GetActivity, GetGroupWithJudgePermission } from '@/types/classroom'
 import { ChevronDown, Users } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -95,6 +91,30 @@ export default function ActivityGroups({
                                         </Badge>
                                     </div>
                                     <div className="ml-auto flex items-center gap-x-2">
+                                        {activity.rubric_id !== null ? (
+                                            group.score_percentage !== null && (
+                                                <Badge variant="outline">
+                                                    {formatDecimalNumber(
+                                                        group.score_percentage
+                                                    )}
+                                                    /100
+                                                </Badge>
+                                            )
+                                        ) : group.score !== null ? (
+                                            <Badge variant="outline">
+                                                {formatDecimalNumber(
+                                                    group.score
+                                                )}
+                                                /{activity.max_score}
+                                            </Badge>
+                                        ) : group.score_percentage !== null ? (
+                                            <Badge variant="outline">
+                                                {formatDecimalNumber(
+                                                    group.score_percentage
+                                                )}
+                                                /100
+                                            </Badge>
+                                        ) : null}
                                         <AssignJudgeButton
                                             onClick={() =>
                                                 setGroupToAssignJudges(group)
@@ -117,7 +137,24 @@ export default function ActivityGroups({
                             </CollapsibleTrigger>
                             <CollapsibleContent className="divide-y divide-border">
                                 {group.users.map((user) => (
-                                    <ListUser user={user} key={user.id} />
+                                    <ListUser
+                                        user={user}
+                                        key={user.id}
+                                        scoreString={
+                                            activity.rubric_id !== null
+                                                ? user.score_percentage !== null
+                                                    ? `${formatDecimalNumber(user.score_percentage)}/100`
+                                                    : undefined
+                                                : user.score !== null
+                                                  ? `${formatDecimalNumber(user.score)}/${activity.max_score}`
+                                                  : user.score_percentage !==
+                                                      null
+                                                    ? `${formatDecimalNumber(
+                                                          user.score_percentage
+                                                      )}/100`
+                                                    : undefined
+                                        }
+                                    />
                                 ))}
 
                                 {group.judges.map((judge) => (
@@ -148,12 +185,14 @@ export default function ActivityGroups({
 export function ListUser({
     user,
     isJudge = false,
+    scoreString = '',
 }: {
     user: UserEssentialDetail
     isJudge?: boolean
+    scoreString?: string
 }) {
     return (
-        <div className="px-4 py-2.5 flex items-center gap-x-3 hover:bg-muted/50 transition-colors">
+        <div className="px-4 py-2.5 flex items-center gap-x-3 transition-colors hover:bg-muted/50">
             <div className="relative h-8 w-8 shrink-0">
                 <Image
                     src={user.profile_picture}
@@ -166,17 +205,15 @@ export function ListUser({
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium line-clamp-1">
                     {user.first_name} {user.last_name}
-                    {isJudge && (
-                        <Badge variant="outline" className="ml-2">
-                            Judge
-                        </Badge>
-                    )}
                 </p>
 
-                <p className="h-5 px-0 text-xs text-muted-foreground justify-start font-normal truncate max-w-full">
+                <p className="h-5 px-0 text-xs justify-start font-normal truncate max-w-full">
                     {user.email}
                 </p>
             </div>
+
+            {scoreString && <Badge variant="outline">{scoreString}</Badge>}
+            {isJudge && <Badge variant="paragon">Judge</Badge>}
         </div>
     )
 }

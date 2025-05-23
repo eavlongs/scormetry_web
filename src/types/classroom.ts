@@ -135,7 +135,18 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
     judges: UserEssentialDetail[]
 }
 
-export type GetGroupWithJudgePermission = GetGroup & {
+export type GetGroupWithScoreInfo = Prettify<
+    Pick<GetGroup, 'id' | 'name' | 'grouping_id' | 'judges'> & {
+        score: number | null
+        score_percentage: number | null
+        users: (UserEssentialDetail & {
+            score: number | null
+            score_percentage: number | null
+        })[]
+    }
+>
+
+export type GetGroupWithJudgePermission = GetGroupWithScoreInfo & {
     activity_assignment_id: string
     permitted_to_judge: boolean
 }
@@ -150,6 +161,8 @@ export type GetActivity = Activity & {
                   activity_assignment_id: string
                   permitted_to_judge: boolean
                   judges: UserEssentialDetail[]
+                  score: number | null
+                  score_percentage: number | null
               }
           >[]
         | null
