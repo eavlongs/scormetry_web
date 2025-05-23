@@ -11,7 +11,7 @@ const api = axios.create({
 })
 
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-    console.log(config.url)
+    console.log(`${config.baseURL}${config.url}`)
     return config
 })
 
@@ -35,7 +35,7 @@ const apiWithAuth = axios.create({
 
 apiWithAuth.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-        console.log(config.url)
+        console.log(`${config.baseURL}${config.url}`)
         const session = await getSession()
         if (session && session.isAuthenticated) {
             config.headers['Authorization'] = `Bearer ${session.accessToken}`
