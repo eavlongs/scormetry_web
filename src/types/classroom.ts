@@ -211,6 +211,13 @@ export type RubricCriteria = {
     updated_at: string
 }
 
+export type GetActivitiesResponse = {
+    classroom: Classroom
+    activities: (Activity & {
+        posted_by_user: UserEssentialDetail
+    })[]
+}
+
 export type CriteriaScoreRange = {
     id: string
     rubric_criteria_id: string
@@ -238,3 +245,15 @@ export type ScoringEntity = {
 )
 
 export type IndividualOrGroup = 'individual' | 'group'
+
+export type GetStudentGradeResponse = {
+    activity_id: string
+    score: number
+}
+
+export type GetGradeResponse = {
+    student: UserEssentialDetail & {
+        grades: GetStudentGradeResponse[]
+        class_average: number
+    }
+}
