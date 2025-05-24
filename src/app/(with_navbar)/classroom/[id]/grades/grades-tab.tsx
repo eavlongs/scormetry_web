@@ -78,10 +78,10 @@ export default function GradesTab({
                                                                 .last_name
                                                         }
                                                         fill
-                                                        className="rounded-full"
+                                                        className="rounded-full aspect-square"
                                                     />
                                                 </div>
-                                                <span className="text-sm text-muted-foreground">
+                                                <span className="text-sm text-muted-foreground max-w-[15rem] line-clamp-1">
                                                     {grade.student.first_name +
                                                         ' ' +
                                                         grade.student.last_name}
@@ -104,7 +104,8 @@ export default function GradesTab({
                                                         <Link
                                                             href={`/activity/${activity.id}/score?sid=${grade.student.id}`}
                                                         >
-                                                            {score ? (
+                                                            {score &&
+                                                            score.score ? (
                                                                 <span className="font-medium">
                                                                     {
                                                                         score.score

@@ -28,6 +28,7 @@ import {
 import RangeScoreInput, { RangeScore } from './range-score-input'
 import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
+import { useSearchParams } from 'next/navigation'
 
 type ScoreData = {
     range_based_scores?: RangeScore[]
@@ -51,6 +52,34 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
 
     const commentRef = useRef<HTMLTextAreaElement>(null)
+
+    const searchParams = useSearchParams()
+
+    useEffect(() => {
+        if (searchParams.get('sid')) {
+            const studentId = searchParams.get('sid')
+
+            let entity: ScoringEntity | null = null
+
+            for (const e of entities) {
+                if (e.type == 'individual' && e.entity.id === studentId) {
+                    entity = e
+                    break
+                } else if (e.type == 'group') {
+                    for (const members of e.entity.users) {
+                        if (members.id === studentId) {
+                            entity = e
+                            break
+                        }
+                    }
+                }
+            }
+
+            if (entity) {
+                setSelectedEntity(entity)
+            }
+        }
+    }, [searchParams])
 
     // Initialize entities based on activity type (groups or individual students)
     useEffect(() => {
