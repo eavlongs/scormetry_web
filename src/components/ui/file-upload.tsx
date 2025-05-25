@@ -988,9 +988,9 @@ export function formatBytes(bytes: number) {
     return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${sizes[i]}`
 }
 
-function getFileIcon(file: File) {
-    const type = file.type
-    const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+export function getFileIcon(fileType: string, fileName: string) {
+    const type = fileType
+    const extension = fileName.split('.').pop()?.toLowerCase() ?? ''
 
     if (type.startsWith('video/')) {
         return <FileVideoIcon />
@@ -1078,7 +1078,7 @@ const FileUploadItemPreview = React.forwardRef<
                 )
             }
 
-            return getFileIcon(file)
+            return getFileIcon(file.type, file.name)
         },
         [isImage, render]
     )

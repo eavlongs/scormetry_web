@@ -127,6 +127,7 @@ export type CustomFile = {
     file_path: string
     file_name: string
     file_size: number
+    content_type: string
     created_at: string
 }
 

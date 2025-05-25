@@ -55,6 +55,10 @@ export function formatDecimalNumber(num: number): string {
     }
 }
 
+export function formatFileUrl(filePath: string): string {
+    return `${process.env.NEXT_PUBLIC_API_URL}/files?p=${filePath}`
+}
+
 export function convertZodErrorToValidationErrorWithNestedPath<T>(
     err: ZodError<T>,
     customPathMap: Record<string, string[]> = {}

@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatBytes } from '@/components/ui/file-upload'
+import { formatBytes, getFileIcon } from '@/components/ui/file-upload'
 import { Separator } from '@/components/ui/separator'
-import { copyToClipboard } from '@/lib/utils'
+import { copyToClipboard, formatFileUrl } from '@/lib/utils'
 import type { GetActivity } from '@/types/classroom'
-import { ArrowLeft, FileText, Users } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback } from 'react'
@@ -151,11 +151,36 @@ export default function ViewActivity({
                     {activity.files &&
                         activity.files.length > 0 &&
                         activity.files.map((file) => (
-                            <div
+                            <Link
+                                href={formatFileUrl(file.file_path)}
+                                target="_blank"
                                 key={file.id}
                                 className="flex items-center gap-3 p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
                             >
-                                <FileText className="h-5 w-5 text-muted-foreground" />
+                                {file.content_type.startsWith('image/') ? (
+                                    <img
+                                        src={formatFileUrl(file.file_path)}
+                                        alt={file.file_name}
+                                        className="w-8 h-8 rounded object-cover"
+                                        onLoad={(event) => {
+                                            if (
+                                                !(
+                                                    event.target instanceof
+                                                    HTMLImageElement
+                                                )
+                                            )
+                                                return
+                                            URL.revokeObjectURL(
+                                                event.target.src
+                                            )
+                                        }}
+                                    />
+                                ) : (
+                                    getFileIcon(
+                                        file.content_type,
+                                        file.file_name
+                                    )
+                                )}
                                 <div className="flex-1">
                                     <p className="text-sm line-clamp-1">
                                         {file.file_name}
@@ -164,7 +189,7 @@ export default function ViewActivity({
                                         {formatBytes(file.file_size)}
                                     </p>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                 </div>
 
