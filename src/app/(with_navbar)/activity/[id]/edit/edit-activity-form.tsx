@@ -26,7 +26,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { formatFileUrl, getErrorMessageFromValidationError } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import {
     Category,
@@ -47,7 +47,7 @@ import { Pencil, Plus, Upload, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { v4 as uuidv4, validate as validateUUID } from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { editActivity } from './actions'
 
@@ -96,7 +96,7 @@ export default function EditActivityForm({
     // const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
     const [files, setFiles] = useState<
-        { id: string; file: File; forcedSize?: number }[]
+        { id: string; file: File; forcedSize?: number; forcedPath?: string }[]
     >([])
 
     const [isCreateCategoryDialogOpen, setCreateCategoryDialogOpen] =
@@ -189,16 +189,18 @@ export default function EditActivityForm({
                 id: string
                 file: File
                 forcedSize?: number
+                forcedPath?: string
             }[] = []
 
             for (const _file of activity.files) {
                 const tmp = new File([], _file.file_name, {
-                    type: _file.id,
+                    type: _file.content_type,
                 })
                 files.push({
                     id: _file.id,
                     file: tmp,
                     forcedSize: _file.file_size,
+                    forcedPath: formatFileUrl(_file.file_path),
                 })
             }
 
@@ -214,6 +216,18 @@ export default function EditActivityForm({
         // activity.rubric,
         activity.scoring_type,
     ])
+
+    useEffect(() => {
+        console.log(
+            'new files:',
+            files
+                .filter(
+                    (file) =>
+                        originalFiles.findIndex((f) => f.id == file.id) == -1
+                )
+                .map((file) => file.file)
+        )
+    }, [files])
 
     function onUpload(
         files: File[],
@@ -285,8 +299,10 @@ export default function EditActivityForm({
         )
 
         files
+            .filter(
+                (file) => originalFiles.findIndex((f) => f.id == file.id) == -1
+            )
             .map((file) => file.file)
-            .filter((file) => !validateUUID(file.type))
             .forEach((file) => {
                 formData.append('files', file)
             })
@@ -499,27 +515,15 @@ export default function EditActivityForm({
                             >
                                 <FileUpload
                                     value={files.map((file) => file.file)}
-                                    onValueChange={(val) => {
+                                    onFileAccept={(file) => {
                                         setFiles((prev) => {
-                                            const updatedFiles = val
-                                                .map((file) => {
-                                                    if (
-                                                        validateUUID(file.type)
-                                                    ) {
-                                                        return prev.find(
-                                                            (prevFile) =>
-                                                                prevFile.id ===
-                                                                file.type
-                                                        )
-                                                    }
-                                                    return {
-                                                        id: uuidv4(),
-                                                        file: file,
-                                                    }
-                                                })
-                                                .filter((v) => v !== undefined)
-
-                                            return updatedFiles
+                                            return [
+                                                ...prev,
+                                                {
+                                                    id: uuidv4(),
+                                                    file,
+                                                },
+                                            ]
                                         })
                                     }}
                                     maxFiles={5}
@@ -558,9 +562,12 @@ export default function EditActivityForm({
                                             <FileUploadItem
                                                 key={file.id}
                                                 value={file.file}
+                                                forcedPath={file.forcedPath}
                                             >
                                                 {/* <div className="flex gap-x-2 items-center w-full"> */}
-                                                <FileUploadItemPreview />
+                                                <FileUploadItemPreview
+                                                    forcedSrc={file.forcedPath}
+                                                />
                                                 <FileUploadItemMetadata
                                                     forcedSize={file.forcedSize}
                                                     className="flex-grow"
@@ -570,6 +577,9 @@ export default function EditActivityForm({
                                                         variant="ghost"
                                                         size="icon"
                                                         className="size-7"
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
                                                     >
                                                         <X />
                                                     </Button>
