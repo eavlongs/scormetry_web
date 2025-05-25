@@ -27,6 +27,7 @@ import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import {
     Category,
+    GetRubricInClassroomResponse,
     Grouping,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
@@ -50,13 +51,6 @@ import { CreateCategoryDialog } from '../../categories/create-category-dialog'
 import { CreateGroupingDialog } from '../../groupings/create-grouping-dialog'
 import { createActivity } from './actions'
 
-// Mock data for rubrics
-const mockRubrics = [
-    { id: 'rubric-1', name: 'Standard Assessment Rubric' },
-    { id: 'rubric-2', name: 'Project Evaluation Rubric' },
-    { id: 'rubric-3', name: 'Technical Skills Rubric' },
-]
-
 // Scoring type options - updated to include range-based and rubric-based
 const scoringTypes = [
     { id: SCORING_TYPE_RANGE, name: 'Range Based' },
@@ -65,8 +59,10 @@ const scoringTypes = [
 
 export default function CreateActivityForm({
     classroom,
+    rubricsInClassroom,
 }: {
     classroom: GetClassroomResponse
+    rubricsInClassroom: GetRubricInClassroomResponse[]
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -772,6 +768,7 @@ export default function CreateActivityForm({
 
             <RubricBuilderDialog
                 isIndividual={groupingId === 'individual'}
+                rubricsInClassroom={rubricsInClassroom}
                 open={isRubricDialogOpen}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}

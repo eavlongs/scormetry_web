@@ -170,6 +170,10 @@ export type GetActivity = Activity & {
     group: GetGroup | null
 }
 
+export type GetRubricInClassroomResponse = GetRubric & {
+    activity_name: string
+}
+
 export type GetRubric = Rubric & {
     rubric_sections: (RubricSection & {
         rubric_criterias: (CriteriaScoreRange & {

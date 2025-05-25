@@ -17,10 +17,11 @@ import {
     getValidationErrorMessage,
 } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
+import { GetRubricInClassroomResponse } from '@/types/classroom'
 import { Prettify } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import assert from 'assert'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { Delta } from 'quill'
 import {
     createContext,
@@ -34,7 +35,20 @@ import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import { z, ZodError } from 'zod'
 import QuillEditor from './quill-editor'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 import { LabelWrapper } from './ui/label-wrapper'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from './ui/select'
 
 interface ScoreRange {
     id: string
@@ -61,6 +75,7 @@ interface Section {
 
 interface RubricBuilderDialogProps {
     open: boolean
+    rubricsInClassroom: GetRubricInClassroomResponse[]
     onOpenChange: (open: boolean) => void
     initialData: z.infer<typeof RubricSchema> | null
     isIndividual: boolean
@@ -166,6 +181,7 @@ export function RubricBuilderDialog({
     onSave,
     isIndividual,
     initialData,
+    rubricsInClassroom,
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
         initialData
@@ -195,6 +211,9 @@ export function RubricBuilderDialog({
     const [note, setNote] = useState<Delta>()
     const [quill, setQuill] = useState()
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
+
+    const importCSVRef = useRef<HTMLInputElement>(null)
+    const importExcelRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (open && quill && initialData?.note) {
@@ -475,6 +494,124 @@ export function RubricBuilderDialog({
                             </Button>
                         </div>
                     </DialogHeader>
+
+                    <div className="flex items-center justify-start gap-x-4 p-4">
+                        {rubricsInClassroom.length > 0 && (
+                            <Select
+                                onValueChange={(value) => {
+                                    if (value) {
+                                        const selectedRubric =
+                                            rubricsInClassroom.find(
+                                                (r) => r.id === value
+                                            )
+                                        if (selectedRubric) {
+                                            try {
+                                                const parsedData =
+                                                    RubricSchema.parse(
+                                                        selectedRubric
+                                                    )
+                                                setSections(
+                                                    parsedData.rubric_sections.map(
+                                                        (section) => ({
+                                                            id: uuidv4(),
+                                                            ...section,
+                                                            rubric_criterias:
+                                                                section.rubric_criterias.map(
+                                                                    (
+                                                                        criteria
+                                                                    ) => ({
+                                                                        id: uuidv4(),
+                                                                        ...criteria,
+                                                                        criteria_score_ranges:
+                                                                            criteria.criteria_score_ranges.map(
+                                                                                (
+                                                                                    range
+                                                                                ) => ({
+                                                                                    id: uuidv4(),
+                                                                                    ...range,
+                                                                                })
+                                                                            ),
+                                                                    })
+                                                                ),
+                                                        })
+                                                    )
+                                                )
+                                                toast.success(
+                                                    'Rubric loaded successfully'
+                                                )
+                                            } catch (error) {
+                                                toast.error(
+                                                    'Failed to load rubric'
+                                                )
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Select existing rubric" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {rubricsInClassroom.map((rubric) => (
+                                        <SelectItem
+                                            key={rubric.id}
+                                            value={rubric.id}
+                                        >
+                                            {rubric.activity_name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                >
+                                    Import Rubric
+                                    <ChevronDown size={16} />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        importCSVRef.current?.click()
+                                    }
+                                >
+                                    Import CSV File
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        importExcelRef.current?.click()
+                                    }
+                                >
+                                    Import Excel File
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <input
+                            id="import-csv"
+                            type="file"
+                            className="hidden"
+                            ref={importCSVRef}
+                            accept=".csv"
+                            multiple={false}
+                            onChange={() => {}}
+                        />
+
+                        <input
+                            id="import-excel"
+                            type="file"
+                            className="hidden"
+                            ref={importExcelRef}
+                            accept=".xlsx,.xls"
+                            multiple={false}
+                            onChange={() => {}}
+                        />
+                    </div>
 
                     <div className="flex-1 overflow-auto p-4 px-0 pt-0 pb-20 flex flex-col gap-y-4">
                         {sections.map((section, sectionIndex) => (

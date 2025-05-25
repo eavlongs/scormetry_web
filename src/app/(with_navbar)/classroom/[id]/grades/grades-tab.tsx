@@ -22,7 +22,7 @@ import { format } from 'date-fns'
 import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 
 export default function GradesTab({
     activities,
@@ -100,13 +100,13 @@ export default function GradesTab({
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => exportData('csv')}>
                                 <FileText size={16} className="mr-2" />
-                                Export as CSV
+                                Export as CSV File
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => exportData('xlsx')}
                             >
                                 <FileSpreadsheet size={16} className="mr-2" />
-                                Export as XLSX
+                                Export as Excel File
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

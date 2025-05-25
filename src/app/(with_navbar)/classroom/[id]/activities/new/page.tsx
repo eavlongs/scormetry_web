@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getClassroom } from '../../actions'
 import CreateActivityForm from './create-activity-form'
+import { getRubricsInClassroom } from './actions'
 
 export default async function Page({
     params,
@@ -14,5 +15,12 @@ export default async function Page({
         notFound()
     }
 
-    return <CreateActivityForm classroom={classroom} />
+    const rubricsInClassroom = await getRubricsInClassroom(id)
+
+    return (
+        <CreateActivityForm
+            classroom={classroom}
+            rubricsInClassroom={rubricsInClassroom}
+        />
+    )
 }

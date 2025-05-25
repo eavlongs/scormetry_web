@@ -29,9 +29,9 @@ import { Separator } from '@/components/ui/separator'
 import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import {
-    Activity,
     Category,
     GetActivity,
+    GetRubricInClassroomResponse,
     Grouping,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
@@ -48,16 +48,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
-import { editActivity } from './actions'
 import { z } from 'zod'
-import { set } from 'lodash'
-
-// Mock data for rubrics
-const mockRubrics = [
-    { id: 'rubric-1', name: 'Standard Assessment Rubric' },
-    { id: 'rubric-2', name: 'Project Evaluation Rubric' },
-    { id: 'rubric-3', name: 'Technical Skills Rubric' },
-]
+import { editActivity } from './actions'
 
 const scoringTypes = [
     { id: SCORING_TYPE_RANGE, name: 'Range Based' },
@@ -67,9 +59,11 @@ const scoringTypes = [
 export default function EditActivityForm({
     classroom,
     activity,
+    rubricsInClassroom,
 }: {
     classroom: GetClassroomResponse
     activity: GetActivity
+    rubricsInClassroom: GetRubricInClassroomResponse[]
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -795,6 +789,7 @@ export default function EditActivityForm({
 
             <RubricBuilderDialog
                 open={isRubricDialogOpen}
+                rubricsInClassroom={rubricsInClassroom}
                 isIndividual={groupingId === 'individual'}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}
