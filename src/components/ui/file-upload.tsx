@@ -12,6 +12,7 @@ import {
     FileVideoIcon,
 } from 'lucide-react'
 import * as React from 'react'
+import { toast } from 'sonner'
 
 const ROOT_NAME = 'FileUpload'
 const DROPZONE_NAME = 'FileUploadDropzone'
@@ -702,7 +703,6 @@ const FileUploadDropzone = React.forwardRef<
     const onDragEnter = React.useCallback(
         (event: React.DragEvent<HTMLDivElement>) => {
             propsRef.current?.onDragEnter?.(event)
-
             if (event.defaultPrevented) return
 
             event.preventDefault()
@@ -726,19 +726,24 @@ const FileUploadDropzone = React.forwardRef<
     const onDrop = React.useCallback(
         (event: React.DragEvent<HTMLDivElement>) => {
             propsRef.current?.onDrop?.(event)
-
             if (event.defaultPrevented) return
 
             event.preventDefault()
             store.dispatch({ variant: 'SET_DRAG_OVER', dragOver: false })
 
             const files = Array.from(event.dataTransfer.files)
-            console.log(files)
             const inputElement = context.inputRef.current
             if (!inputElement) return
 
             const dataTransfer = new DataTransfer()
+            let shouldToastWarning = false
             for (const file of files) {
+                if (file.size == 0) {
+                    toast.warning(
+                        `${file.name} is empty. They will not be uploaded.`
+                    )
+                    continue
+                }
                 dataTransfer.items.add(file)
             }
 

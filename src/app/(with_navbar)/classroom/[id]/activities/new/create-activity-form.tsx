@@ -507,6 +507,9 @@ export default function CreateActivityForm({
                                                         variant="ghost"
                                                         size="icon"
                                                         className="size-7"
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
                                                     >
                                                         <X />
                                                     </Button>
