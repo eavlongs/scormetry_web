@@ -563,54 +563,6 @@ export function RubricBuilderDialog({
                                 </SelectContent>
                             </Select>
                         )}
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center gap-2"
-                                >
-                                    Import Rubric
-                                    <ChevronDown size={16} />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        importCSVRef.current?.click()
-                                    }
-                                >
-                                    Import CSV File
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        importExcelRef.current?.click()
-                                    }
-                                >
-                                    Import Excel File
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <input
-                            id="import-csv"
-                            type="file"
-                            className="hidden"
-                            ref={importCSVRef}
-                            accept=".csv"
-                            multiple={false}
-                            onChange={() => {}}
-                        />
-
-                        <input
-                            id="import-excel"
-                            type="file"
-                            className="hidden"
-                            ref={importExcelRef}
-                            accept=".xlsx,.xls"
-                            multiple={false}
-                            onChange={() => {}}
-                        />
                     </div>
 
                     <div className="flex-1 overflow-auto p-4 px-0 pt-0 pb-20 flex flex-col gap-y-4">
