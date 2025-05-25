@@ -1,6 +1,13 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
     Table,
     TableBody,
@@ -12,6 +19,7 @@ import {
 import { TextFileWriter } from '@/lib/text-file-writer'
 import type { GetActivitiesResponse, GetGradeResponse } from '@/types/classroom'
 import { format } from 'date-fns'
+import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect } from 'react'
@@ -35,10 +43,6 @@ export default function GradesTab({
         textFileWriter.write()
         textFileWriter.download()
     }
-
-    useEffect(() => {
-        exportData('xlsx')
-    }, [])
 
     const formatGradeData = useCallback(() => {
         // Format the data into a structure that's suitable for CSV/Excel export
@@ -81,6 +85,32 @@ export default function GradesTab({
         <>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Grades</h2>
+                <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="flex items-center gap-2"
+                            >
+                                <FileDown size={16} />
+                                Export Data
+                                <ChevronDown size={16} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => exportData('csv')}>
+                                <FileText size={16} className="mr-2" />
+                                Export as CSV
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => exportData('xlsx')}
+                            >
+                                <FileSpreadsheet size={16} className="mr-2" />
+                                Export as XLSX
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
             <div className="bg-background rounded-lg border">
