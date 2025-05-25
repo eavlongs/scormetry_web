@@ -9,9 +9,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { TextFileWriter } from '@/lib/text-file-writer'
 import type { GetActivitiesResponse, GetGradeResponse } from '@/types/classroom'
+import { format } from 'date-fns'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useCallback, useEffect } from 'react'
 
 export default function GradesTab({
     activities,
@@ -20,6 +23,60 @@ export default function GradesTab({
     activities: GetActivitiesResponse
     grades: GetGradeResponse[]
 }) {
+    function exportData(fileType: 'csv' | 'xlsx') {
+        const textFileWriter = new TextFileWriter(
+            formatGradeData(),
+            fileType,
+            activities.classroom.name +
+                ' grades ' +
+                format(new Date(), 'yyyy-MM-dd,HH:mm:ss')
+        )
+
+        textFileWriter.write()
+        textFileWriter.download()
+    }
+
+    useEffect(() => {
+        exportData('xlsx')
+    }, [])
+
+    const formatGradeData = useCallback(() => {
+        // Format the data into a structure that's suitable for CSV/Excel export
+        const formattedData = grades.map((grade) => {
+            // Start with student info
+            const rowData: Record<string, any> = {
+                'Student ID': grade.student.id,
+                'Student Name': `${grade.student.first_name} ${grade.student.last_name}`,
+                Email: grade.student.email,
+            }
+
+            // Add a column for each activity
+            activities.activities.forEach((activity) => {
+                const score = grade.student.grades.find(
+                    (g) => g.activity_id === activity.id
+                )
+                rowData[activity.title] =
+                    score && score.score ? score.score : ''
+            })
+
+            // Calculate average score
+            const validScores = grade.student.grades
+                .filter((g) => g.score !== undefined && g.score !== null)
+                .map((g) => g.score as number)
+
+            const average =
+                validScores.length > 0
+                    ? validScores.reduce((sum, score) => sum + score, 0) /
+                      validScores.length
+                    : 0
+
+            rowData['Average Score'] = average.toFixed(1)
+
+            return rowData
+        })
+
+        return formattedData
+    }, [activities, grades])
     return (
         <>
             <div className="flex justify-between items-center mb-4">
