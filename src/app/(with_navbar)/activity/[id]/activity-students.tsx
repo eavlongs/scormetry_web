@@ -1,5 +1,6 @@
 'use client'
 
+import CoonditionalTooltip from '@/components/conditional-tooltip'
 import { Badge } from '@/components/ui/badge'
 import {
     Collapsible,
@@ -10,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
 import { GetActivity } from '@/types/classroom'
-import { ChevronDown, Users } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -62,13 +63,6 @@ export default function ActivityStudents({
         // <ScrollArea className="h-[calc(100vh-5rem)]">
         <ScrollArea>
             <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                    <h2 className="text-lg font-semibold">Students</h2>
-                    <Badge variant="outline" className="ml-auto">
-                        {activity.students?.length || 0} students
-                    </Badge>
-                </div>
                 <div className="mb-4">
                     <AssignJudgeAll activityID={activity.id} judges={judges} />
                 </div>
@@ -142,12 +136,17 @@ function ListStudentWithJudges({
                     <div className="ml-auto flex items-center gap-x-2">
                         {activity.rubric_id !== null ? (
                             student.score_percentage !== null && (
-                                <Badge variant="outline">
-                                    {formatDecimalNumber(
-                                        student.score_percentage
-                                    )}
-                                    /100
-                                </Badge>
+                                <CoonditionalTooltip
+                                    text="See detail"
+                                    show={true}
+                                >
+                                    <Badge variant="outline">
+                                        {formatDecimalNumber(
+                                            student.score_percentage
+                                        )}
+                                        /100
+                                    </Badge>
+                                </CoonditionalTooltip>
                             )
                         ) : student.score !== null ? (
                             <Badge variant="outline">

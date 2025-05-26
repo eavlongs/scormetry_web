@@ -65,8 +65,34 @@ export default function ViewActivity({
                     </AccordionItem>
                     {activity.scoring_type != null && (
                         <AccordionItem value="item-2">
-                            <AccordionTrigger className="cursor-pointer hover:no-underline text-base">
-                                Judge Assignment
+                            <AccordionTrigger className="cursor-pointer hover:no-underline text-base pb-2">
+                                {activity.grouping_id !== null &&
+                                activity.groups ? (
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h2 className="text-lg font-semibold">
+                                            Groups
+                                        </h2>
+                                        <Badge
+                                            variant="outline"
+                                            className="ml-auto"
+                                        >
+                                            {activity.groups.length} groups
+                                        </Badge>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h2 className="text-lg font-semibold">
+                                            Students
+                                        </h2>
+                                        <Badge
+                                            variant="outline"
+                                            className="ml-auto"
+                                        >
+                                            {activity.students?.length || 0}{' '}
+                                            students
+                                        </Badge>
+                                    </div>
+                                )}
                             </AccordionTrigger>
                             <AccordionContent>
                                 {activity.groups ? (
