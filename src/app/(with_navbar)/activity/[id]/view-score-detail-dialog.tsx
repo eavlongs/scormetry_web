@@ -316,7 +316,7 @@ export default function ViewScoreDetailDialog({
                                                 >
                                                     <Textarea
                                                         id="comment"
-                                                        placeholder="Provide detailed feedback..."
+                                                        placeholder="(No feedback)"
                                                         rows={6}
                                                         value={
                                                             scores.find(
@@ -329,7 +329,7 @@ export default function ViewScoreDetailDialog({
                                                         readOnly
                                                         disabled
                                                         ref={commentRef}
-                                                        className="resize-none field-sizing-fixed"
+                                                        className="resize-none field-sizing-fixed disabled:text-black disabled:placeholder:text-black"
                                                     />
                                                 </LabelWrapper>
                                             </div>
