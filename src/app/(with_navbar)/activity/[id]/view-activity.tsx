@@ -100,11 +100,13 @@ export default function ViewActivity({
                                         activity={activity}
                                         groups={activity.groups}
                                         judges={activity.judges || []}
+                                        classroom={classroom}
                                     />
                                 ) : (
                                     <ActivityStudents
                                         activity={activity}
                                         judges={activity.judges || []}
+                                        classroom={classroom}
                                     />
                                 )}
                             </AccordionContent>

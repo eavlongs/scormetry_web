@@ -1,6 +1,6 @@
 'use client'
 
-import CoonditionalTooltip from '@/components/conditional-tooltip'
+import ConditionalTooltip from '@/components/conditional-tooltip'
 import { Badge } from '@/components/ui/badge'
 import {
     Collapsible,
@@ -10,37 +10,116 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
-import { GetActivity } from '@/types/classroom'
+import {
+    CLASSROOM_ROLE_TEACHER,
+    GetActivity,
+    SCORING_TYPE_RANGE,
+    SCORING_TYPE_RUBRIC,
+} from '@/types/classroom'
 import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { assignJudgesToStudent } from './actions'
+import { GetClassroomResponse } from '../../classroom/[id]/actions'
+import {
+    assignJudgesToStudent,
+    getRangeScoreDetail,
+    getRubricScoreDetail,
+} from './actions'
 import { ListUser } from './activity-groups'
 import AssignJudgeAll from './assign-judge-all'
 import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
 import { GiveScoreButton } from './give-score-button'
+import { ScoreData } from './score/score-activity'
+import ViewScoreDetailDialog from './view-score-detail-dialog'
 
 export default function ActivityStudents({
     activity,
     judges,
+    classroom,
 }: {
     activity: GetActivity
     judges: UserEssentialDetail[]
+    classroom: GetClassroomResponse
 }) {
     const [studentToAssignJudges, setStudentToAssignJudges] = useState<
         NonNullable<typeof activity.students>[number] | null
     >(null)
     const [openStudents, setOpenStudents] = useState<string[]>([])
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const [studentToHighlight, setStudentToHighlight] = useState<string | null>(
+        null
+    )
+    const pathname = usePathname()
+    const [studentToViewScoreDetail, setStudentToViewScoreDetail] = useState<
+        NonNullable<typeof activity.students>[number] | null
+    >(null)
+    const [scores, setScores] = useState<
+        {
+            judge: UserEssentialDetail
+            comment: string
+            data: ScoreData['range_based_scores'] | ScoreData['rubric_score']
+        }[]
+    >([])
 
-    function toggleGroup(studentId: string) {
+    function toggleStudent(studentId: string) {
         setOpenStudents((prev) =>
             prev.includes(studentId)
                 ? prev.filter((id) => id !== studentId)
                 : [...prev, studentId]
         )
     }
+
+    useEffect(() => {
+        async function fetchData() {
+            if (!studentToViewScoreDetail) return
+            if (activity.scoring_type == SCORING_TYPE_RUBRIC) {
+                const response = await getRubricScoreDetail(
+                    studentToViewScoreDetail.activity_assignment_id
+                )
+
+                if (response.success) {
+                    setScores(response.data!)
+                } else {
+                    setStudentToViewScoreDetail(null)
+                    toast.error(response.message)
+                }
+            } else if (activity.scoring_type == SCORING_TYPE_RANGE) {
+                const response = await getRangeScoreDetail(
+                    studentToViewScoreDetail.activity_assignment_id
+                )
+
+                if (response.success) {
+                    setScores(response.data!)
+                } else {
+                    setStudentToViewScoreDetail(null)
+                    toast.error(response.message)
+                }
+            }
+        }
+        fetchData()
+    }, [studentToViewScoreDetail])
+
+    useEffect(() => {
+        if (searchParams.get('sid')) {
+            const studentId = searchParams.get('sid')
+            if (studentId && activity.students) {
+                const student = activity.students.find(
+                    (s) => s.id === studentId
+                )
+                if (student) {
+                    toggleStudent(studentId)
+                    setStudentToHighlight(studentId)
+                }
+            }
+            setTimeout(() => router.replace(pathname), 3000)
+        } else {
+            setStudentToHighlight(null)
+        }
+    }, [searchParams])
 
     async function handleAssignJudges(judgesId: string[]) {
         if (!studentToAssignJudges) return
@@ -69,12 +148,20 @@ export default function ActivityStudents({
                 <div className="border rounded-lg bg-card divide-y divide-border">
                     {activity.students?.map((student) => (
                         <ListStudentWithJudges
+                            highlight={
+                                studentToHighlight !== null &&
+                                studentToHighlight === student.id
+                            }
+                            classroom={classroom}
                             activity={activity}
                             open={openStudents.includes(student.id)}
-                            onOpenChange={() => toggleGroup(student.id)}
+                            onOpenChange={() => toggleStudent(student.id)}
                             student={student}
                             key={student.id}
                             onAssign={() => setStudentToAssignJudges(student)}
+                            onViewScoreDetail={() =>
+                                setStudentToViewScoreDetail(student)
+                            }
                         />
                     ))}
                 </div>
@@ -88,21 +175,46 @@ export default function ActivityStudents({
                 }
                 onAssignJudges={handleAssignJudges}
             />
+            <ViewScoreDetailDialog
+                open={!!studentToViewScoreDetail}
+                onOpenChange={(val) => {
+                    if (!val) setStudentToViewScoreDetail(null)
+                }}
+                scores={scores}
+                scoringEntity={
+                    studentToViewScoreDetail !== null
+                        ? {
+                              isScored: true,
+                              type: 'individual',
+                              activity_assignment_id:
+                                  studentToViewScoreDetail.activity_assignment_id,
+                              entity: studentToViewScoreDetail,
+                          }
+                        : null
+                }
+                activity={activity}
+            />
         </ScrollArea>
     )
 }
 function ListStudentWithJudges({
+    highlight,
+    classroom,
     activity,
     student,
     open,
     onOpenChange,
     onAssign,
+    onViewScoreDetail,
 }: {
+    highlight: boolean
+    classroom: GetClassroomResponse
     activity: GetActivity
     student: NonNullable<GetActivity['students']>[number]
     open: boolean
     onOpenChange: () => void
     onAssign: () => void
+    onViewScoreDetail: () => void
 }) {
     return (
         <Collapsible
@@ -115,7 +227,13 @@ function ListStudentWithJudges({
             className="border rounded-lg bg-card"
         >
             <CollapsibleTrigger className="w-full">
-                <div className="px-4 py-3 border-b bg-muted/40 flex items-center gapx-x-2 hover:bg-muted/60 transition-colors cursor-pointer gap-x-2">
+                <div
+                    className={cn(
+                        'px-4 py-3 border-b bg-muted/40 flex items-center gapx-x-2 hover:bg-muted/60 transition-colors cursor-pointer gap-x-2',
+                        highlight &&
+                            'border border-paragon relative animate-border-pulse'
+                    )}
+                >
                     <div className="relative h-8 w-8 shrink-0 flex items-center gap-2 px-2">
                         <Image
                             src={student.profile_picture}
@@ -136,28 +254,75 @@ function ListStudentWithJudges({
                     <div className="ml-auto flex items-center gap-x-2">
                         {activity.rubric_id !== null ? (
                             student.score_percentage !== null && (
-                                <CoonditionalTooltip
+                                <ConditionalTooltip
                                     text="See detail"
-                                    show={true}
+                                    show={
+                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                                    }
                                 >
-                                    <Badge variant="outline">
+                                    <Badge
+                                        variant="outline"
+                                        className={cn(
+                                            classroom.role ==
+                                                CLASSROOM_ROLE_TEACHER &&
+                                                'hover:border-black'
+                                        )}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onViewScoreDetail()
+                                        }}
+                                    >
                                         {formatDecimalNumber(
                                             student.score_percentage
                                         )}
                                         /100
                                     </Badge>
-                                </CoonditionalTooltip>
+                                </ConditionalTooltip>
                             )
                         ) : student.score !== null ? (
-                            <Badge variant="outline">
-                                {formatDecimalNumber(student.score)}/
-                                {activity.max_score}
-                            </Badge>
+                            <ConditionalTooltip
+                                text="See detail"
+                                show={classroom.role == CLASSROOM_ROLE_TEACHER}
+                            >
+                                <Badge
+                                    variant="outline"
+                                    className={cn(
+                                        classroom.role ==
+                                            CLASSROOM_ROLE_TEACHER &&
+                                            'hover:border-black'
+                                    )}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onViewScoreDetail()
+                                    }}
+                                >
+                                    {formatDecimalNumber(student.score)}/
+                                    {activity.max_score}
+                                </Badge>
+                            </ConditionalTooltip>
                         ) : student.score_percentage !== null ? (
-                            <Badge variant="outline">
-                                {formatDecimalNumber(student.score_percentage)}
-                                /100
-                            </Badge>
+                            <ConditionalTooltip
+                                text="See detail"
+                                show={classroom.role == CLASSROOM_ROLE_TEACHER}
+                            >
+                                <Badge
+                                    variant="outline"
+                                    className={cn(
+                                        classroom.role ==
+                                            CLASSROOM_ROLE_TEACHER &&
+                                            'hover:border-black'
+                                    )}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onViewScoreDetail()
+                                    }}
+                                >
+                                    {formatDecimalNumber(
+                                        student.score_percentage
+                                    )}
+                                    /100
+                                </Badge>
+                            </ConditionalTooltip>
                         ) : null}
 
                         <AssignJudgeButton onClick={onAssign} />

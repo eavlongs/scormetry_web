@@ -259,6 +259,6 @@ export type GetStudentGradeResponse = {
 export type GetGradeResponse = {
     student: UserEssentialDetail & {
         grades: GetStudentGradeResponse[]
-        class_average: number
+        overall_score: number
     }
 }

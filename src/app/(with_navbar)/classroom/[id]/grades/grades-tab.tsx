@@ -211,7 +211,7 @@ export default function GradesTab({
                                         )}
                                         <TableCell className="text-center pr-8 text-base font-medium">
                                             {/* {grade.student.class_average.toFixed(1)} */}
-                                            80%
+                                            {grade.student.overall_score}%
                                         </TableCell>
                                     </TableRow>
                                 ))}

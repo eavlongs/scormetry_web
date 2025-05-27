@@ -1,6 +1,6 @@
 import { SimpleToolTip } from './simple-tooltip'
 
-export default function CoonditionalTooltip({
+export default function ConditionalTooltip({
     text,
     show,
     children,

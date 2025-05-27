@@ -30,7 +30,7 @@ import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
 import { useSearchParams } from 'next/navigation'
 
-type ScoreData = {
+export type ScoreData = {
     range_based_scores?: RangeScore[]
     rubric_score?: RubricScoreContextType['scores']
 }

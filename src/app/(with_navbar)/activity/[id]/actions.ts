@@ -6,6 +6,7 @@ import { GetActivity } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
+import { ScoreData } from './score/score-activity'
 
 export async function getActivity(activityId: string) {
     try {
@@ -120,6 +121,83 @@ export async function assignJudgesToEveryone(
             success: false,
             message:
                 e.response.data.message || 'Failed to assign judges to group',
+        }
+    }
+}
+
+export async function getRubricScoreDetail(
+    activitiyAssignmentId: string
+): Promise<
+    ActionResponse<
+        {
+            judge: UserEssentialDetail
+            comment: string
+            data: ScoreData['rubric_score']
+        }[]
+    >
+> {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                data: {
+                    judge: UserEssentialDetail
+                    comment: string
+                    data: ScoreData['rubric_score']
+                }[]
+            }>
+        >(`/activity_assignment/${activitiyAssignmentId}/score/rubric/all`)
+
+        return {
+            success: true,
+            message: response.data.message,
+            data: response.data.data!.data,
+        }
+    } catch (e: any) {
+        console.log(e)
+        return {
+            success: false,
+            message:
+                e.response?.data?.message ||
+                'Failed to get rubric score detail',
+            data: [],
+        }
+    }
+}
+
+export async function getRangeScoreDetail(
+    activitiyAssignmentId: string
+): Promise<
+    ActionResponse<
+        {
+            judge: UserEssentialDetail
+            comment: string
+            data: ScoreData['range_based_scores']
+        }[]
+    >
+> {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                data: {
+                    judge: UserEssentialDetail
+                    comment: string
+                    data: ScoreData['range_based_scores']
+                }[]
+            }>
+        >(`/activity_assignment/${activitiyAssignmentId}/score/range/all`)
+
+        return {
+            success: true,
+            message: response.data.message,
+            data: response.data.data!.data,
+        }
+    } catch (e: any) {
+        console.log(e)
+        return {
+            success: false,
+            message:
+                e.response?.data?.message || 'Failed to get range score detail',
+            data: [],
         }
     }
 }

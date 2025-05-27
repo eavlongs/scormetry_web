@@ -1,5 +1,6 @@
 'use client'
 
+import ConditionalTooltip from '@/components/conditional-tooltip'
 import { Badge } from '@/components/ui/badge'
 import {
     Collapsible,
@@ -9,29 +10,83 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
-import { GetActivity, GetGroupWithJudgePermission } from '@/types/classroom'
+import {
+    CLASSROOM_ROLE_TEACHER,
+    GetActivity,
+    GetGroupWithJudgePermission,
+    SCORING_TYPE_RANGE,
+    SCORING_TYPE_RUBRIC,
+} from '@/types/classroom'
 import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { assignJudgesToGroup } from './actions'
+import { GetClassroomResponse } from '../../classroom/[id]/actions'
+import {
+    assignJudgesToGroup,
+    getRangeScoreDetail,
+    getRubricScoreDetail,
+} from './actions'
 import AssignJudgeAll from './assign-judge-all'
 import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
 import { GiveScoreButton } from './give-score-button'
+import { ScoreData } from './score/score-activity'
+import ViewScoreDetailDialog from './view-score-detail-dialog'
 
 export default function ActivityGroups({
     activity,
     groups,
     judges,
+    classroom,
 }: {
     activity: GetActivity
     groups: GetGroupWithJudgePermission[]
     judges: UserEssentialDetail[]
+    classroom: GetClassroomResponse
 }) {
     const [openGroups, setOpenGroups] = useState<string[]>([])
     const [groupToAssignJudges, setGroupToAssignJudges] =
-        useState<GetGroupWithJudgePermission | null>()
+        useState<GetGroupWithJudgePermission | null>(null)
+    const [groupToViewScoreDetail, setGroupToViewScoreDetail] =
+        useState<GetGroupWithJudgePermission | null>(null)
+    const [scores, setScores] = useState<
+        {
+            judge: UserEssentialDetail
+            comment: string
+            data: ScoreData['range_based_scores'] | ScoreData['rubric_score']
+        }[]
+    >([])
+
+    useEffect(() => {
+        async function fetchData() {
+            if (!groupToViewScoreDetail) return
+            if (activity.scoring_type == SCORING_TYPE_RUBRIC) {
+                const response = await getRubricScoreDetail(
+                    groupToViewScoreDetail.activity_assignment_id
+                )
+
+                if (response.success) {
+                    setScores(response.data!)
+                } else {
+                    setGroupToViewScoreDetail(null)
+                    toast.error(response.message)
+                }
+            } else if (activity.scoring_type == SCORING_TYPE_RANGE) {
+                const response = await getRangeScoreDetail(
+                    groupToViewScoreDetail.activity_assignment_id
+                )
+
+                if (response.success) {
+                    setScores(response.data!)
+                } else {
+                    setGroupToViewScoreDetail(null)
+                    toast.error(response.message)
+                }
+            }
+        }
+        fetchData()
+    }, [groupToViewScoreDetail])
 
     function toggleGroup(groupId: string) {
         setOpenGroups((prev) =>
@@ -86,27 +141,90 @@ export default function ActivityGroups({
                                     <div className="ml-auto flex items-center gap-x-2">
                                         {activity.rubric_id !== null ? (
                                             group.score_percentage !== null && (
-                                                <Badge variant="outline">
+                                                <ConditionalTooltip
+                                                    text="See detail"
+                                                    show={
+                                                        classroom.role ==
+                                                        CLASSROOM_ROLE_TEACHER
+                                                    }
+                                                >
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            classroom.role ==
+                                                                CLASSROOM_ROLE_TEACHER &&
+                                                                'hover:border-black'
+                                                        )}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setGroupToViewScoreDetail(
+                                                                group
+                                                            )
+                                                        }}
+                                                    >
+                                                        {formatDecimalNumber(
+                                                            group.score_percentage
+                                                        )}
+                                                        /100
+                                                    </Badge>
+                                                </ConditionalTooltip>
+                                            )
+                                        ) : group.score !== null ? (
+                                            <ConditionalTooltip
+                                                text="See detail"
+                                                show={
+                                                    classroom.role ==
+                                                    CLASSROOM_ROLE_TEACHER
+                                                }
+                                            >
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        classroom.role ==
+                                                            CLASSROOM_ROLE_TEACHER &&
+                                                            'hover:border-black'
+                                                    )}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setGroupToViewScoreDetail(
+                                                            group
+                                                        )
+                                                    }}
+                                                >
+                                                    {formatDecimalNumber(
+                                                        group.score
+                                                    )}
+                                                    /{activity.max_score}
+                                                </Badge>
+                                            </ConditionalTooltip>
+                                        ) : group.score_percentage !== null ? (
+                                            <ConditionalTooltip
+                                                text="See detail"
+                                                show={
+                                                    classroom.role ==
+                                                    CLASSROOM_ROLE_TEACHER
+                                                }
+                                            >
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        classroom.role ==
+                                                            CLASSROOM_ROLE_TEACHER &&
+                                                            'hover:border-black'
+                                                    )}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setGroupToViewScoreDetail(
+                                                            group
+                                                        )
+                                                    }}
+                                                >
                                                     {formatDecimalNumber(
                                                         group.score_percentage
                                                     )}
                                                     /100
                                                 </Badge>
-                                            )
-                                        ) : group.score !== null ? (
-                                            <Badge variant="outline">
-                                                {formatDecimalNumber(
-                                                    group.score
-                                                )}
-                                                /{activity.max_score}
-                                            </Badge>
-                                        ) : group.score_percentage !== null ? (
-                                            <Badge variant="outline">
-                                                {formatDecimalNumber(
-                                                    group.score_percentage
-                                                )}
-                                                /100
-                                            </Badge>
+                                            </ConditionalTooltip>
                                         ) : null}
                                         <AssignJudgeButton
                                             onClick={() =>
@@ -170,6 +288,26 @@ export default function ActivityGroups({
                     groupToAssignJudges ? groupToAssignJudges.judges : []
                 }
                 onAssignJudges={handleAssignJudges}
+            />
+
+            <ViewScoreDetailDialog
+                open={!!groupToViewScoreDetail}
+                onOpenChange={(val) => {
+                    if (!val) setGroupToViewScoreDetail(null)
+                }}
+                scores={scores}
+                scoringEntity={
+                    groupToViewScoreDetail !== null
+                        ? {
+                              isScored: true,
+                              type: 'group',
+                              activity_assignment_id:
+                                  groupToViewScoreDetail.activity_assignment_id,
+                              entity: groupToViewScoreDetail,
+                          }
+                        : null
+                }
+                activity={activity}
             />
         </ScrollArea>
     )
