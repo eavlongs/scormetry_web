@@ -327,7 +327,10 @@ function ListStudentWithJudges({
 
                         <AssignJudgeButton onClick={onAssign} />
                         {student.permitted_to_judge && (
-                            <GiveScoreButton activityId={activity.id} />
+                            <GiveScoreButton
+                                activityId={activity.id}
+                                studentId={student.id}
+                            />
                         )}
 
                         <ChevronDown

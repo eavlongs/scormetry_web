@@ -31,10 +31,6 @@ export default function RangeScoreInput({
         onScoreUpdate(scores)
     }, [scores])
 
-    useEffect(() => {
-        console.log('initialScores', initialScores)
-    }, [initialScores])
-
     function addOrReplaceScore(student_id: string, score: number) {
         const newScores = [...scores]
         const index = newScores.findIndex((s) => s.student_id === student_id)

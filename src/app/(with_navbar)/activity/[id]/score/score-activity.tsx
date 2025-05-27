@@ -18,6 +18,7 @@ import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -28,7 +29,6 @@ import {
 import RangeScoreInput, { RangeScore } from './range-score-input'
 import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
-import { useSearchParams } from 'next/navigation'
 
 export type ScoreData = {
     range_based_scores?: RangeScore[]
@@ -56,6 +56,10 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     const searchParams = useSearchParams()
 
     useEffect(() => {
+        console.log({
+            studentId: searchParams.get('sid'),
+            groupId: searchParams.get('gid'),
+        })
         if (searchParams.get('sid')) {
             const studentId = searchParams.get('sid')
 
@@ -75,11 +79,28 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                 }
             }
 
+            console.log({ entity })
+
+            if (entity) {
+                setSelectedEntity(entity)
+            }
+        } else if (searchParams.get('gid')) {
+            const groupId = searchParams.get('gid')
+
+            let entity: ScoringEntity | null = null
+
+            for (const e of entities) {
+                console.log(e.type, e.entity.id == groupId)
+                if (e.type == 'group' && e.entity.id === groupId) {
+                    entity = e
+                    break
+                }
+            }
             if (entity) {
                 setSelectedEntity(entity)
             }
         }
-    }, [searchParams])
+    }, [searchParams, entities])
 
     // Initialize entities based on activity type (groups or individual students)
     useEffect(() => {
@@ -121,10 +142,6 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     useEffect(() => {
         fetchScoreData()
     }, [selectedEntity])
-
-    useEffect(() => {
-        console.log({ initialScore })
-    }, [initialScore])
 
     const fetchScoreData = useCallback(async () => {
         if (
@@ -302,7 +319,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                 </div>
                 <div>
                     {entities.length === 0 ? (
-                        <div className="flex items-center justify-center h-full p-4 !max-w-[calc(100vw-3rem-1rem)]">
+                        <div className="flex items-center justify-center h-full p-4 ">
                             <p className="text-muted-foreground">
                                 No students or groups assigned for scoring
                             </p>

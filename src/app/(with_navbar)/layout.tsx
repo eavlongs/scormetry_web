@@ -12,7 +12,7 @@ export default async function Layout({
     return (
         <SidebarProvider>
             <AppSidebar classrooms={classrooms} />
-            <SidebarInset>
+            <SidebarInset className="overflow-hidden">
                 <Navbar />
                 <div className="px-6 flex-grow">{children}</div>
             </SidebarInset>

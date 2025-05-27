@@ -234,6 +234,7 @@ export default function ActivityGroups({
                                         {group.permitted_to_judge && (
                                             <GiveScoreButton
                                                 activityId={activity.id}
+                                                groupId={group.id}
                                             />
                                         )}
                                         <ChevronDown
