@@ -67,7 +67,7 @@ export default function ViewScoreDetailDialog({
             open={open && scoringEntity != null}
             onOpenChange={onOpenChange}
         >
-            <DialogContent className="w-screen h-screen !max-w-none flex flex-col p-0 m-0 rounded-none">
+            <DialogContent className="w-screen h-screen !max-w-none flex flex-col p-0 m-0 rounded-none overflow-y-auto">
                 <DialogHeader className="px-6 py-2 border-b sticky top-0 bg-background z-10">
                     <div className="flex items-center">
                         <DialogTitle>

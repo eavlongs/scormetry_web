@@ -2,11 +2,8 @@
 
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
-import { ValidationError } from '@/types/response'
 import Image from 'next/image'
-import { ComponentProps, FocusEvent, useEffect, useState } from 'react'
 
 export type RangeScore = {
     student_id: string

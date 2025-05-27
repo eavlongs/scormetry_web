@@ -6,7 +6,7 @@ import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
 import Image from 'next/image'
-import { ComponentProps, FocusEvent, useEffect, useState } from 'react'
+import { ComponentProps, FocusEvent, useEffect, useRef, useState } from 'react'
 
 export type RangeScore = {
     student_id: string
@@ -26,6 +26,10 @@ export default function RangeScoreInput({
 }) {
     const [scores, setScores] = useState<RangeScore[]>(initialScores ?? [])
     const [errors, setErrors] = useState<ValidationError[]>([])
+
+    useEffect(() => {
+        setScores(initialScores ?? [])
+    }, [initialScores])
 
     useEffect(() => {
         onScoreUpdate(scores)
@@ -122,7 +126,6 @@ export default function RangeScoreInput({
                     }
                 />
             )}
-
             {entity.type == 'group' && (
                 <div className="flex flex-col gap-y-4">
                     {entity.entity.users.map((student) => {
@@ -184,14 +187,21 @@ function ScoreInput({
     error: string
     defaultValue?: number | string
 }) {
+    const inputRef = useRef<HTMLInputElement>(null)
+
+    useEffect(() => {
+        console.log('defaultValue', defaultValue)
+        if (inputRef.current) {
+            inputRef.current.value = defaultValue?.toString() || ''
+        }
+    }, [defaultValue, inputRef.current])
     return (
         <LabelWrapper label={null} error={error} className="max-w-xs">
             <Input
-                id="score"
+                ref={inputRef}
                 type="number"
                 placeholder={`Enter score (0-${maxScore})`}
-                defaultValue={defaultValue} // TODO: to be implemented with initial score
-                onChange={(e) => {}}
+                // defaultValue={defaultValue} // TODO: to be implemented with initial score
                 className="hide-arrows"
                 onBlur={onBlur}
             />

@@ -140,6 +140,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     }, [activity])
 
     useEffect(() => {
+        if (!selectedEntity) return
         fetchScoreData()
     }, [selectedEntity])
 
@@ -149,11 +150,10 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             activity.scoring_type != SCORING_TYPE_RANGE
         )
             return
-        if (!selectedEntity) return
 
         setScoreFetched(false)
         const response = await getActivityAssignmentScoreForStudent(
-            selectedEntity,
+            selectedEntity!,
             activity.scoring_type as 'rubric' | 'range'
         )
 
@@ -195,6 +195,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                               .data as unknown as RubricScoreContextType['scores'])
                         : undefined,
             })
+            if (commentRef.current) {
+                commentRef.current.value = response.data.data.comment || ''
+            }
         } else {
             toast.error(response.message)
         }
