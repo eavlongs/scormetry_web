@@ -6,6 +6,7 @@ import {
     ValidationError,
 } from '@/types/response'
 import { clsx, type ClassValue } from 'clsx'
+import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { ZodError } from 'zod'
@@ -57,6 +58,10 @@ export function formatDecimalNumber(num: number): string {
 
 export function formatFileUrl(filePath: string): string {
     return `${process.env.NEXT_PUBLIC_API_URL}/files?p=${filePath}`
+}
+
+export function generateFileNameForExport(name: string): string {
+    return name + ' ' + format(new Date(), 'yyyy-MM-dd,HH:mm:ss')
 }
 
 export function convertZodErrorToValidationErrorWithNestedPath<T>(

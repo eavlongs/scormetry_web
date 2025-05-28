@@ -17,8 +17,8 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { TextFileWriter } from '@/lib/text-file-writer'
+import { generateFileNameForExport } from '@/lib/utils'
 import type { GetActivitiesResponse, GetGradeResponse } from '@/types/classroom'
-import { format } from 'date-fns'
 import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -35,9 +35,7 @@ export default function GradesTab({
         const textFileWriter = new TextFileWriter(
             formatGradeData(),
             fileType,
-            activities.classroom.name +
-                ' grades ' +
-                format(new Date(), 'yyyy-MM-dd,HH:mm:ss')
+            generateFileNameForExport(activities.classroom.name + ' grades')
         )
 
         textFileWriter.write()

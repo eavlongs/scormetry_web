@@ -201,3 +201,53 @@ export async function getRangeScoreDetail(
         }
     }
 }
+
+export type GetRangeScoreFromAJudge = {
+    judge: UserEssentialDetail
+    score: number
+}
+
+export type GetRubricScoreFromJudge = {
+    judge: UserEssentialDetail
+    scores: {
+        rubric_criteria_id: string
+        score: number
+    }[]
+}
+
+export async function getScoresOfActivity(
+    activityId: string,
+    scoringType: 'range' | 'rubric'
+): Promise<
+    ActionResponse<
+        {
+            student: UserEssentialDetail
+            score_data: GetRubricScoreFromJudge[] | GetRangeScoreFromAJudge[]
+        }[]
+    >
+> {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                scores: {
+                    student: UserEssentialDetail
+                    score_data:
+                        | GetRubricScoreFromJudge[]
+                        | GetRangeScoreFromAJudge[]
+                }[]
+            }>
+        >(`activity/${activityId}/score/${scoringType}`)
+        return {
+            success: true,
+            message: response.data.message,
+            data: response.data.data!.scores,
+        }
+    } catch (e: any) {
+        console.log(e)
+        return {
+            success: false,
+            message: e.response?.data?.message || 'Failed to get score detail',
+            data: [],
+        }
+    }
+}

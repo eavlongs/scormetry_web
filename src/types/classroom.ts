@@ -177,7 +177,7 @@ export type GetRubricInClassroomResponse = GetRubric & {
 
 export type GetRubric = Rubric & {
     rubric_sections: (RubricSection & {
-        rubric_criterias: (CriteriaScoreRange & {
+        rubric_criterias: (RubricCriteria & {
             criteria_score_ranges: CriteriaScoreRange[]
         })[]
     })[]
