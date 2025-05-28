@@ -91,7 +91,7 @@ function ScoreInput({
                 id="score"
                 type="number"
                 placeholder={`Enter score (0-${maxScore})`}
-                value={value}
+                value={value ?? ''}
                 readOnly
                 className="hide-arrows"
             />
