@@ -82,7 +82,7 @@ export default function GradesTab({
     return (
         <>
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Grades</h2>
+                <h2 className="text-xl font-bold">Grades</h2>
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

@@ -17,6 +17,7 @@ import { GetClassroomResponse } from '../actions'
 import { CreateCategoryDialog } from './create-category-dialog'
 import { DeleteCategoryDialog } from './delete-category-dialog'
 import { EditCategoryDialog } from './edit-category-dialog'
+import { SimpleToolTip } from '@/components/simple-tooltip'
 
 export default function CategoriesTab({
     classroom,
@@ -88,27 +89,35 @@ export function CategoryList({
                             <TableCell>{category.score_percentage}%</TableCell>
                             <TableCell className="flex justify-center">
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() =>
-                                            setCategoryToEdit(category)
-                                        }
-                                    >
-                                        <EditIcon className="h-4 w-4" />
-                                        <span className="sr-only">Edit</span>
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="text-destructive hover:text-destructive"
-                                        onClick={() =>
-                                            setCategoryToDelete(category)
-                                        }
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Delete</span>
-                                    </Button>
+                                    <SimpleToolTip text="Edit Category">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                                setCategoryToEdit(category)
+                                            }
+                                        >
+                                            <EditIcon className="h-4 w-4" />
+                                            <span className="sr-only">
+                                                Edit
+                                            </span>
+                                        </Button>
+                                    </SimpleToolTip>
+                                    <SimpleToolTip text="Delete Category">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={() =>
+                                                setCategoryToDelete(category)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">
+                                                Delete
+                                            </span>
+                                        </Button>
+                                    </SimpleToolTip>
                                 </div>
                             </TableCell>
                         </TableRow>

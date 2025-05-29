@@ -133,10 +133,10 @@ export default function ClassroomHeader({
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            {/* <DropdownMenuItem>
                                 <ArchiveIcon className="h-4 w-4 mr-2" />
                                 <span>Archive</span>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             {classroom.owned_by !== session.user?.id ? (
                                 <DropdownMenuItem
                                     variant="destructive"

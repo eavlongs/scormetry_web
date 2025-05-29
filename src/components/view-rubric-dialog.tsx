@@ -1,11 +1,17 @@
 'use client'
 
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { GetRubric } from '@/types/classroom'
+import { X } from 'lucide-react'
 import { useState } from 'react'
 import TinyEditor from './tiny-editor'
 import { Badge } from './ui/badge'
-import { Textarea } from './ui/textarea'
+import { Button } from './ui/button'
 import {
     Tooltip,
     TooltipContent,
@@ -33,9 +39,21 @@ export function ViewRubricDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="min-w-[900px] max-w-[70vw] max-h-[calc(100vh-2rem)] overflow-y-auto">
-                <DialogTitle>Rubric</DialogTitle>
-                <div className="flex-1 overflow-auto p-4 px-0 pt-0 flex flex-col gap-y-4">
+            <DialogContent className="w-screen h-screen !max-w-none flex flex-col p-0 m-0 rounded-none overflow-y-auto">
+                <DialogHeader className="px-6 py-2 border-b sticky top-0 bg-background z-10">
+                    <div className="flex items-center">
+                        <DialogTitle>Rubric</DialogTitle>
+                        <Button
+                            className="ml-auto"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </DialogHeader>
+                <div className="flex-1 overflow-auto p-4 pt-0 flex flex-col gap-y-4">
                     {sections.map((section) => (
                         <RubricSection
                             key={section.id}
@@ -122,7 +140,7 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
                     {/* Criteria name */}
                     <div className="border p-3 bg-muted/10 flex items-center text-xs gap-y-1 relative">
                         <p className="text-base font-medium w-48 text-center">
-                            {criteria.name}
+                            {`${criteria.name} (${criteria.max_score})`}
                         </p>
                     </div>
 
@@ -131,29 +149,24 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
                         {criteria.criteria_score_ranges.map((range) => (
                             <div
                                 key={range.id}
-                                className="border p-3 flex-shrink-0 relative"
+                                className="border p-3 flex-shrink-0 relative w-[12rem] h-[8rem] flex items-center justify-center"
                             >
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <p className="border-0 p-1 h-auto max-w-[180px] focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400">
-                                                        {range.name}
-                                                    </p>
-                                                </div>
+                                                <p className="border-0 p-1  focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
+                                                    {range.name}
+                                                </p>
 
-                                                <div className="flex items-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm">
+                                                <div className="flex items-center justify-center mb-3 text-sm text-muted-foreground gap-x-1">
+                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
                                                         {range.min_score}
                                                     </p>
                                                     -
-                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm">
+                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
                                                         {range.max_score}
                                                     </p>
-                                                    <span className="ml-1">
-                                                        points
-                                                    </span>
                                                 </div>
                                             </div>
                                         </TooltipTrigger>
@@ -164,13 +177,6 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
                                         )}
                                     </Tooltip>
                                 </TooltipProvider>
-
-                                <Textarea
-                                    value={range.description}
-                                    maxLength={255}
-                                    readOnly
-                                    className="min-h-[80px] field-sizing-fixed resize-none text-sm focus-visible:ring-0 focus-visible:border-input"
-                                />
                             </div>
                         ))}
                     </div>

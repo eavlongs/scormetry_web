@@ -472,7 +472,7 @@ export function RubricCriteria({
                     <div className="border py-4 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4">
                         <div>
                             <p className="text-base font-medium w-[15rem] text-center">
-                                {criteria.name}
+                                {`${criteria.name} (${criteria.max_score})`}
                             </p>
                             {/* {(() => {
                                 const scoreNum = parseFloat(score)

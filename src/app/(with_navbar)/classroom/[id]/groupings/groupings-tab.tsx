@@ -18,6 +18,7 @@ import { GetClassroomResponse } from '../actions'
 import { CreateGroupingDialog } from './create-grouping-dialog'
 import { DeleteGroupingDialog } from './delete-grouping-dialog'
 import { EditGroupingDialog } from './edit-grouping-dialog'
+import { SimpleToolTip } from '@/components/simple-tooltip'
 
 export default function GroupingsTab({
     classroom,
@@ -96,27 +97,35 @@ export function GroupingList({
                             </TableCell>
                             <TableCell className="flex justify-center">
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() =>
-                                            setEditGrouping(grouping)
-                                        }
-                                    >
-                                        <EditIcon className="h-4 w-4" />
-                                        <span className="sr-only">Edit</span>
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="text-destructive hover:text-destructive"
-                                        onClick={() =>
-                                            setDeleteGrouping(grouping)
-                                        }
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Delete</span>
-                                    </Button>
+                                    <SimpleToolTip text="Edit Grouping Name and Description">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                                setEditGrouping(grouping)
+                                            }
+                                        >
+                                            <EditIcon className="h-4 w-4" />
+                                            <span className="sr-only">
+                                                Edit
+                                            </span>
+                                        </Button>
+                                    </SimpleToolTip>
+                                    <SimpleToolTip text="Delete Grouping">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={() =>
+                                                setDeleteGrouping(grouping)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">
+                                                Delete
+                                            </span>
+                                        </Button>
+                                    </SimpleToolTip>
                                 </div>
                             </TableCell>
                         </TableRow>
