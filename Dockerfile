@@ -10,6 +10,7 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json pnpm-lock.yaml* postinstall.js ./
 RUN pnpm install --frozen-lockfile
+RUN node postinstall.js
 
 # Rebuild the source code only when needed
 FROM base AS builder
