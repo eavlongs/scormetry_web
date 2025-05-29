@@ -1,6 +1,6 @@
 'use client'
 
-import QuillEditor from '@/components/quill-editor'
+import TinyEditor from '@/components/tiny-editor'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -171,9 +171,8 @@ function _RubricScoreInput({
 
             <div>
                 <h3 className="text-base underline font-bold mb-2">Note</h3>
-                <QuillEditor
-                    className="w-full"
-                    initialContent={JSON.parse(rubric.note)}
+                <TinyEditor
+                    initialContent={rubric.note}
                     readOnly
                     placeholder="Not available"
                 />

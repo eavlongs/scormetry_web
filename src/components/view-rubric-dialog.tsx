@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { GetRubric } from '@/types/classroom'
 import { useState } from 'react'
-import QuillEditor from './quill-editor'
+import TinyEditor from './tiny-editor'
 import { Badge } from './ui/badge'
 import { Textarea } from './ui/textarea'
 import {
@@ -49,8 +49,7 @@ export function ViewRubricDialog({
                         <h3 className="text-base underline font-bold mb-2">
                             Note
                         </h3>
-                        <QuillEditor
-                            className=" w-full"
+                        <TinyEditor
                             initialContent={JSON.parse(rubric.note)}
                             readOnly
                             placeholder="Not available"

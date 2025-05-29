@@ -1,3 +1,5 @@
+import { ITinyEvents } from '@tinymce/tinymce-react/lib/cjs/main/ts/Events'
+
 export type Prettify<T> = {
     [K in keyof T]: T[K]
 } & {}
@@ -27,3 +29,5 @@ export const ACCEPTED_IMPORT_FILE_TYPES = [
 ]
 
 export const PATH_FOR_ERROR_TO_TOAST = '_toast'
+
+export type TinyEditorType = Parameters<ITinyEvents['onInit']>[1]

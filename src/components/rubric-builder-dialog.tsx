@@ -18,11 +18,10 @@ import {
 } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import { GetRubricInClassroomResponse } from '@/types/classroom'
-import { Prettify } from '@/types/general'
+import { Prettify, TinyEditorType } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import assert from 'assert'
-import { ChevronDown, Pencil, Plus, Trash2, X } from 'lucide-react'
-import { Delta } from 'quill'
+import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import {
     createContext,
     SetStateAction,
@@ -34,13 +33,7 @@ import {
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import { z, ZodError } from 'zod'
-import QuillEditor from './quill-editor'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from './ui/dropdown-menu'
+import TinyEditor from './tiny-editor'
 import { LabelWrapper } from './ui/label-wrapper'
 import {
     Select,
@@ -208,19 +201,12 @@ export function RubricBuilderDialog({
         }
     > | null>(null)
 
-    const [note, setNote] = useState<Delta>()
-    const [quill, setQuill] = useState()
+    const editorRef = useRef<TinyEditorType>(null)
+    const note = initialData ? initialData.note : ''
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
 
     const importCSVRef = useRef<HTMLInputElement>(null)
     const importExcelRef = useRef<HTMLInputElement>(null)
-
-    useEffect(() => {
-        if (open && quill && initialData?.note) {
-            // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-            quill.setContents(JSON.parse(initialData.note))
-        }
-    }, [quill, initialData?.note])
 
     useEffect(() => {
         if (initialData) {
@@ -596,12 +582,12 @@ export function RubricBuilderDialog({
                             <h3 className="text-base underline font-bol mb-2">
                                 Note
                             </h3>
-                            <QuillEditor
-                                // placeholder="Add any additional information about this rubric..."
-                                className="min-h-[180px] w-full"
-                                onContentChange={setNote}
+
+                            <TinyEditor
                                 initialContent={note}
-                                setQuillObject={setQuill}
+                                onInit={(_evt, editor) =>
+                                    (editorRef.current = editor)
+                                }
                             />
                         </div>
                         {/*  */}

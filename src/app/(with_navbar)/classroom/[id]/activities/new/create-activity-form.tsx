@@ -1,7 +1,7 @@
 'use client'
 
-import QuillEditor from '@/components/quill-editor'
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
+import TinyEditor from '@/components/tiny-editor'
 import { Button } from '@/components/ui/button'
 import {
     FileUpload,
@@ -37,11 +37,11 @@ import {
     NEW_ACTIVITY_DATA_KEY_PREFIX,
     SP_AFTER_SAVE_KEY,
     SP_DATA_KEY,
+    TinyEditorType,
 } from '@/types/general'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { Pencil, Plus, Upload, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Delta } from 'quill'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
@@ -75,7 +75,7 @@ export default function CreateActivityForm({
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
         []
     )
-    const [description, setDescription] = useState<Delta>()
+    const [description, setDescription] = useState<string>()
     const [isRubricDialogOpen, setIsRubricDialogOpen] = useState(false)
 
     // Form fields
@@ -99,7 +99,7 @@ export default function CreateActivityForm({
     const [isCreateGroupingDialogOpen, setCreateGroupingDialogOpen] =
         useState(false)
 
-    const [quill, setQuill] = useState()
+    const editorRef = useRef<TinyEditorType>(null)
 
     function saveDataToSessionStorage(data: any): string {
         const sessionStorageKeys = Object.keys(sessionStorage)
@@ -118,6 +118,7 @@ export default function CreateActivityForm({
     }
 
     const parseSessionStorageData = useMemo(() => {
+        if (typeof window === 'undefined' || !window.sessionStorage) return null
         if (searchParams.has(SP_DATA_KEY)) {
             const dataKey = searchParams.get(SP_DATA_KEY)
             if (!dataKey) return
@@ -125,25 +126,22 @@ export default function CreateActivityForm({
 
             if (data) {
                 const parsedData = JSON.parse(data)
+                console.log(parsedData)
                 return parsedData
             }
         }
-
         return null
     }, [searchParams])
+
+    useEffect(() => {
+        console.log({ groupingId })
+    }, [groupingId])
 
     useEffect(() => {
         if (parseSessionStorageData) {
             titleRef.current!.value = parseSessionStorageData.title
 
-            if (quill) {
-                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-                quill.setContents(
-                    JSON.parse(parseSessionStorageData.description)
-                )
-                setDescription(JSON.parse(parseSessionStorageData.description))
-            }
+            setDescription(parseSessionStorageData.description)
 
             setCategoryId(parseSessionStorageData.category_id)
             setGroupingId(parseSessionStorageData.grouping_id)
@@ -155,12 +153,12 @@ export default function CreateActivityForm({
                 const tmp = JSON.parse(parseSessionStorageData.rubric)
                 setRubric(JSON.parse(parseSessionStorageData.rubric))
 
-                if (tmp.id) {
+                if (tmp && tmp.id) {
                     setSelectedRubricId(tmp.id)
                 }
             }
         }
-    }, [parseSessionStorageData, quill])
+    }, [parseSessionStorageData, editorRef, editorRef.current])
 
     function onUpload(
         files: File[],
@@ -198,7 +196,7 @@ export default function CreateActivityForm({
         formData.append('title', titleRef.current?.value || '')
         formData.append(
             'description',
-            description ? JSON.stringify(description) : '[]'
+            editorRef.current ? editorRef.current?.getContent() : ''
         )
         formData.append('category_id', categoryId)
         formData.append(
@@ -430,11 +428,11 @@ export default function CreateActivityForm({
                                     required: false,
                                 }}
                             >
-                                <QuillEditor
+                                <TinyEditor
                                     initialContent={description}
-                                    className="min-h-[200px]"
-                                    onContentChange={setDescription}
-                                    setQuillObject={setQuill}
+                                    onInit={(_evt, editor) =>
+                                        (editorRef.current = editor)
+                                    }
                                 />
                             </LabelWrapper>
                         </div>
@@ -548,6 +546,7 @@ export default function CreateActivityForm({
                                 <Select
                                     value={categoryId}
                                     onValueChange={(val) => {
+                                        if (val == '') return
                                         if (val === 'new') {
                                             setCreateCategoryDialogOpen(true)
                                             return
@@ -598,6 +597,7 @@ export default function CreateActivityForm({
                                 <Select
                                     value={groupingId}
                                     onValueChange={(val) => {
+                                        if (val == '') return
                                         if (val === 'new') {
                                             setCreateGroupingDialogOpen(true)
                                             return
@@ -669,6 +669,7 @@ export default function CreateActivityForm({
                                 <Select
                                     value={scoringType}
                                     onValueChange={(value) => {
+                                        if (value == '') return
                                         setScoringType(value)
                                     }}
                                 >
@@ -747,7 +748,9 @@ export default function CreateActivityForm({
 
                             const dataKey = saveDataToSessionStorage({
                                 title: titleRef.current?.value || '',
-                                description: JSON.stringify(description || []),
+                                description: editorRef.current
+                                    ? editorRef.current.getContent()
+                                    : '',
                                 category_id: categoryId,
                                 grouping_id: grouping.id,
                                 scoring_type: scoringType,

@@ -4,8 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -126,51 +124,8 @@
   }
 }
 
-.read-only-editor.ql-container.ql-snow {
-    border: none;
-    background-color: transparent;
-}
-
-.read-only-editor {
-    /* background-color: #f9fafb; */
-}
-
-.read-only-editor .ql-editor {
-    padding: 1rem;
-}
-
-.ql-container {
-    font-family: Inter, Inter Fallback !important;
-    font-style: normal;
-}
-
-.ql-cursor {
-    display: none;
-}
-
-input[data-formula="e=mc^2"][data-link="https://quilljs.com"][data-video="Embed URL"][placeholder="https://quilljs.com"]::placeholder {
-    color: transparent;
-}
-
-.ql-editor {
-    flex-grow: 1;
-}
-
-.ql-editor[contenteditable=false] {
-    padding: 0;
-}
-
-.read-only-editor .ql-editor * {
-    cursor: auto;
-}
-
-/* to prevent quilljs editor placeholder from misaligning */
-.ql-editor.ql-blank::before {
-    position: unset !important;
-}
-
-.ql-editor a {
-    cursor: pointer;
+.tox-tinymce.tox-tinymce--disabled {
+    border: 0;
 }
 
 ::-webkit-scrollbar-track

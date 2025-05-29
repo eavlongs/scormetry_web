@@ -5,6 +5,7 @@ import { CreateCategoryDialog } from '@/app/(with_navbar)/classroom/[id]/categor
 import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupings/create-grouping-dialog'
 import QuillEditor from '@/components/quill-editor'
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
+import TinyEditor from '@/components/tiny-editor'
 import { Button } from '@/components/ui/button'
 import {
     FileUpload,
@@ -41,6 +42,7 @@ import {
     NEW_ACTIVITY_DATA_KEY_PREFIX,
     SP_AFTER_SAVE_KEY,
     SP_DATA_KEY,
+    TinyEditorType,
 } from '@/types/general'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { Pencil, Plus, Upload, X } from 'lucide-react'
@@ -76,7 +78,8 @@ export default function EditActivityForm({
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
         []
     )
-    const [description, setDescription] = useState({})
+    const [description, setDescription] = useState(activity.description)
+    const editorRef = useRef<TinyEditorType>(null)
 
     // Form fields
     const titleRef = useRef<HTMLInputElement>(null)
@@ -104,8 +107,6 @@ export default function EditActivityForm({
 
     const [isCreateGroupingDialogOpen, setCreateGroupingDialogOpen] =
         useState(false)
-
-    const [quill, setQuill] = useState()
 
     function saveDataToSessionStorage(data: any): string {
         const sessionStorageKeys = Object.keys(sessionStorage)
@@ -142,14 +143,7 @@ export default function EditActivityForm({
         if (parseSessionStorageData) {
             titleRef.current!.value = parseSessionStorageData.title
 
-            if (quill) {
-                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-                quill.setContents(
-                    JSON.parse(parseSessionStorageData.description)
-                )
-                setDescription(JSON.parse(parseSessionStorageData.description))
-            }
+            setDescription(parseSessionStorageData.description)
 
             setCategoryId(parseSessionStorageData.category_id)
             setGroupingId(parseSessionStorageData.grouping_id)
@@ -166,12 +160,7 @@ export default function EditActivityForm({
                 }
             }
         } else {
-            if (quill) {
-                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-                quill.setContents(JSON.parse(activity.description))
-                setDescription(JSON.parse(activity.description))
-            }
+            setDescription(activity.description)
 
             setCategoryId(activity.category_id || '')
             setGroupingId(activity.grouping_id || 'individual')
@@ -208,7 +197,6 @@ export default function EditActivityForm({
         })
     }, [
         parseSessionStorageData,
-        quill,
         activity.category_id,
         activity.description,
         activity.grouping_id,
@@ -489,12 +477,11 @@ export default function EditActivityForm({
                                     required: false,
                                 }}
                             >
-                                <QuillEditor
+                                <TinyEditor
                                     initialContent={description}
-                                    className="min-h-[200px]"
-                                    onContentChange={setDescription}
-                                    setQuillObject={setQuill}
-                                    // readOnly
+                                    onInit={(_evt, editor) =>
+                                        (editorRef.current = editor)
+                                    }
                                 />
                             </LabelWrapper>
                         </div>

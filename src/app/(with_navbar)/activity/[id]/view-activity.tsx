@@ -1,7 +1,7 @@
 'use client'
 
-import QuillEditor from '@/components/quill-editor'
 import { SimpleToolTip } from '@/components/simple-tooltip'
+import TinyEditor from '@/components/tiny-editor'
 import {
     Accordion,
     AccordionContent,
@@ -168,12 +168,7 @@ export default function ViewActivity({
                 </div>
 
                 {/* <p className="text-sm">Description:</p> */}
-                <QuillEditor
-                    initialContent={JSON.parse(activity.description)}
-                    readOnly={true}
-                    className="mb-4"
-                    loadingClassName="min-h-[0px] border-0 justify-start mb-4"
-                />
+                <TinyEditor initialContent={activity.description} readOnly />
                 <Separator className="my-4" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {activity.files &&
