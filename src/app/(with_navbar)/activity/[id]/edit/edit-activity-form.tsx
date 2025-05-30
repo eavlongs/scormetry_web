@@ -3,7 +3,6 @@
 import { GetClassroomResponse } from '@/app/(with_navbar)/classroom/[id]/actions'
 import { CreateCategoryDialog } from '@/app/(with_navbar)/classroom/[id]/categories/create-category-dialog'
 import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupings/create-grouping-dialog'
-import QuillEditor from '@/components/quill-editor'
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 import TinyEditor from '@/components/tiny-editor'
 import { Button } from '@/components/ui/button'

@@ -10,15 +10,27 @@ import {
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { formatBytes, getFileIcon } from '@/components/ui/file-upload'
 import { Separator } from '@/components/ui/separator'
 import { copyToClipboard, formatFileUrl } from '@/lib/utils'
-import type { GetActivity } from '@/types/classroom'
-import { ArrowLeft, Users } from 'lucide-react'
+import type { Activity, GetActivity } from '@/types/classroom'
+import { ArrowLeft, MoreVertical, Pencil, Trash2, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback } from 'react'
-import { GetClassroomResponse } from '../../classroom/[id]/actions'
+import { useRouter } from 'next/navigation'
+import { useCallback, useState } from 'react'
+import { toast } from 'sonner'
+import {
+    deleteActivity,
+    GetClassroomResponse,
+} from '../../classroom/[id]/actions'
+import DeleteActivityDialog from '../../classroom/[id]/delete-activity-dialog'
 import ActivityCommentSection from './activity-comment-section'
 import ActivityGroups from './activity-groups'
 import ActivityScoreview from './activity-score-view'
@@ -32,6 +44,24 @@ export default function ViewActivity({
     activity: GetActivity
     classroom: GetClassroomResponse
 }) {
+    const [activityToDelete, setActivityToDelete] = useState<Activity | null>(
+        null
+    )
+    const router = useRouter()
+
+    async function handleDeleteActivity(id: string) {
+        const response = await deleteActivity(id, classroom.classroom.id)
+
+        if (response.success) {
+            setActivityToDelete(null)
+            toast.success(response.message)
+            router.push(`/classroom/${classroom.classroom.id}`)
+            return
+        }
+
+        toast.error(response.message)
+    }
+
     // Find category name if category_id exists
     const categoryName = activity.category_id
         ? classroom.categories.find((cat) => cat.id === activity.category_id)
@@ -127,17 +157,52 @@ export default function ViewActivity({
     return (
         <div className="grid grid-cols-1 md:grid-cols-10">
             <div className="relative pr-4 col-span-1 md:col-span-7 pb-4">
-                <Link
-                    href={`/classroom/${classroom.classroom.id}`}
-                    className="text-sm opacity-70 cursor-pointer flex items-center mb-2"
-                >
-                    <ArrowLeft
-                        className="inline-block align-middle mr-1"
-                        strokeWidth={1.5}
-                        size={18}
-                    />{' '}
-                    Back to {classroom.classroom.name}
-                </Link>
+                <div className="flex items-center justify-between">
+                    <Link
+                        href={`/classroom/${classroom.classroom.id}`}
+                        className="text-sm opacity-70 cursor-pointer flex items-center mb-2"
+                    >
+                        <ArrowLeft
+                            className="inline-block align-middle mr-1"
+                            strokeWidth={1.5}
+                            size={18}
+                        />{' '}
+                        Back to {classroom.classroom.name}
+                    </Link>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="cursor-pointer"
+                            >
+                                <MoreVertical size={10} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="start"
+                            side="bottom"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                        >
+                            <DropdownMenuItem asChild>
+                                <Link href={`/activity/${activity.id}/edit`}>
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Edit
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setActivityToDelete(activity)}
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span>Delete</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
                 <div className="mb-4">
                     <div className="flex items-center gap-x-2 mb-1">
                         <h1 className="text-3xl">{activity.title}</h1>
@@ -277,6 +342,12 @@ export default function ViewActivity({
 
                 {renderSidePanel()}
             </div>
+
+            <DeleteActivityDialog
+                activity={activityToDelete}
+                onClose={() => setActivityToDelete(null)}
+                onDelete={handleDeleteActivity}
+            />
         </div>
     )
 }
