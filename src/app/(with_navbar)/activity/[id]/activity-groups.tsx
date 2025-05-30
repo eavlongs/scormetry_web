@@ -405,7 +405,7 @@ export default function ActivityGroups({
                     Email: student.email,
                     Percentage:
                         typeof scorePercentage == 'number'
-                            ? scorePercentage.toFixed(2) + '%'
+                            ? formatDecimalNumber(scorePercentage) + '%'
                             : '',
                     Judges: judges
                         .map((j) => `${j.first_name} ${j.last_name}`)
@@ -460,8 +460,9 @@ export default function ActivityGroups({
                     'Max Score': activity.max_score,
                     Percentage:
                         typeof score == 'number'
-                            ? ((score / activity.max_score) * 100).toFixed(2) +
-                              '%'
+                            ? formatDecimalNumber(
+                                  (score / activity.max_score) * 100
+                              ) + '%'
                             : '',
                     Judges: judges
                         .map((j) => `${j.first_name} ${j.last_name}`)

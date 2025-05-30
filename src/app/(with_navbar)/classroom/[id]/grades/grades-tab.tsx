@@ -17,7 +17,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { TextFileWriter } from '@/lib/text-file-writer'
-import { generateFileNameForExport } from '@/lib/utils'
+import { formatDecimalNumber, generateFileNameForExport } from '@/lib/utils'
 import type { GetActivitiesResponse, GetGradeResponse } from '@/types/classroom'
 import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
 import Image from 'next/image'
@@ -72,7 +72,7 @@ export default function GradesTab({
                       validScores.length
                     : 0
 
-            rowData['Average Score'] = average.toFixed(1)
+            rowData['Average Score'] = formatDecimalNumber(average)
 
             return rowData
         })
@@ -120,6 +120,11 @@ export default function GradesTab({
                                     <TableHead className="w-[300px] font-medium pl-8 text-base">
                                         Student
                                     </TableHead>
+                                    <TableHead className="font-medium text-center pr-8 min-w-[120px] text-base">
+                                        <Badge variant="paragon">
+                                            Average Score
+                                        </Badge>
+                                    </TableHead>
                                     {activities.activities.map((activity) => (
                                         <TableHead
                                             key={activity.id}
@@ -134,11 +139,6 @@ export default function GradesTab({
                                             </Link>
                                         </TableHead>
                                     ))}
-                                    <TableHead className="font-medium text-center pr-8 min-w-[120px] text-base">
-                                        <Badge variant="paragon">
-                                            Average Score
-                                        </Badge>
-                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -173,6 +173,12 @@ export default function GradesTab({
                                                 </span>
                                             </div>
                                         </TableCell>
+                                        <TableCell className="text-center pr-8 text-base font-medium">
+                                            {formatDecimalNumber(
+                                                grade.student.overall_score
+                                            )}
+                                            %
+                                        </TableCell>
                                         {activities.activities.map(
                                             (activity) => {
                                                 const score =
@@ -192,9 +198,9 @@ export default function GradesTab({
                                                             {score &&
                                                             score.score ? (
                                                                 <span className="font-medium">
-                                                                    {
+                                                                    {formatDecimalNumber(
                                                                         score.score
-                                                                    }
+                                                                    )}
                                                                     %
                                                                 </span>
                                                             ) : (
@@ -207,10 +213,6 @@ export default function GradesTab({
                                                 )
                                             }
                                         )}
-                                        <TableCell className="text-center pr-8 text-base font-medium">
-                                            {/* {grade.student.class_average.toFixed(1)} */}
-                                            {grade.student.overall_score}%
-                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

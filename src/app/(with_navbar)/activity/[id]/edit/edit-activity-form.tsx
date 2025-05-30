@@ -252,7 +252,7 @@ export default function EditActivityForm({
         formData.append('title', titleRef.current?.value || '')
         formData.append(
             'description',
-            description ? JSON.stringify(description) : '{}'
+            editorRef.current ? editorRef.current.getContent() : ''
         )
         formData.append('category_id', categoryId)
         formData.append(
@@ -808,7 +808,7 @@ export default function EditActivityForm({
 
                             const dataKey = saveDataToSessionStorage({
                                 title: titleRef.current?.value || '',
-                                description: JSON.stringify(description),
+                                description: description,
                                 category_id: categoryId,
                                 grouping_id: grouping.id,
                                 scoring_type: scoringType,

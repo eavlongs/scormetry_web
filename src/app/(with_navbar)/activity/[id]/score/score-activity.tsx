@@ -54,12 +54,13 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     const commentRef = useRef<HTMLTextAreaElement>(null)
 
     const searchParams = useSearchParams()
+    const [
+        shouldAutomaticallySelectScoringEntity,
+        setShouldAutomaticallySelectScoringEntity,
+    ] = useState(true)
 
     useEffect(() => {
-        console.log({
-            studentId: searchParams.get('sid'),
-            groupId: searchParams.get('gid'),
-        })
+        if (!shouldAutomaticallySelectScoringEntity) return
         if (searchParams.get('sid')) {
             const studentId = searchParams.get('sid')
 
@@ -79,11 +80,12 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                 }
             }
 
-            console.log({ entity })
-
             if (entity) {
                 setSelectedEntity(entity)
+            } else {
+                toast.error('You were not assigned to judge this student')
             }
+            setShouldAutomaticallySelectScoringEntity(false)
         } else if (searchParams.get('gid')) {
             const groupId = searchParams.get('gid')
 
@@ -98,9 +100,12 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             }
             if (entity) {
                 setSelectedEntity(entity)
+            } else {
+                toast.error('You were not assigned to judge this group')
             }
+            setShouldAutomaticallySelectScoringEntity(false)
         }
-    }, [searchParams, entities])
+    }, [searchParams, entities, shouldAutomaticallySelectScoringEntity])
 
     // Initialize entities based on activity type (groups or individual students)
     useEffect(() => {
