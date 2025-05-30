@@ -1,8 +1,16 @@
+import { REDIRECT_URL_NAME } from '@/types/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from './lib/server-session'
-import { REDIRECT_URL_NAME } from '@/types/auth'
 
 export async function middleware(request: NextRequest) {
+    console.log({
+        method: request.method,
+        url: request.url,
+        userAgent: request.headers.get('user-agent'),
+        ip: request.headers.get('x-forwarded-for'),
+        timestamp: new Date().toISOString(),
+    })
+
     const { pathname } = request.nextUrl
     const session = await getServerSession()
 
