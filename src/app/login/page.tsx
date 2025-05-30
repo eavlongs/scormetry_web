@@ -1,5 +1,6 @@
 import LoginWithGoogle from '@/components/login-with-google'
 import { REDIRECT_URL_NAME } from '@/types/auth'
+import LoginErrorToast from './login-error-toast'
 
 export default async function Page({
     searchParams,
@@ -18,6 +19,7 @@ export default async function Page({
                 </p>
             </div>
             <LoginWithGoogle redirectUrl={redirectUrl ?? '/'} />
+            <LoginErrorToast />
         </div>
     )
 }
