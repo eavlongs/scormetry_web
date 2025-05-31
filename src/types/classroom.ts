@@ -217,7 +217,9 @@ export type RubricCriteria = {
 }
 
 export type GetActivitiesResponse = {
-    classroom: Classroom
+    classroom: Classroom & {
+        role: ClassroomRole
+    }
     activities: (Activity & {
         posted_by_user: UserEssentialDetail
     })[]

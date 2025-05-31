@@ -19,7 +19,12 @@ import {
 import { formatBytes, getFileIcon } from '@/components/ui/file-upload'
 import { Separator } from '@/components/ui/separator'
 import { copyToClipboard, formatFileUrl } from '@/lib/utils'
-import type { Activity, GetActivity } from '@/types/classroom'
+import {
+    CLASSROOM_ROLE_JUDGE,
+    CLASSROOM_ROLE_TEACHER,
+    type Activity,
+    type GetActivity,
+} from '@/types/classroom'
 import { ArrowLeft, MoreVertical, Pencil, Trash2, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -99,28 +104,48 @@ export default function ViewActivity({
                                 {activity.grouping_id !== null &&
                                 activity.groups ? (
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h2 className="text-lg font-semibold">
-                                            Groups
-                                        </h2>
-                                        <Badge
-                                            variant="outline"
-                                            className="ml-auto"
-                                        >
-                                            {activity.groups.length} groups
-                                        </Badge>
+                                        {classroom.role ==
+                                        CLASSROOM_ROLE_JUDGE ? (
+                                            <h2 className="text-lg font-semibold">
+                                                My Assignments
+                                            </h2>
+                                        ) : (
+                                            <>
+                                                <h2 className="text-lg font-semibold">
+                                                    Groups
+                                                </h2>
+                                                <Badge
+                                                    variant="outline"
+                                                    className="ml-auto"
+                                                >
+                                                    {activity.groups.length}{' '}
+                                                    groups
+                                                </Badge>
+                                            </>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h2 className="text-lg font-semibold">
-                                            Students
-                                        </h2>
-                                        <Badge
-                                            variant="outline"
-                                            className="ml-auto"
-                                        >
-                                            {activity.students?.length || 0}{' '}
-                                            students
-                                        </Badge>
+                                        {classroom.role ==
+                                        CLASSROOM_ROLE_JUDGE ? (
+                                            <h2 className="text-lg font-semibold">
+                                                My Assignments
+                                            </h2>
+                                        ) : (
+                                            <>
+                                                <h2 className="text-lg font-semibold">
+                                                    Students
+                                                </h2>
+                                                <Badge
+                                                    variant="outline"
+                                                    className="ml-auto"
+                                                >
+                                                    {activity.students
+                                                        ?.length || 0}{' '}
+                                                    students
+                                                </Badge>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </AccordionTrigger>
@@ -169,41 +194,47 @@ export default function ViewActivity({
                         />{' '}
                         Back to {classroom.classroom.name}
                     </Link>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="cursor-pointer"
+                    {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                >
+                                    <MoreVertical size={10} />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="start"
+                                side="bottom"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                }}
                             >
-                                <MoreVertical size={10} />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="start"
-                            side="bottom"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                            }}
-                        >
-                            <DropdownMenuItem asChild>
-                                <Link href={`/activity/${activity.id}/edit`}>
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Edit
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setActivityToDelete(activity)}
-                            >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                <span>Delete</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href={`/activity/${activity.id}/edit`}
+                                    >
+                                        <Pencil className="h-4 w-4 mr-2" />
+                                        Edit
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() =>
+                                        setActivityToDelete(activity)
+                                    }
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <span>Delete</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
 
-                <div className="mb-4">
+                <div>
                     <div className="flex items-center gap-x-2 mb-1">
                         <h1 className="text-3xl">{activity.title}</h1>
                         <div className="flex items-center gap-x-1">
@@ -233,7 +264,18 @@ export default function ViewActivity({
                 </div>
 
                 {/* <p className="text-sm">Description:</p> */}
-                <TinyEditor initialContent={activity.description} readOnly />
+                {activity.description.trim().length === 0 ? (
+                    <p className="text-muted-foreground italic mt-3">
+                        No instruction provided
+                    </p>
+                ) : (
+                    <div className="mt-3 prose prose-sm max-w-none">
+                        <TinyEditor
+                            initialContent={activity.description}
+                            readOnly
+                        />
+                    </div>
+                )}
                 <Separator className="my-4" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {activity.files &&

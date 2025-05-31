@@ -7,7 +7,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Activity, Classroom } from '@/types/classroom'
+import {
+    Activity,
+    Classroom,
+    CLASSROOM_ROLE_TEACHER,
+    ClassroomRole,
+} from '@/types/classroom'
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
 import { CalendarIcon, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import Image from 'next/image'
@@ -22,7 +27,9 @@ export function ActivityCard({
     activity: NonNullable<
         Awaited<ReturnType<typeof getActivities>>
     >['activities'][0]
-    classroom: Classroom
+    classroom: Classroom & {
+        role: ClassroomRole
+    }
     onShowDeleteDialog: (activity: Activity) => void
 }) {
     const timeAgo = formatDistanceToNow(new Date(activity.created_at), {
@@ -57,44 +64,50 @@ export function ActivityCard({
                                 ' ' +
                                 activity.posted_by_user.last_name}
                         </span>
+                        <CalendarIcon className="mr-1 h-3 w-3" />
+                        <span className="text-xs text-muted-foreground">
+                            {timeAgo}
+                        </span>
                     </div>
                 </div>
             </div>
             <div className="flex items-center text-xs text-muted-foreground">
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                <span>{timeAgo}</span>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="cursor-pointer"
+                {/* <CalendarIcon className="mr-1 h-3 w-3" />
+                <span>{timeAgo}</span> */}
+                {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="cursor-pointer"
+                            >
+                                <MoreVertical size={10} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="start"
+                            side="left"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
                         >
-                            <MoreVertical size={10} />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        align="start"
-                        side="left"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                        }}
-                    >
-                        <DropdownMenuItem asChild>
-                            <Link href={`/activity/${activity.id}/edit`}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => onShowDeleteDialog(activity)}
-                        >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            <span>Delete</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <DropdownMenuItem asChild>
+                                <Link href={`/activity/${activity.id}/edit`}>
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Edit
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => onShowDeleteDialog(activity)}
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span>Delete</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
         </Link>
     )

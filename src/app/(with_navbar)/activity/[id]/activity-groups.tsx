@@ -479,47 +479,62 @@ export default function ActivityGroups({
         // <ScrollArea className="h-[calc(100vh-5rem)]">
         <ScrollArea>
             <div>
-                <div className="mb-4 flex items-center gap-x-2">
-                    <AssignJudgeAll activityID={activity.id} judges={judges} />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="flex items-center gap-2"
-                            >
-                                <FileDown size={16} />
-                                Export Data
-                                <ChevronDown size={16} />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                                onClick={() => exportData('csv', 'final')}
-                            >
-                                <FileText size={16} className="mr-2" />
-                                Export Final Score (CSV)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => exportData('xlsx', 'final')}
-                            >
-                                <FileSpreadsheet size={16} className="mr-2" />
-                                Export Final Score (Excel)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => exportData('csv', 'detailed')}
-                            >
-                                <FileText size={16} className="mr-2" />
-                                Export Detailed Score (CSV)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => exportData('xlsx', 'detailed')}
-                            >
-                                <FileSpreadsheet size={16} className="mr-2" />
-                                Export Detailed Score (Excel)
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                    <div className="mb-4 flex items-center gap-x-2">
+                        <AssignJudgeAll
+                            activityID={activity.id}
+                            judges={judges}
+                        />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                >
+                                    <FileDown size={16} />
+                                    Export Data
+                                    <ChevronDown size={16} />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={() => exportData('csv', 'final')}
+                                >
+                                    <FileText size={16} className="mr-2" />
+                                    Export Final Score (CSV)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => exportData('xlsx', 'final')}
+                                >
+                                    <FileSpreadsheet
+                                        size={16}
+                                        className="mr-2"
+                                    />
+                                    Export Final Score (Excel)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        exportData('csv', 'detailed')
+                                    }
+                                >
+                                    <FileText size={16} className="mr-2" />
+                                    Export Detailed Score (CSV)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        exportData('xlsx', 'detailed')
+                                    }
+                                >
+                                    <FileSpreadsheet
+                                        size={16}
+                                        className="mr-2"
+                                    />
+                                    Export Detailed Score (Excel)
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                )}
                 <div className="space-y-3">
                     {groups.map((group) => (
                         <Collapsible

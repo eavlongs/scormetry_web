@@ -10,6 +10,7 @@ export default async function Page({
     const { id } = await params
     const groupingDetail = await getgrouping(id)
 
+    // no need to check for classroom role, since our backend wont return anything if the user is not a teacher
     if (!groupingDetail) {
         return <NotFound />
     }

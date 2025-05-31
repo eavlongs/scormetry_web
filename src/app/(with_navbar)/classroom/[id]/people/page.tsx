@@ -1,6 +1,6 @@
+import { notFound } from 'next/navigation'
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
-import ClassroomNotFound from '../classroom-not-found'
 import PeopleTab from './people-tab'
 
 export default async function Page({
@@ -14,13 +14,19 @@ export default async function Page({
     const classroom = await getClassroom(id)
 
     if (!classroom) {
-        return <ClassroomNotFound />
+        return notFound()
     }
 
     return (
         <div className="py-6">
             <div className="mb-4">
-                <ClassroomHeader classroom={classroom.classroom} tab="people" />
+                <ClassroomHeader
+                    classroom={{
+                        ...classroom.classroom,
+                        role: classroom.role,
+                    }}
+                    tab="people"
+                />
             </div>
             <section className="my-4">
                 <PeopleTab classroom={classroom} />

@@ -1,7 +1,8 @@
+import { getRubricsInClassroom } from '@/app/(with_navbar)/classroom/[id]/activities/new/actions'
+import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 import { notFound } from 'next/navigation'
 import { getActivity } from '../actions'
 import EditActivityForm from './edit-activity-form'
-import { getRubricsInClassroom } from '@/app/(with_navbar)/classroom/[id]/activities/new/actions'
 
 export default async function Page({
     params,
@@ -11,7 +12,7 @@ export default async function Page({
     const { id } = await params
     const response = await getActivity(id)
 
-    if (!response) {
+    if (!response || response.classroom.role !== CLASSROOM_ROLE_TEACHER) {
         notFound()
     }
 

@@ -1,6 +1,10 @@
+import {
+    CLASSROOM_ROLE_STUDENT,
+    CLASSROOM_ROLE_TEACHER,
+} from '@/types/classroom'
+import { notFound } from 'next/navigation'
 import { getActivities } from '../actions'
 import ClassroomHeader from '../classroom-header'
-import ClassroomNotFound from '../classroom-not-found'
 import { getClassroomGrades } from './actions'
 import GradesTab from './grades-tab'
 
@@ -12,8 +16,12 @@ export default async function Page({
     const { id } = await params
     const activities = await getActivities(id)
 
-    if (!activities) {
-        return <ClassroomNotFound />
+    if (
+        !activities ||
+        (activities.classroom.role !== CLASSROOM_ROLE_TEACHER &&
+            activities.classroom.role !== CLASSROOM_ROLE_STUDENT)
+    ) {
+        return notFound()
     }
 
     activities.activities.reverse()

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getClassroom } from '../../actions'
 import CreateActivityForm from './create-activity-form'
 import { getRubricsInClassroom } from './actions'
+import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 
 export default async function Page({
     params,
@@ -11,7 +12,7 @@ export default async function Page({
     const { id } = await params
     const classroom = await getClassroom(id)
 
-    if (!classroom) {
+    if (!classroom || classroom.role !== CLASSROOM_ROLE_TEACHER) {
         notFound()
     }
 
