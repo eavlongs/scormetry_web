@@ -1,12 +1,16 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
+import { Copy } from 'lucide-react'
 import Image from 'next/image'
 import { ComponentProps, FocusEvent, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 export type RangeScore = {
     student_id: string
@@ -110,6 +114,26 @@ export default function RangeScoreInput({
         }
     }
 
+    function handleApplyAll(studentId: string) {
+        if (entity.type !== 'group') return
+        const score = scores.find((s) => s.student_id === studentId)?.score
+
+        if (score === undefined) {
+            toast.error('Cannot apply empty score')
+            return
+        }
+
+        if (score >= 0 && score <= maxScore) {
+            for (const student of entity.entity.users) {
+                addOrReplaceScore(student.id, score)
+                removeError(student.id)
+            }
+        } else {
+            toast.error(
+                'Please make sure that the score is within a valid range.'
+            )
+        }
+    }
     return (
         <>
             {entity.type == 'individual' && (
@@ -153,20 +177,38 @@ export default function RangeScoreInput({
                                             student.last_name}
                                     </span>
                                 </div>
-
-                                <ScoreInput
-                                    maxScore={maxScore}
-                                    onBlur={(e) => handleOnBlur(student.id, e)}
-                                    error={getErrorMessageFromValidationError(
-                                        errors,
-                                        student.id
+                                <div className="flex items-center">
+                                    <ScoreInput
+                                        maxScore={maxScore}
+                                        onBlur={(e) =>
+                                            handleOnBlur(student.id, e)
+                                        }
+                                        error={getErrorMessageFromValidationError(
+                                            errors,
+                                            student.id
+                                        )}
+                                        defaultValue={
+                                            scores.find(
+                                                (s) =>
+                                                    s.student_id === student.id
+                                            )?.score
+                                        }
+                                    />
+                                    {scores.find(
+                                        (s) => s.student_id === student.id
+                                    )?.score !== undefined && (
+                                        <SimpleToolTip text="Apply to all students in group">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() =>
+                                                    handleApplyAll(student.id)
+                                                }
+                                            >
+                                                <Copy />
+                                            </Button>
+                                        </SimpleToolTip>
                                     )}
-                                    defaultValue={
-                                        scores.find(
-                                            (s) => s.student_id === student.id
-                                        )?.score
-                                    }
-                                />
+                                </div>
                             </div>
                         )
                     })}
@@ -201,7 +243,6 @@ function ScoreInput({
                 ref={inputRef}
                 type="number"
                 placeholder={`Enter score (0-${maxScore})`}
-                // defaultValue={defaultValue} // TODO: to be implemented with initial score
                 className="hide-arrows"
                 onBlur={onBlur}
             />

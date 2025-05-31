@@ -205,9 +205,6 @@ export function RubricBuilderDialog({
     const note = initialData ? initialData.note : ''
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
 
-    const importCSVRef = useRef<HTMLInputElement>(null)
-    const importExcelRef = useRef<HTMLInputElement>(null)
-
     useEffect(() => {
         if (initialData) {
             setSections(
@@ -481,8 +478,8 @@ export function RubricBuilderDialog({
                         </div>
                     </DialogHeader>
 
-                    <div className="flex items-center justify-start gap-x-4 p-4">
-                        {rubricsInClassroom.length > 0 && (
+                    {rubricsInClassroom.length > 0 && (
+                        <div className="flex items-center justify-start gap-x-4 p-4">
                             <Select
                                 onValueChange={(value) => {
                                     if (value) {
@@ -548,8 +545,8 @@ export function RubricBuilderDialog({
                                     ))}
                                 </SelectContent>
                             </Select>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
                     <div className="flex-1 overflow-auto p-4 px-0 pt-0 pb-20 flex flex-col gap-y-4">
                         {sections.map((section, sectionIndex) => (
