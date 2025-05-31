@@ -61,6 +61,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
 
     useEffect(() => {
         if (!shouldAutomaticallySelectScoringEntity) return
+        if (entities.length == 0) return
         if (searchParams.get('sid')) {
             const studentId = searchParams.get('sid')
 
@@ -83,7 +84,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             if (entity) {
                 setSelectedEntity(entity)
             } else {
-                toast.error('You were not assigned to judge this student')
+                toast.error('You were not assigned as judge for this student')
             }
             setShouldAutomaticallySelectScoringEntity(false)
         } else if (searchParams.get('gid')) {
@@ -92,7 +93,6 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             let entity: ScoringEntity | null = null
 
             for (const e of entities) {
-                console.log(e.type, e.entity.id == groupId)
                 if (e.type == 'group' && e.entity.id === groupId) {
                     entity = e
                     break
@@ -101,7 +101,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             if (entity) {
                 setSelectedEntity(entity)
             } else {
-                toast.error('You were not assigned to judge this group')
+                toast.error('You were not assigned as judge this group')
             }
             setShouldAutomaticallySelectScoringEntity(false)
         }

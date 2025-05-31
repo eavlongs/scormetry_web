@@ -177,7 +177,7 @@ export default function RangeScoreInput({
                                             student.last_name}
                                     </span>
                                 </div>
-                                <div className="flex items-center">
+                                <div className="flex items-start">
                                     <ScoreInput
                                         maxScore={maxScore}
                                         onBlur={(e) =>
