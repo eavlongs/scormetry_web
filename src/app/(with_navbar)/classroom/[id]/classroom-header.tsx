@@ -196,7 +196,7 @@ export default function ClassroomHeader({
 
                 {classroom.role === CLASSROOM_ROLE_TEACHER && (
                     <div className="flex items-center gap-3 text-sm ml-0 sm:ml-auto">
-                        <div className="flex items-center bg-muted/30 border rounded-md px-3 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center bg-muted/30 border rounded-md px-3 py-4 hover:bg-muted/50 transition-colors">
                             <span className="text-muted-foreground mr-2">
                                 Code:
                             </span>
