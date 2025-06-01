@@ -168,7 +168,19 @@ export type GetActivity = Activity & {
           >[]
         | null
     judges: UserEssentialDetail[] | null
-    group: GetGroup | null
+    group:
+        | (GetGroupWithScoreInfo & {
+              activity_assignment_id: string
+          })
+        | null
+    student: StudentWithScoreDetail | null
+}
+
+export type StudentWithScoreDetail = UserEssentialDetail & {
+    judges: UserEssentialDetail[]
+    score: number | null
+    score_percentage: number | null
+    activity_assignment_id: string
 }
 
 export type GetRubricInClassroomResponse = GetRubric & {

@@ -63,7 +63,10 @@ export default function ClassroomHeader({
         {
             name: 'Grades',
             value: 'grades',
-            href: `/classroom/${classroom.id}/grades`,
+            href:
+                classroom.role == CLASSROOM_ROLE_STUDENT
+                    ? `/classroom/${classroom.id}/my-grades`
+                    : `/classroom/${classroom.id}/grades`,
         },
         {
             name: 'Categories',

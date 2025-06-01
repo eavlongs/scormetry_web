@@ -1,6 +1,7 @@
 'use client'
 
 import { Editor } from '@tinymce/tinymce-react'
+import { ComponentProps } from 'react'
 
 interface TinyEditorProps {
     initialContent?: any
@@ -8,6 +9,7 @@ interface TinyEditorProps {
     onContentChange?: (content: any) => void
     placeholder?: string
     onInit?: React.ComponentProps<typeof Editor>['onInit']
+    init?: ComponentProps<typeof Editor>['init']
 }
 
 export default function TinyEditor({
@@ -16,7 +18,9 @@ export default function TinyEditor({
     onContentChange,
     placeholder,
     onInit,
+    init,
 }: TinyEditorProps) {
+    const initialConfig = init !== undefined ? init : {}
     return (
         <Editor
             tinymceScriptSrc="/tinymce/tinymce.min.js"
@@ -69,7 +73,6 @@ export default function TinyEditor({
                           'media',
                           'table',
                           //   'preview',
-                          'help',
                           'wordcount',
                       ],
                 statusbar: readOnly ? false : true,
@@ -83,9 +86,10 @@ export default function TinyEditor({
                     : 'undo redo | blocks | ' +
                       'bold italic forecolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
+                      'removeformat',
                 content_style:
                     'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                ...initialConfig,
             }}
         />
     )

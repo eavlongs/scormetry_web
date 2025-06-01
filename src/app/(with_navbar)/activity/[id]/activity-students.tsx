@@ -612,6 +612,7 @@ export default function ActivityStudents({
         </ScrollArea>
     )
 }
+
 function ListStudentWithJudges({
     highlight,
     classroom,
@@ -707,6 +708,11 @@ function ListStudentWithJudges({
                                             'hover:border-black'
                                     )}
                                     onClick={(e) => {
+                                        if (
+                                            classroom.role !==
+                                            CLASSROOM_ROLE_TEACHER
+                                        )
+                                            return
                                         e.stopPropagation()
                                         onViewScoreDetail()
                                     }}

@@ -1,6 +1,5 @@
 'use client'
 
-import { SimpleToolTip } from '@/components/simple-tooltip'
 import TinyEditor from '@/components/tiny-editor'
 import {
     Accordion,
@@ -18,9 +17,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { formatBytes, getFileIcon } from '@/components/ui/file-upload'
 import { Separator } from '@/components/ui/separator'
-import { copyToClipboard, formatFileUrl } from '@/lib/utils'
+import { formatFileUrl } from '@/lib/utils'
 import {
     CLASSROOM_ROLE_JUDGE,
+    CLASSROOM_ROLE_STUDENT,
     CLASSROOM_ROLE_TEACHER,
     type Activity,
     type GetActivity,
@@ -41,6 +41,7 @@ import ActivityGroups from './activity-groups'
 import ActivityScoreview from './activity-score-view'
 import ActivityScoringDetail from './activity-scoring-detail'
 import ActivityStudents from './activity-students'
+import StudentViewScore from './student-view-score'
 
 export default function ViewActivity({
     activity,
@@ -96,77 +97,82 @@ export default function ViewActivity({
                         </AccordionTrigger>
                         <AccordionContent>
                             <ActivityScoringDetail activity={activity} />
+                            <StudentViewScore
+                                activity={activity}
+                                classroom={classroom}
+                            />
                         </AccordionContent>
                     </AccordionItem>
-                    {activity.scoring_type != null && (
-                        <AccordionItem value="item-2">
-                            <AccordionTrigger className="cursor-pointer hover:no-underline text-base pb-2">
-                                {activity.grouping_id !== null &&
-                                activity.groups ? (
-                                    <div className="flex items-center gap-2 mb-2">
-                                        {classroom.role ==
-                                        CLASSROOM_ROLE_JUDGE ? (
-                                            <h2 className="text-lg font-semibold">
-                                                My Assignments
-                                            </h2>
-                                        ) : (
-                                            <>
+                    {activity.scoring_type != null &&
+                        classroom.role !== CLASSROOM_ROLE_STUDENT && (
+                            <AccordionItem value="item-2">
+                                <AccordionTrigger className="cursor-pointer hover:no-underline text-base pb-2">
+                                    {activity.grouping_id !== null &&
+                                    activity.groups ? (
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {classroom.role ==
+                                            CLASSROOM_ROLE_JUDGE ? (
                                                 <h2 className="text-lg font-semibold">
-                                                    Groups
+                                                    My Assignments
                                                 </h2>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="ml-auto"
-                                                >
-                                                    {activity.groups.length}{' '}
-                                                    groups
-                                                </Badge>
-                                            </>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-2 mb-2">
-                                        {classroom.role ==
-                                        CLASSROOM_ROLE_JUDGE ? (
-                                            <h2 className="text-lg font-semibold">
-                                                My Assignments
-                                            </h2>
-                                        ) : (
-                                            <>
+                                            ) : (
+                                                <>
+                                                    <h2 className="text-lg font-semibold">
+                                                        Groups
+                                                    </h2>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="ml-auto"
+                                                    >
+                                                        {activity.groups.length}{' '}
+                                                        groups
+                                                    </Badge>
+                                                </>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {classroom.role ==
+                                            CLASSROOM_ROLE_JUDGE ? (
                                                 <h2 className="text-lg font-semibold">
-                                                    Students
+                                                    My Assignments
                                                 </h2>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="ml-auto"
-                                                >
-                                                    {activity.students
-                                                        ?.length || 0}{' '}
-                                                    students
-                                                </Badge>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                {activity.groups ? (
-                                    <ActivityGroups
-                                        activity={activity}
-                                        groups={activity.groups}
-                                        judges={activity.judges || []}
-                                        classroom={classroom}
-                                    />
-                                ) : (
-                                    <ActivityStudents
-                                        activity={activity}
-                                        judges={activity.judges || []}
-                                        classroom={classroom}
-                                    />
-                                )}
-                            </AccordionContent>
-                        </AccordionItem>
-                    )}
+                                            ) : (
+                                                <>
+                                                    <h2 className="text-lg font-semibold">
+                                                        Students
+                                                    </h2>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="ml-auto"
+                                                    >
+                                                        {activity.students
+                                                            ?.length || 0}{' '}
+                                                        students
+                                                    </Badge>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    {activity.groups ? (
+                                        <ActivityGroups
+                                            activity={activity}
+                                            groups={activity.groups}
+                                            judges={activity.judges || []}
+                                            classroom={classroom}
+                                        />
+                                    ) : (
+                                        <ActivityStudents
+                                            activity={activity}
+                                            judges={activity.judges || []}
+                                            classroom={classroom}
+                                        />
+                                    )}
+                                </AccordionContent>
+                            </AccordionItem>
+                        )}
                 </Accordion>
             )
         }
@@ -273,6 +279,10 @@ export default function ViewActivity({
                         <TinyEditor
                             initialContent={activity.description}
                             readOnly
+                            init={{
+                                autoresize_min_height: 50,
+                                autoresize_max_height: 500,
+                            }}
                         />
                     </div>
                 )}
@@ -322,58 +332,6 @@ export default function ViewActivity({
                             </Link>
                         ))}
                 </div>
-
-                {activity.group && (
-                    <>
-                        <Separator className="my-4" />
-
-                        <div className="flex items-center gap-2 mb-2">
-                            <Users className="h-5 w-5 text-muted-foreground" />
-                            <h3 className="font-medium">
-                                Team: {activity.group.name}
-                            </h3>
-                        </div>
-
-                        <div className="space-y-2">
-                            {activity.group.users.map((user) => (
-                                <div className="flex items-center justify-between py-1 rounded-md hover:bg-muted/50">
-                                    <div className="flex items-center gap-x-1">
-                                        <div className="relative h-6 w-6 cursor-pointer">
-                                            <Image
-                                                src={user.profile_picture}
-                                                alt={
-                                                    user.first_name +
-                                                    ' ' +
-                                                    user.last_name
-                                                }
-                                                fill
-                                                className="rounded-full"
-                                            />
-                                        </div>
-                                        <span className="text-sm">
-                                            Eav Long Sok
-                                        </span>
-                                    </div>
-                                    <SimpleToolTip
-                                        text="Click to copy email"
-                                        sideOffset={5}
-                                    >
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                            onClick={() =>
-                                                copyToClipboard(user.email)
-                                            }
-                                        >
-                                            {user.email}
-                                        </Button>
-                                    </SimpleToolTip>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
             </div>
 
             <div className="relative pl-4 gap-y-6 col-span-1 md:col-span-3 h-full">

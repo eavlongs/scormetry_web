@@ -1,7 +1,4 @@
-import {
-    CLASSROOM_ROLE_STUDENT,
-    CLASSROOM_ROLE_TEACHER,
-} from '@/types/classroom'
+import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 import { notFound } from 'next/navigation'
 import { getActivities } from '../actions'
 import ClassroomHeader from '../classroom-header'
@@ -16,11 +13,7 @@ export default async function Page({
     const { id } = await params
     const activities = await getActivities(id)
 
-    if (
-        !activities ||
-        (activities.classroom.role !== CLASSROOM_ROLE_TEACHER &&
-            activities.classroom.role !== CLASSROOM_ROLE_STUDENT)
-    ) {
+    if (!activities || activities.classroom.role !== CLASSROOM_ROLE_TEACHER) {
         return notFound()
     }
 
