@@ -98,15 +98,18 @@ export default function ActivitiesTab({
                             No activities yet
                         </h3>
                     </CardContent>
-                    <CardFooter className="justify-center pt-0">
-                        <Link
-                            href={`/classroom/${classroom.id}/activities/new`}
-                        >
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" /> New Activity
-                            </Button>
-                        </Link>
-                    </CardFooter>
+                    {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                        <CardFooter className="justify-center pt-0">
+                            <Link
+                                href={`/classroom/${classroom.id}/activities/new`}
+                            >
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" /> New
+                                    Activity
+                                </Button>
+                            </Link>
+                        </CardFooter>
+                    )}
                 </Card>
             )}
 
