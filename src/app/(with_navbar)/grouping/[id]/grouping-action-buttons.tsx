@@ -1,6 +1,12 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { ImportGroupFileReader } from '@/lib/import-group-file-reader'
 import {
     convertZodErrorToValidationError,
@@ -71,7 +77,7 @@ export default function GroupingActionButtons({
     }
 
     return (
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex items-start gap-2 w-full sm:w-auto">
             <Button
                 onClick={onCreateGroup}
                 className="flex items-center gap-2 flex-1 sm:flex-none"
@@ -80,13 +86,29 @@ export default function GroupingActionButtons({
                 Create Group
             </Button>
 
-            <Button
-                className="flex items-center gap-2 flex-1 sm:flex-none"
-                onClick={() => importGroupsRef.current?.click()}
-            >
-                <Download className="h-4 w-4" />
-                Import Groups
-            </Button>
+            <div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild className="cursor-pointer">
+                            <Button
+                                className="flex items-center gap-2 flex-1 sm:flex-none"
+                                onClick={() => importGroupsRef.current?.click()}
+                            >
+                                <Download className="h-4 w-4" />
+                                Import Groups
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <div className="flex flex-col gap-y-1 items-center">
+                                <p>Expected Format</p>
+                                <p>Group Alpha, john@gmail.com</p>
+                                <p>Group Alpha, jane@gmail.com</p>
+                                <p>Group Beta, james@gmail.com</p>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
 
             {/* <Button className="flex items-center gap-2 flex-1 sm:flex-none">
                 <Upload className="h-4 w-4" />
