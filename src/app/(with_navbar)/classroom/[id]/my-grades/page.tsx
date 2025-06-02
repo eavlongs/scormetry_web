@@ -30,7 +30,7 @@ export default async function Page({
     }
 
     return (
-        <div className="py-6">
+        <div className="pb-6 pt-4">
             <div className="mb-4 max-w-full">
                 <ClassroomHeader
                     classroom={activities.classroom}
