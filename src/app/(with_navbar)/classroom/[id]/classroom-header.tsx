@@ -146,39 +146,39 @@ export default function ClassroomHeader({
                     </Avatar>
                     <h1 className="text-xl font-bold">{classroom.name}</h1>
 
-                    {classroom.role === CLASSROOM_ROLE_TEACHER && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 ml-1 cursor-pointer"
-                                >
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 ml-1 cursor-pointer"
+                            >
+                                <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                            {classroom.role === CLASSROOM_ROLE_TEACHER && (
                                 <DropdownMenuItem
                                     onClick={() => setIsEditDialogOpen(true)}
                                 >
                                     <Pencil className="h-4 w-4 mr-2" />
                                     Edit
                                 </DropdownMenuItem>
-                                {/* <DropdownMenuItem>
+                            )}
+                            {/* <DropdownMenuItem>
                                 <ArchiveIcon className="h-4 w-4 mr-2" />
                                 <span>Archive</span>
                             </DropdownMenuItem> */}
-                                {classroom.owned_by !== session.user?.id ? (
-                                    <DropdownMenuItem
-                                        variant="destructive"
-                                        onClick={() =>
-                                            setIsLeaveDialogOpen(true)
-                                        }
-                                    >
-                                        <LogOut className="h-4 w-4 mr-2" />
-                                        <span>Leave</span>
-                                    </DropdownMenuItem>
-                                ) : (
+                            {classroom.owned_by !== session.user?.id ? (
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setIsLeaveDialogOpen(true)}
+                                >
+                                    <LogOut className="h-4 w-4 mr-2" />
+                                    <span>Leave</span>
+                                </DropdownMenuItem>
+                            ) : (
+                                classroom.role === CLASSROOM_ROLE_TEACHER && (
                                     <DropdownMenuItem
                                         variant="destructive"
                                         onClick={() =>
@@ -188,15 +188,15 @@ export default function ClassroomHeader({
                                         <Trash2 className="h-4 w-4 mr-2" />
                                         <span>Delete</span>
                                     </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                                )
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 {classroom.role === CLASSROOM_ROLE_TEACHER && (
                     <div className="flex items-center gap-3 text-sm ml-0 sm:ml-auto">
-                        <div className="flex items-center bg-muted/30 border rounded-md px-3 py-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center bg-muted/30 border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors">
                             <span className="text-muted-foreground mr-2">
                                 Code:
                             </span>

@@ -602,7 +602,9 @@ export function RubricBuilderDialog({
                                 try {
                                     setErrors([])
                                     const data = RubricSchema.parse({
-                                        note: JSON.stringify(note || []),
+                                        note: editorRef.current
+                                            ? editorRef.current.getContent()
+                                            : '',
                                         rubric_sections: sections,
                                     })
                                     onSave(data)
