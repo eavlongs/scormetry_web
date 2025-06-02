@@ -118,6 +118,7 @@ export type Activity = {
     max_score: number | null
     posted_by: string
     files: CustomFile[]
+    hide_score: boolean
     created_at: string
     updated_at: string
 }

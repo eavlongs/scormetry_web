@@ -54,6 +54,7 @@ export function CreateClassroomDialog({
             if (response.success) {
                 toast.success(response.message)
                 setOpen(false)
+                setLoading(false)
                 if (response.data)
                     router.push(`/classroom/${response.data.classroom.id}`)
                 return

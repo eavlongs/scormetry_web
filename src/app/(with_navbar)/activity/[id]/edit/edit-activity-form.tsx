@@ -6,6 +6,7 @@ import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupin
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 import TinyEditor from '@/components/tiny-editor'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     FileUpload,
     FileUploadDropzone,
@@ -106,6 +107,8 @@ export default function EditActivityForm({
 
     const [isCreateGroupingDialogOpen, setCreateGroupingDialogOpen] =
         useState(false)
+
+    const [hideScore, setHideScore] = useState(activity.hide_score)
 
     function saveDataToSessionStorage(data: any): string {
         const sessionStorageKeys = Object.keys(sessionStorage)
@@ -263,6 +266,7 @@ export default function EditActivityForm({
             'scoring_type',
             scoringType !== 'none' ? scoringType : ''
         )
+        formData.append('hide_score', hideScore ? '1' : '0')
 
         // Handle different scoring types
         if (scoringType === SCORING_TYPE_RANGE && maxScoreRef.current?.value) {
@@ -753,6 +757,35 @@ export default function EditActivityForm({
                         </div>
 
                         {renderScoringFields()}
+
+                        {scoringType !== 'none' && (
+                            <div>
+                                <LabelWrapper
+                                    label={{
+                                        text: 'Hide Score From Students',
+                                        field: 'hide_score',
+                                    }}
+                                    error={getErrorMessageFromValidationError(
+                                        validationErrors,
+                                        'hide_score'
+                                    )}
+                                    options={{
+                                        required: false,
+                                        label_placement: 'inline-end',
+                                    }}
+                                >
+                                    <Checkbox
+                                        checked={hideScore}
+                                        onCheckedChange={(val) =>
+                                            val !== 'indeterminate'
+                                                ? setHideScore(val)
+                                                : null
+                                        }
+                                        className="mr-2"
+                                    />
+                                </LabelWrapper>
+                            </div>
+                        )}
 
                         <div className="flex justify-end mt-auto gap-4 pt-4">
                             <Button

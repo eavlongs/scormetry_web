@@ -27,7 +27,7 @@ export function LabelWrapper({
     options?: {
         required?: boolean
         // error_placement?: 'bottom'
-        label_placement?: 'newline' | 'inline'
+        label_placement?: 'newline' | 'inline' | 'inline-end'
         label_className?: string
         error_display?: 'text' | 'tooltip'
     }
@@ -58,6 +58,9 @@ export function LabelWrapper({
                 <>
                     {label && (
                         <div className="flex items-center">
+                            {optionsWithDefaults.label_placement ==
+                                'inline-end' && children}
+
                             <Label
                                 htmlFor={label.field}
                                 className={labelClassName}

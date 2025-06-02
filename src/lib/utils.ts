@@ -102,12 +102,12 @@ export function convertZodErrorToValidationError<T>(
     const issues = err.issues
     const validationErrors: ValidationError[] = []
 
-    for (const i in issues) {
+    for (let i = 0; i < issues.length; i++) {
         const path = issues[i].path
 
         if (!path) {
             validationErrors.push({
-                field: i + 1,
+                field: (i + 1).toString(),
                 message: issues[i].message,
             })
             continue
