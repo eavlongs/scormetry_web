@@ -604,6 +604,7 @@ export default function EditActivityForm({
                                 <Select
                                     value={categoryId}
                                     onValueChange={(val) => {
+                                        if (val == '') return
                                         if (val === 'new') {
                                             setCreateCategoryDialogOpen(true)
                                             return
@@ -654,6 +655,7 @@ export default function EditActivityForm({
                                 <Select
                                     value={groupingId}
                                     onValueChange={(val) => {
+                                        if (val == '') return
                                         if (val === 'new') {
                                             setCreateGroupingDialogOpen(true)
                                             return
@@ -723,8 +725,10 @@ export default function EditActivityForm({
                                 }}
                             >
                                 <Select
+                                    // defaultValue={scoringType}
                                     value={scoringType}
                                     onValueChange={(value) => {
+                                        if (value == '') return
                                         setScoringType(value)
                                     }}
                                 >
