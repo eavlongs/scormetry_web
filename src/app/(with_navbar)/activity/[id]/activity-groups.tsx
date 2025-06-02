@@ -46,6 +46,7 @@ import { AssignJudgeDialog } from './assign-jugde-dialog'
 import { GiveScoreButton } from './give-score-button'
 import { ScoreData } from './score/score-activity'
 import ViewScoreDetailDialog from './view-score-detail-dialog'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 export default function ActivityGroups({
     activity,
@@ -70,6 +71,13 @@ export default function ActivityGroups({
             data: ScoreData['range_based_scores'] | ScoreData['rubric_score']
         }[]
     >([])
+
+    const [groupToHighlight, setGroupToHighlight] = useState<string | null>(
+        null
+    )
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const pathname = usePathname()
 
     useEffect(() => {
         async function fetchData() {
@@ -100,6 +108,22 @@ export default function ActivityGroups({
         }
         fetchData()
     }, [groupToViewScoreDetail])
+
+    useEffect(() => {
+        if (searchParams.get('gid')) {
+            const groupId = searchParams.get('gid')
+            if (groupId && activity.groups) {
+                const group = activity.groups.find((s) => s.id === groupId)
+                if (group) {
+                    toggleGroup(groupId)
+                    setGroupToHighlight(groupId)
+                }
+            }
+            setTimeout(() => router.replace(pathname), 3000)
+        } else {
+            setGroupToHighlight(null)
+        }
+    }, [searchParams])
 
     function toggleGroup(groupId: string) {
         setOpenGroups((prev) =>
@@ -544,7 +568,14 @@ export default function ActivityGroups({
                             className="border rounded-lg bg-card"
                         >
                             <CollapsibleTrigger className="w-full">
-                                <div className="px-4 py-3 border-b bg-muted/40 flex items-center justify-between hover:bg-muted/60 transition-colors cursor-pointer">
+                                <div
+                                    className={cn(
+                                        `px-4 py-3 border-b bg-muted/40 flex items-center justify-between hover:bg-muted/60 transition-colors cursor-pointer`,
+                                        groupToHighlight !== null &&
+                                            groupToHighlight === group.id &&
+                                            'border border-paragon relative animate-border-pulse'
+                                    )}
+                                >
                                     <div className="w-full flex items-center gap-2 px-2">
                                         <span className="font-medium">
                                             {group.name}
