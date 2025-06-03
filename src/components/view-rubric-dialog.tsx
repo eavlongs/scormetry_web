@@ -68,7 +68,7 @@ export function ViewRubricDialog({
                             Note
                         </h3>
                         <TinyEditor
-                            initialContent={JSON.parse(rubric.note)}
+                            initialContent={rubric.note}
                             readOnly
                             placeholder="Not available"
                         />
