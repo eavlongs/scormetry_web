@@ -83,7 +83,7 @@ export function EditGroupingDialog({
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Create New Grouping</AlertDialogTitle>
+                    <AlertDialogTitle>Edit Grouping</AlertDialogTitle>
                 </AlertDialogHeader>
                 <form>
                     <div className="grid gap-4 py-4">
