@@ -35,6 +35,417 @@ export type ScoreData = {
     rubric_score?: RubricScoreContextType['scores']
 }
 
+const tmp = {
+    id: 'rubric_001',
+    has_weightage: true,
+    max_score: 100,
+    note: 'Final project evaluation rubric for CS 101 course',
+    created_at: '2024-01-15T10:30:00Z',
+    updated_at: '2024-02-01T14:22:00Z',
+    rubric_sections: [
+        {
+            id: 'section_001',
+            rubric_id: 'rubric_001',
+            name: 'Code Quality',
+            description:
+                'Assessment of code structure, readability, and best practices',
+            is_group_score: false,
+            score_percentage: 40,
+            max_score: 40,
+            order: 1,
+            created_at: '2024-01-15T10:30:00Z',
+            updated_at: '2024-01-15T10:30:00Z',
+            rubric_criterias: [
+                {
+                    id: 'criteria_001',
+                    rubric_section_id: 'section_001',
+                    name: 'Code Organization',
+                    min_score: 0,
+                    max_score: 20,
+                    order: 1,
+                    created_at: '2024-01-15T10:30:00Z',
+                    updated_at: '2024-01-15T10:30:00Z',
+                    criteria_score_ranges: [
+                        {
+                            id: 'range_001',
+                            rubric_criteria_id: 'criteria_001',
+                            name: 'Needs Improvement',
+                            description:
+                                'Code is poorly organized with confusing structure',
+                            min_score: 0,
+                            max_score: 9,
+                            order: 1,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_002',
+                            rubric_criteria_id: 'criteria_001',
+                            name: 'Satisfactory',
+                            description:
+                                'Code has basic organization but lacks clarity in some areas',
+                            min_score: 10,
+                            max_score: 13,
+                            order: 2,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_003',
+                            rubric_criteria_id: 'criteria_001',
+                            name: 'Good',
+                            description:
+                                'Code is mostly well-organized with minor structural issues',
+                            min_score: 14,
+                            max_score: 17,
+                            order: 3,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_004',
+                            rubric_criteria_id: 'criteria_001',
+                            name: 'Excellent',
+                            description:
+                                'Code is well-organized with clear structure, proper modularity, and logical flow',
+                            min_score: 18,
+                            max_score: 20,
+                            order: 4,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                    ],
+                },
+                {
+                    id: 'criteria_002',
+                    rubric_section_id: 'section_001',
+                    name: 'Code Documentation',
+                    min_score: 0,
+                    max_score: 20,
+                    order: 2,
+                    created_at: '2024-01-15T10:30:00Z',
+                    updated_at: '2024-01-15T10:30:00Z',
+                    criteria_score_ranges: [
+                        {
+                            id: 'range_005',
+                            rubric_criteria_id: 'criteria_002',
+                            name: 'Needs Improvement',
+                            description: 'Little to no documentation provided',
+                            min_score: 0,
+                            max_score: 9,
+                            order: 1,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_006',
+                            rubric_criteria_id: 'criteria_002',
+                            name: 'Satisfactory',
+                            description:
+                                'Basic documentation present but incomplete',
+                            min_score: 10,
+                            max_score: 13,
+                            order: 2,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_007',
+                            rubric_criteria_id: 'criteria_002',
+                            name: 'Good',
+                            description:
+                                'Good documentation with most functions and complex logic explained',
+                            min_score: 14,
+                            max_score: 17,
+                            order: 3,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_008',
+                            rubric_criteria_id: 'criteria_002',
+                            name: 'Excellent',
+                            description:
+                                'Comprehensive documentation with clear comments and explanations',
+                            min_score: 18,
+                            max_score: 20,
+                            order: 4,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id: 'section_002',
+            rubric_id: 'rubric_001',
+            name: 'Functionality',
+            description: 'Assessment of program functionality and correctness',
+            is_group_score: false,
+            score_percentage: 35,
+            max_score: 35,
+            order: 2,
+            created_at: '2024-01-15T10:30:00Z',
+            updated_at: '2024-01-15T10:30:00Z',
+            rubric_criterias: [
+                {
+                    id: 'criteria_003',
+                    rubric_section_id: 'section_002',
+                    name: 'Core Requirements',
+                    min_score: 0,
+                    max_score: 25,
+                    order: 1,
+                    created_at: '2024-01-15T10:30:00Z',
+                    updated_at: '2024-01-15T10:30:00Z',
+                    criteria_score_ranges: [
+                        {
+                            id: 'range_009',
+                            rubric_criteria_id: 'criteria_003',
+                            name: 'Needs Improvement',
+                            description:
+                                'Many core requirements missing or not working',
+                            min_score: 0,
+                            max_score: 12,
+                            order: 1,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_010',
+                            rubric_criteria_id: 'criteria_003',
+                            name: 'Satisfactory',
+                            description:
+                                'Basic requirements met but some functionality missing',
+                            min_score: 13,
+                            max_score: 17,
+                            order: 2,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_011',
+                            rubric_criteria_id: 'criteria_003',
+                            name: 'Good',
+                            description:
+                                'Most core requirements implemented with minor issues',
+                            min_score: 18,
+                            max_score: 22,
+                            order: 3,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_012',
+                            rubric_criteria_id: 'criteria_003',
+                            name: 'Excellent',
+                            description:
+                                'All core requirements implemented correctly with no bugs',
+                            min_score: 23,
+                            max_score: 25,
+                            order: 4,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                    ],
+                },
+                {
+                    id: 'criteria_004',
+                    rubric_section_id: 'section_002',
+                    name: 'Error Handling',
+                    min_score: 0,
+                    max_score: 10,
+                    order: 2,
+                    created_at: '2024-01-15T10:30:00Z',
+                    updated_at: '2024-01-15T10:30:00Z',
+                    criteria_score_ranges: [
+                        {
+                            id: 'range_013',
+                            rubric_criteria_id: 'criteria_004',
+                            name: 'Needs Improvement',
+                            description: 'Little to no error handling',
+                            min_score: 0,
+                            max_score: 4,
+                            order: 1,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_014',
+                            rubric_criteria_id: 'criteria_004',
+                            name: 'Satisfactory',
+                            description: 'Basic error handling present',
+                            min_score: 5,
+                            max_score: 6,
+                            order: 2,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_015',
+                            rubric_criteria_id: 'criteria_004',
+                            name: 'Good',
+                            description:
+                                'Good error handling for most scenarios',
+                            min_score: 7,
+                            max_score: 8,
+                            order: 3,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_016',
+                            rubric_criteria_id: 'criteria_004',
+                            name: 'Excellent',
+                            description:
+                                'Comprehensive error handling with graceful recovery',
+                            min_score: 9,
+                            max_score: 10,
+                            order: 4,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id: 'section_003',
+            rubric_id: 'rubric_001',
+            name: 'Presentation',
+            description: 'Assessment of project presentation and demonstration',
+            is_group_score: true,
+            score_percentage: 25,
+            max_score: 25,
+            order: 3,
+            created_at: '2024-01-15T10:30:00Z',
+            updated_at: '2024-01-15T10:30:00Z',
+            rubric_criterias: [
+                {
+                    id: 'criteria_005',
+                    rubric_section_id: 'section_003',
+                    name: 'Clarity and Organization',
+                    min_score: 0,
+                    max_score: 15,
+                    order: 1,
+                    created_at: '2024-01-15T10:30:00Z',
+                    updated_at: '2024-01-15T10:30:00Z',
+                    criteria_score_ranges: [
+                        {
+                            id: 'range_017',
+                            rubric_criteria_id: 'criteria_005',
+                            name: 'Needs Improvement',
+                            description:
+                                'Presentation is unclear and poorly organized',
+                            min_score: 0,
+                            max_score: 7,
+                            order: 1,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_018',
+                            rubric_criteria_id: 'criteria_005',
+                            name: 'Satisfactory',
+                            description:
+                                'Presentation has basic organization but lacks clarity',
+                            min_score: 8,
+                            max_score: 10,
+                            order: 2,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_019',
+                            rubric_criteria_id: 'criteria_005',
+                            name: 'Good',
+                            description:
+                                'Presentation is mostly clear with good organization',
+                            min_score: 11,
+                            max_score: 13,
+                            order: 3,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_020',
+                            rubric_criteria_id: 'criteria_005',
+                            name: 'Excellent',
+                            description:
+                                'Presentation is clear, well-organized, and engaging',
+                            min_score: 14,
+                            max_score: 15,
+                            order: 4,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                    ],
+                },
+                {
+                    id: 'criteria_006',
+                    rubric_section_id: 'section_003',
+                    name: 'Technical Demonstration',
+                    min_score: 0,
+                    max_score: 10,
+                    order: 2,
+                    created_at: '2024-01-15T10:30:00Z',
+                    updated_at: '2024-01-15T10:30:00Z',
+                    criteria_score_ranges: [
+                        {
+                            id: 'range_021',
+                            rubric_criteria_id: 'criteria_006',
+                            name: 'Needs Improvement',
+                            description:
+                                'Poor demonstration with major technical issues',
+                            min_score: 0,
+                            max_score: 4,
+                            order: 1,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_022',
+                            rubric_criteria_id: 'criteria_006',
+                            name: 'Satisfactory',
+                            description:
+                                'Basic demonstration with some technical problems',
+                            min_score: 5,
+                            max_score: 6,
+                            order: 2,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_023',
+                            rubric_criteria_id: 'criteria_006',
+                            name: 'Good',
+                            description:
+                                'Good demonstration with minor technical issues',
+                            min_score: 7,
+                            max_score: 8,
+                            order: 3,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                        {
+                            id: 'range_024',
+                            rubric_criteria_id: 'criteria_006',
+                            name: 'Excellent',
+                            description:
+                                'Flawless demonstration with all features working',
+                            min_score: 9,
+                            max_score: 10,
+                            order: 4,
+                            created_at: '2024-01-15T10:30:00Z',
+                            updated_at: '2024-01-15T10:30:00Z',
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+}
+
 export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     const [selectedEntity, setSelectedEntity] = useState<ScoringEntity | null>(
         null
@@ -497,7 +908,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                     activity.rubric && (
                                         <div>
                                             <RubricScoreInput
-                                                rubric={activity.rubric}
+                                                // rubric={activity.rubric}
+                                                rubric={tmp}
                                                 entity={selectedEntity}
                                                 initialScores={
                                                     initialScore.rubric_score

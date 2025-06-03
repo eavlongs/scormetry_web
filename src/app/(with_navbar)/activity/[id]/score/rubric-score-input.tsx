@@ -1,6 +1,5 @@
 'use client'
 
-import QuillEditor from '@/components/quill-editor'
 import TinyEditor from '@/components/tiny-editor'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
@@ -16,7 +15,7 @@ import { RubricScoreSchema } from '@/schema'
 import { GetRubric, IndividualOrGroup, ScoringEntity } from '@/types/classroom'
 import { NestedPathValidationError } from '@/types/response'
 import Image from 'next/image'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { z } from 'zod'
 import {
     RubricScoreContextType,
@@ -60,6 +59,10 @@ export function RubricScoreInput({
         }
     }, [parentErrors])
 
+    useEffect(() => {
+        onScoreUpdate(scores)
+    }, [scores])
+
     function updateScore(
         id: string,
         type: IndividualOrGroup,
@@ -67,35 +70,24 @@ export function RubricScoreInput({
         scoreStr: string
     ) {
         if (scoreStr === '') {
-            const promise = new Promise<z.infer<typeof RubricScoreSchema>[]>(
-                (resolve) => {
-                    setScores((prev) => {
-                        const index = prev.findIndex(
-                            (s) => s.assignee_id === id && s.type == type
-                        )
-                        if (index !== -1) {
-                            const updatedScores = [...prev]
-                            updatedScores[index].scores = updatedScores[
-                                index
-                            ].scores.filter(
-                                (s) => s.rubric_criteria_id !== criteria_id
-                            )
+            setScores((prev) => {
+                const index = prev.findIndex(
+                    (s) => s.assignee_id === id && s.type == type
+                )
+                if (index !== -1) {
+                    const updatedScores = [...prev]
+                    updatedScores[index].scores = updatedScores[
+                        index
+                    ].scores.filter((s) => s.rubric_criteria_id !== criteria_id)
 
-                            if (updatedScores[index].scores.length === 0) {
-                                updatedScores.splice(index, 1)
-                            }
-                            resolve(updatedScores) // Call resolve with updated scores
-                            return updatedScores
-                        }
-                        resolve(prev) // Make sure to resolve even if no changes
-                        return prev
-                    })
+                    if (updatedScores[index].scores.length === 0) {
+                        updatedScores.splice(index, 1)
+                    }
+                    return updatedScores
                 }
-            )
-
-            promise.then((updatedScores) => {
-                onScoreUpdate(updatedScores) // Use the resolved value
+                return prev
             })
+
             return
         }
 
@@ -105,75 +97,62 @@ export function RubricScoreInput({
             throw new Error('Score must be a number')
         }
 
-        const promise = new Promise<z.infer<typeof RubricScoreSchema>[]>(
-            (resolve) => {
-                setScores((prev) => {
-                    const index = prev.findIndex(
-                        (s) => s.assignee_id === id && s.type == type
-                    )
-                    let newScores
+        setScores((prev) => {
+            const index = prev.findIndex(
+                (s) => s.assignee_id === id && s.type == type
+            )
+            let newScores
 
-                    if (index !== -1) {
-                        const updatedScores = [...prev]
-                        const hasExistingScore = updatedScores[
-                            index
-                        ].scores.find(
-                            (s) => s.rubric_criteria_id === criteria_id
-                        )
+            if (index !== -1) {
+                const updatedScores = [...prev]
+                const hasExistingScore = updatedScores[index].scores.find(
+                    (s) => s.rubric_criteria_id === criteria_id
+                )
 
-                        let newScoresArray: (typeof prev)[number]['scores']
-                        if (hasExistingScore) {
-                            newScoresArray = updatedScores[index].scores.map(
-                                (s) => {
-                                    if (s.rubric_criteria_id === criteria_id) {
-                                        return {
-                                            ...s,
-                                            score: score,
-                                        }
-                                    }
-
-                                    return s
-                                }
-                            )
-                        } else {
-                            newScoresArray = [
-                                ...updatedScores[index].scores,
-                                {
-                                    rubric_criteria_id: criteria_id,
-                                    score: score,
-                                },
-                            ]
+                let newScoresArray: (typeof prev)[number]['scores']
+                if (hasExistingScore) {
+                    newScoresArray = updatedScores[index].scores.map((s) => {
+                        if (s.rubric_criteria_id === criteria_id) {
+                            return {
+                                ...s,
+                                score: score,
+                            }
                         }
 
-                        updatedScores[index] = {
-                            ...updatedScores[index],
-                            scores: newScoresArray,
-                        }
-                        console.log(newScoresArray)
-                        newScores = updatedScores
-                    } else {
-                        newScores = [
-                            ...prev,
+                        return s
+                    })
+                } else {
+                    newScoresArray = [
+                        ...updatedScores[index].scores,
+                        {
+                            rubric_criteria_id: criteria_id,
+                            score: score,
+                        },
+                    ]
+                }
+
+                updatedScores[index] = {
+                    ...updatedScores[index],
+                    scores: newScoresArray,
+                }
+                console.log(newScoresArray)
+                newScores = updatedScores
+            } else {
+                newScores = [
+                    ...prev,
+                    {
+                        assignee_id: id,
+                        type: type,
+                        scores: [
                             {
-                                assignee_id: id,
-                                type: type,
-                                scores: [
-                                    {
-                                        rubric_criteria_id: criteria_id,
-                                        score: score,
-                                    },
-                                ],
+                                rubric_criteria_id: criteria_id,
+                                score: score,
                             },
-                        ]
-                    }
-                    resolve(newScores) // Call resolve with updated scores
-                    return newScores
-                })
+                        ],
+                    },
+                ]
             }
-        )
-
-        promise.then((updatedScores) => {
-            onScoreUpdate(updatedScores) // Use the resolved value
+            return newScores
         })
     }
 
@@ -200,23 +179,34 @@ export function RubricScoreInput({
         })
     }
 
-    return (
-        <RubricScoreProvider
-            value={{
-                assignment_type: entity.type,
-                scores: scores,
-                errors: errors,
+    const contextValue = useMemo(
+        () => ({
+            assignment_type: entity.type,
+            scores: scores,
+            errors: errors,
+            updateScore: updateScore,
+            syncStatus: sync,
+            syncScore: () => {
+                setSync((prev) => !prev)
+            },
+            setErrors: setErrors,
+            addOrReplaceError: addOrReplaceError,
+            removeError: removeError,
+        }),
+        [
+            entity.type,
+            scores,
+            errors,
+            sync,
+            updateScore,
+            setSync,
+            addOrReplaceError,
+            removeError,
+        ]
+    )
 
-                updateScore: updateScore,
-                syncStatus: sync,
-                syncScore: () => {
-                    setSync((prev) => !prev)
-                },
-                setErrors: setErrors,
-                addOrReplaceError: addOrReplaceError,
-                removeError: removeError,
-            }}
-        >
+    return (
+        <RubricScoreProvider value={contextValue}>
             <_RubricScoreInput {...props} rubric={rubric} entity={entity} />
         </RubricScoreProvider>
     )
@@ -330,7 +320,9 @@ function _RubricScoreInput({
             )}
 
             <div>
-                <h3 className="text-base underline font-bold mb-2">Note</h3>
+                <h3 className="text-base underline font-bold mb-2">
+                    Rubric Note
+                </h3>
                 <TinyEditor
                     initialContent={rubric.note}
                     readOnly
@@ -467,14 +459,12 @@ export function RubricCriteria({
     return (
         <div className="flex">
             {/* Criteria name */}
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div className="border py-4 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4">
-                        <div>
-                            <p className="text-base font-medium w-[15rem] text-center">
-                                {`${criteria.name} (${criteria.max_score})`}
-                            </p>
-                            {/* {(() => {
+            <div className="border py-4 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4">
+                <div>
+                    <p className="text-base font-medium w-[15rem] text-center">
+                        {`${criteria.name} (${criteria.max_score})`}
+                    </p>
+                    {/* {(() => {
                                 const scoreNum = parseFloat(score)
                                 if (
                                     getErrorMessageFromNestedPathValidationError(
@@ -496,101 +486,88 @@ export function RubricCriteria({
                                     </p>
                                 )
                             })()} */}
-                        </div>
-                        <LabelWrapper
-                            label={null}
-                            error={getErrorMessageFromNestedPathValidationError(
-                                ctx.errors,
-                                path
-                            )}
-                            options={{
-                                error_display: 'tooltip',
-                            }}
-                            className="w-4/5"
-                        >
-                            <Input
-                                id={criteria.id + assignee_id}
-                                className="w-full text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
-                                type="number"
-                                min={criteria.min_score}
-                                max={criteria.max_score}
-                                defaultValue={(() => {
-                                    const scoreNum = parseFloat(score)
-                                    if (isNaN(scoreNum)) return ''
-
-                                    if (
-                                        scoreNum >= criteria.min_score &&
-                                        scoreNum <= criteria.max_score
-                                    )
-                                        return score
-                                    return ''
-                                })()}
-                                onBlur={(e) => {
-                                    if (e.target.value == '') {
-                                        setScore('')
-                                        ctx.removeError(path)
-                                        ctx.updateScore(
-                                            assignee_id,
-                                            type,
-                                            criteria.id,
-                                            e.target.value
-                                        )
-                                        return
-                                    }
-                                    const scoreNum = parseFloat(e.target.value)
-                                    if (isNaN(scoreNum)) {
-                                        ctx.addOrReplaceError({
-                                            field: path,
-                                            message: 'Score must be a number',
-                                        })
-                                        return
-                                    }
-
-                                    console.log('scoreNum', scoreNum)
-                                    if (
-                                        scoreNum >= criteria.min_score &&
-                                        scoreNum <= criteria.max_score
-                                    ) {
-                                        setScore(e.target.value)
-                                        ctx.removeError(path)
-                                    } else {
-                                        setScore(e.target.value)
-
-                                        setTimeout(() => {
-                                            ctx.addOrReplaceError({
-                                                field: path,
-                                                message:
-                                                    'Score should be between ' +
-                                                    criteria.min_score +
-                                                    ' and ' +
-                                                    criteria.max_score,
-                                            })
-                                        }, 0)
-                                    }
-
-                                    ctx.updateScore(
-                                        assignee_id,
-                                        type,
-                                        criteria.id,
-                                        e.target.value
-                                    )
-                                }}
-                            />
-                        </LabelWrapper>
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-[20rem]">
-                    <p className="font-bold text-center text-base mb-1">
-                        {criteria.name}
-                    </p>
-
-                    {!isNaN(scoreNum) && (
-                        <p className="text-center">
-                            {`${scoreNum}${scoreRange ? ` (${scoreRange.name})` : ''}`}
-                        </p>
+                </div>
+                <LabelWrapper
+                    label={null}
+                    error={getErrorMessageFromNestedPathValidationError(
+                        ctx.errors,
+                        path
                     )}
-                </TooltipContent>
-            </Tooltip>
+                    options={{
+                        error_display: 'over-label',
+                    }}
+                    className="w-4/5"
+                >
+                    <Input
+                        id={criteria.id + assignee_id}
+                        className="w-full text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
+                        type="number"
+                        min={criteria.min_score}
+                        max={criteria.max_score}
+                        defaultValue={(() => {
+                            const scoreNum = parseFloat(score)
+                            if (isNaN(scoreNum)) return ''
+
+                            if (
+                                scoreNum >= criteria.min_score &&
+                                scoreNum <= criteria.max_score
+                            )
+                                return score
+                            return ''
+                        })()}
+                        onBlur={(e) => {
+                            if (e.target.value == '') {
+                                setScore('')
+                                ctx.removeError(path)
+                                ctx.updateScore(
+                                    assignee_id,
+                                    type,
+                                    criteria.id,
+                                    e.target.value
+                                )
+                                return
+                            }
+                            const scoreNum = parseFloat(e.target.value)
+                            if (isNaN(scoreNum)) {
+                                ctx.addOrReplaceError({
+                                    field: path,
+                                    message: 'Score must be a number',
+                                })
+                                return
+                            }
+
+                            console.log('scoreNum', scoreNum)
+                            if (
+                                scoreNum >= criteria.min_score &&
+                                scoreNum <= criteria.max_score
+                            ) {
+                                setScore(e.target.value)
+                                ctx.removeError(path)
+                            } else {
+                                setScore(e.target.value)
+
+                                setTimeout(() => {
+                                    ctx.addOrReplaceError({
+                                        field: path,
+                                        message:
+                                            'Score should be between ' +
+                                            criteria.min_score +
+                                            ' and ' +
+                                            criteria.max_score,
+                                    })
+                                }, 0)
+                            }
+
+                            ctx.updateScore(
+                                assignee_id,
+                                type,
+                                criteria.id,
+                                e.target.value
+                            )
+                        }}
+                    />
+                </LabelWrapper>
+            </div>
 
             {/* Score range blocks */}
             <div className="flex w-full overflow-x-auto">

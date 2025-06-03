@@ -11,9 +11,8 @@ import {
 } from '@/components/ui/dialog'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { UserEssentialDetail } from '@/types/auth'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { SelectJudges } from './select-judges'
-import useSession from '@/hooks/useSession'
 
 export function AssignJudgeDialog({
     open,
@@ -43,9 +42,9 @@ export function AssignJudgeDialog({
                     <DialogTitle>Select Judges</DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-sm text-black">
-                    Please select the judges to be assigned to all group. Please
+                    {/* Please select the judges to be assigned to all group. Please
                     note that all the existing judge assignments will be
-                    deleted.
+                    deleted. */}
                 </DialogDescription>
                 <LabelWrapper
                     label={{ text: 'Judges', field: 'judges' }}

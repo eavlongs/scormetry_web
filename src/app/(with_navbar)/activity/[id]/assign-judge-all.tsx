@@ -34,7 +34,7 @@ export default function AssignJudgeAll({
             <SimpleToolTip text="Assign judge to all groups">
                 <Button variant="outline" onClick={() => setOpen(true)}>
                     <Plus className="h-5 w-5" />
-                    Assign
+                    Assign All
                 </Button>
             </SimpleToolTip>
             <AssignJudgeDialog
