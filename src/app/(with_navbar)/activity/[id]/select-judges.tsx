@@ -7,16 +7,16 @@ import {
     CommandGroup,
     CommandInput,
     CommandItem,
+    CommandList,
 } from '@/components/ui/command'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import useSession from '@/hooks/useSession'
 import { UserEssentialDetail } from '@/types/auth'
-import { Check } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 interface SelectJudgesProps {
@@ -62,10 +62,15 @@ export function SelectJudges({
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={false}>
             <PopoverTrigger asChild>
                 {/* TODO fix line clamp, probably need to set width */}
-                <Button variant="outline" className="w-full justify-start ">
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between"
+                >
                     {selected.length === 0 && 'Select judges...'}
                     {selected.length > 0 &&
                         selected
@@ -74,18 +79,30 @@ export function SelectJudges({
                                     judge.first_name + ' ' + judge.last_name
                             )
                             .join(', ')}
+                    <ChevronDown className="ml-auto h-4 w-4 shrink-0" />
                 </Button>
+                {/* <Button variant="outline" className="w-full justify-start ">
+                    {selected.length === 0 && 'Select judges...'}
+                    {selected.length > 0 &&
+                        selected
+                            .map(
+                                (judge) =>
+                                    judge.first_name + ' ' + judge.last_name
+                            )
+                            .join(', ')}
+                </Button> */}
             </PopoverTrigger>
             <PopoverContent className="p-0 pointer-events-auto" align="start">
-                <Command>
+                <Command className="pointer-events-auto">
                     <CommandInput
                         placeholder="Search judges..."
                         value={search}
                         onValueChange={setSearch}
+                        className="pointer-events-auto"
                     />
                     <CommandEmpty>No judges found.</CommandEmpty>
-                    <CommandGroup>
-                        <ScrollArea className="max-h-[200px]">
+                    <CommandList>
+                        <CommandGroup>
                             {filteredJudges.map((judge) => {
                                 const isSelected = selected.some(
                                     (j) => j.id === judge.id
@@ -115,8 +132,8 @@ export function SelectJudges({
                                     </CommandItem>
                                 )
                             })}
-                        </ScrollArea>
-                    </CommandGroup>
+                        </CommandGroup>
+                    </CommandList>
                 </Command>
             </PopoverContent>
         </Popover>
