@@ -29,6 +29,7 @@ import {
 import { Prettify } from '@/types/general'
 import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
 import Image from 'next/image'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
@@ -46,7 +47,6 @@ import { AssignJudgeDialog } from './assign-jugde-dialog'
 import { GiveScoreButton } from './give-score-button'
 import { ScoreData } from './score/score-activity'
 import ViewScoreDetailDialog from './view-score-detail-dialog'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 export default function ActivityGroups({
     activity,
@@ -206,10 +206,19 @@ export default function ActivityGroups({
             NonNullable<Awaited<ReturnType<typeof getScoresOfActivity>>['data']>
         >
     ) {
+        console.log(
+            `[formatDetailedScore] Starting with scoring type: ${scoringType}`
+        )
+        console.log(`[formatDetailedScore] Data received:`, data)
+
         const allStudents = classroom.people.students
         const students = allStudents.filter((s) => s.first_name)
+        console.log(
+            `[formatDetailedScore] Processing ${students.length} students`
+        )
 
         if (!activity.students) {
+            console.error('[formatDetailedScore] Missing activity.students')
             toast.error(
                 'Failed to get data to export. Please refresh and try again'
             )
@@ -221,7 +230,11 @@ export default function ActivityGroups({
         let result = []
 
         if (scoringType == 'rubric') {
+            console.log('[formatDetailedScore] Processing rubric scoring type')
             if (activity.rubric_id == null || !activity.rubric) {
+                console.error(
+                    '[formatDetailedScore] Missing activity.rubric or rubric_id'
+                )
                 toast.error(
                     'Failed to get data to export. Please refresh and try again'
                 )
@@ -231,8 +244,14 @@ export default function ActivityGroups({
             }
 
             const sections = activity.rubric.rubric_sections
+            console.log(
+                `[formatDetailedScore] Found ${sections.length} rubric sections`
+            )
 
             for (const student of students) {
+                console.log(
+                    `[formatDetailedScore] Processing student: ${student.id} - ${student.first_name} ${student.last_name}`
+                )
                 const initalData: Record<string, any> = {
                     'Student ID': student.id,
                     'Student Name': `${student.first_name} ${student.last_name}`,
@@ -244,6 +263,9 @@ export default function ActivityGroups({
                     const group = activity.groups.find((g) =>
                         g.users.find((u) => u.id == student.id)
                     )
+                    console.log(
+                        `[formatDetailedScore] Found group for student: ${group?.name || 'None'}`
+                    )
 
                     judges = group ? group.judges : []
                 } else {
@@ -251,47 +273,70 @@ export default function ActivityGroups({
                         activity.students.find((s) => s.id == student.id)
                             ?.judges ?? []
                 }
+                console.log(
+                    `[formatDetailedScore] Found ${judges.length} judges for student`
+                )
 
                 const tmp = data.find((d) => d.student.id == student.id)
                 const scores = tmp
                     ? (tmp.score_data as GetRubricScoreFromJudge[])
                     : []
+                console.log(
+                    `[formatDetailedScore] Found ${scores.length} score entries for student`
+                )
 
                 // since there will always at least one row, we will set the one row outside the loop
                 const firstRowData: Record<string, any> = {
                     ...initalData,
-                    'Judge Name': judges
-                        ? `${judges[0].first_name} ${judges[0].last_name}`
-                        : '',
-                    'Judge Email': judges ? judges[0].email : '',
+                    'Judge Name':
+                        judges && judges.length > 0
+                            ? `${judges[0].first_name} ${judges[0].last_name}`
+                            : '',
+                    'Judge Email':
+                        judges && judges.length > 0 ? judges[0].email : '',
                     ...generateRubricScoreRow(
                         sections,
-                        scores.find((s) => s.judge.id == judges[0].id)
-                            ?.scores ?? []
+                        judges && judges.length > 0
+                            ? (scores.find((s) => s.judge.id == judges[0].id)
+                                  ?.scores ?? [])
+                            : []
                     ),
                 }
+                console.log(
+                    `[formatDetailedScore] Adding first row data:`,
+                    firstRowData
+                )
 
                 result.push(firstRowData)
 
                 for (let i = 1; i < judges.length; i++) {
+                    console.log(
+                        `[formatDetailedScore] Processing judge ${i + 1} of ${judges.length}: ${judges[i].first_name} ${judges[i].last_name}`
+                    )
                     const _data: Record<string, any> = {
                         ...initalData,
-                        'Judge Name': judges
-                            ? `${judges[i].first_name} ${judges[i].last_name}`
-                            : '',
-                        'Judge Email': judges ? judges[i].email : '',
+                        'Judge Name': `${judges[i].first_name} ${judges[i].last_name}`,
+                        'Judge Email': judges[i].email,
                         ...generateRubricScoreRow(
                             sections,
                             scores.find((s) => s.judge.id == judges[i].id)
                                 ?.scores ?? []
                         ),
                     }
+                    console.log(
+                        `[formatDetailedScore] Adding additional row data for judge:`,
+                        _data
+                    )
 
                     result.push(_data)
                 }
             }
         } else {
+            console.log('[formatDetailedScore] Processing range scoring type')
             if (!activity.max_score) {
+                console.error(
+                    '[formatDetailedScore] Missing activity.max_score'
+                )
                 toast.error(
                     'Failed to get data to export. Please refresh and try again'
                 )
@@ -299,8 +344,14 @@ export default function ActivityGroups({
                     'Failed to get data to export. Please refresh and try again'
                 )
             }
+            console.log(
+                `[formatDetailedScore] Max score: ${activity.max_score}`
+            )
 
             for (const student of students) {
+                console.log(
+                    `[formatDetailedScore] Processing student: ${student.id} - ${student.first_name} ${student.last_name}`
+                )
                 const initalData: Record<string, any> = {
                     'Student ID': student.id,
                     'Student Name': `${student.first_name} ${student.last_name}`,
@@ -312,6 +363,9 @@ export default function ActivityGroups({
                     const group = activity.groups.find((g) =>
                         g.users.find((u) => u.id == student.id)
                     )
+                    console.log(
+                        `[formatDetailedScore] Found group for student: ${group?.name || 'None'}`
+                    )
 
                     judges = group ? group.judges : []
                 } else {
@@ -319,46 +373,66 @@ export default function ActivityGroups({
                         activity.students.find((s) => s.id == student.id)
                             ?.judges ?? []
                 }
+                console.log(
+                    `[formatDetailedScore] Found ${judges.length} judges for student`
+                )
 
                 const tmp = data.find((d) => d.student.id == student.id)
                 const scores = tmp
                     ? (tmp.score_data as GetRangeScoreFromAJudge[])
                     : []
+                console.log(
+                    `[formatDetailedScore] Found ${scores.length} score entries for student`
+                )
 
                 // since there will always at least one row, we will set the one row outside the loop
                 const firstRowData: Record<string, any> = {
                     ...initalData,
-                    'Judge Name': judges
-                        ? `${judges[0].first_name} ${judges[0].last_name}`
-                        : '',
-                    'Judge Email': judges ? judges[0].email : '',
-                    'Given Score': judges
-                        ? (scores.find((s) => s.judge.id == judges[0].id)
-                              ?.score ?? '')
-                        : '',
+                    'Judge Name':
+                        judges && judges.length > 0
+                            ? `${judges[0].first_name} ${judges[0].last_name}`
+                            : '',
+                    'Judge Email':
+                        judges && judges.length > 0 ? judges[0].email : '',
+                    'Given Score':
+                        judges && judges.length > 0
+                            ? (scores.find((s) => s.judge.id == judges[0].id)
+                                  ?.score ?? '')
+                            : '',
                     'Max Score': activity.max_score,
                 }
+                console.log(
+                    `[formatDetailedScore] Adding first row data:`,
+                    firstRowData
+                )
 
                 result.push(firstRowData)
 
                 for (let i = 1; i < judges.length; i++) {
+                    console.log(
+                        `[formatDetailedScore] Processing judge ${i + 1} of ${judges.length}: ${judges[i].first_name} ${judges[i].last_name}`
+                    )
                     const _data: Record<string, any> = {
                         ...initalData,
-                        'Judge Name': judges
-                            ? `${judges[i].first_name} ${judges[i].last_name}`
-                            : '',
-                        'Judge Email': judges ? judges[i].email : '',
-                        'Given Score': judges
-                            ? (scores.find((s) => s.judge.id == judges[i].id)
-                                  ?.score ?? '')
-                            : '',
+                        'Judge Name': `${judges[i].first_name} ${judges[i].last_name}`,
+                        'Judge Email': judges[i].email,
+                        'Given Score':
+                            scores.find((s) => s.judge.id == judges[i].id)
+                                ?.score ?? '',
                         'Max Score': activity.max_score,
                     }
+                    console.log(
+                        `[formatDetailedScore] Adding additional row data for judge:`,
+                        _data
+                    )
 
                     result.push(_data)
                 }
             }
         }
+        console.log(
+            `[formatDetailedScore] Completed with ${result.length} total rows`
+        )
         return result
     }
 
