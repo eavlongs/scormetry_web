@@ -1,21 +1,21 @@
 'use client'
 
 import TinyEditor from '@/components/tiny-editor'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
+import { cn, getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
 import { RubricScoreSchema } from '@/schema'
 import { GetRubric, IndividualOrGroup, ScoringEntity } from '@/types/classroom'
 import { NestedPathValidationError } from '@/types/response'
 import Image from 'next/image'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
 import {
     RubricScoreContextType,
@@ -43,12 +43,10 @@ export function RubricScoreInput({
     onSetParentErrors: () => void
 } & React.ComponentProps<'div'>) {
     const [scores, setScores] = useState<z.infer<typeof RubricScoreSchema>[]>(
-        initialScores ?? []
+        initialScores ? [...initialScores] : []
     )
 
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
-
-    const [sync, setSync] = useState(false)
 
     useEffect(() => {
         if (parentErrors.length > 0) {
@@ -60,6 +58,7 @@ export function RubricScoreInput({
     }, [parentErrors])
 
     useEffect(() => {
+        console.table(scores)
         onScoreUpdate(scores)
     }, [scores])
 
@@ -69,6 +68,8 @@ export function RubricScoreInput({
         criteria_id: string,
         scoreStr: string
     ) {
+        console.log('updateScore called')
+        console.log({ id, type, criteria_id, scoreStr })
         if (scoreStr === '') {
             setScores((prev) => {
                 const index = prev.findIndex(
@@ -182,14 +183,11 @@ export function RubricScoreInput({
     return (
         <RubricScoreProvider
             value={{
+                initialScores: initialScores || [],
                 assignment_type: entity.type,
                 scores: scores,
                 errors: errors,
                 updateScore: updateScore,
-                syncStatus: sync,
-                syncScore: () => {
-                    setSync((prev) => !prev)
-                },
                 setErrors: setErrors,
                 addOrReplaceError: addOrReplaceError,
                 removeError: removeError,
@@ -219,26 +217,34 @@ function _RubricScoreInput({
     const [hasWeigtage] = useState<boolean>(rubric.has_weightage)
 
     const ctx = useRubricScoreContext()
+
+    useEffect(() => {
+        console.error(ctx.initialScores)
+    }, [ctx.initialScores])
     return (
         <div {...props} className="flex flex-col gap-y-4 ">
             {entity.type == 'group' ? (
-                <Tabs
-                    value={tab}
-                    onValueChange={(val) => {
-                        ctx.syncScore()
-                        setTimeout(() => {
-                            setTab(val)
-                        }, 0)
-                    }}
-                    className="w-full"
-                >
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="group">Group Score</TabsTrigger>
-                        <TabsTrigger value="individual">
+                <>
+                    <div className="w-full grid grid-cols-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setTab('group')}
+                        >
+                            Group Score
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setTab('individual')}
+                        >
                             Individual Score
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="group" className="w-full">
+                        </Button>
+                    </div>
+                    <div
+                        className={cn(
+                            'w-full hidden',
+                            tab == 'group' && 'block'
+                        )}
+                    >
                         {groupScoreSections.map((section) => (
                             <RubricSection
                                 key={section.id}
@@ -248,54 +254,126 @@ function _RubricScoreInput({
                                 type="group"
                             />
                         ))}
-                    </TabsContent>
-                    <TabsContent value="individual">
-                        <div className="flex flex-col gap-y-6 mt-2">
-                            {entity.entity.users.map((student) => {
-                                return (
-                                    <div
-                                        key={student.id}
-                                        className="flex flex-col gap-y-2"
-                                    >
-                                        <div className="flex items-center gap-x-2">
-                                            <div className="relative h-8 w-8 cursor-pointer">
-                                                <Image
-                                                    src={
-                                                        student.profile_picture
-                                                    }
-                                                    alt={
-                                                        student.first_name +
-                                                        ' ' +
-                                                        student.last_name
-                                                    }
-                                                    fill
-                                                    className="rounded-full"
-                                                />
-                                            </div>
-                                            <span>
-                                                {student.first_name +
+                    </div>
+                    <div
+                        className={cn(
+                            'hidden gap-y-6 mt-2',
+                            tab == 'individual' && 'flex flex-col'
+                        )}
+                    >
+                        {entity.entity.users.map((student) => {
+                            return (
+                                <div
+                                    key={student.id}
+                                    className="flex flex-col gap-y-2"
+                                >
+                                    <div className="flex items-center gap-x-2">
+                                        <div className="relative h-8 w-8 cursor-pointer">
+                                            <Image
+                                                src={student.profile_picture}
+                                                alt={
+                                                    student.first_name +
                                                     ' ' +
-                                                    student.last_name}
-                                            </span>
+                                                    student.last_name
+                                                }
+                                                fill
+                                                className="rounded-full"
+                                            />
                                         </div>
-                                        {individualScoreSections.map(
-                                            (section) => (
-                                                <RubricSection
-                                                    key={section.id}
-                                                    section={section}
-                                                    hasWeightage={hasWeigtage}
-                                                    assignee_id={student.id}
-                                                    type="individual"
-                                                />
-                                            )
-                                        )}
+                                        <span>
+                                            {student.first_name +
+                                                ' ' +
+                                                student.last_name}
+                                        </span>
                                     </div>
-                                )
-                            })}
-                        </div>
-                    </TabsContent>
-                </Tabs>
+                                    {individualScoreSections.map((section) => (
+                                        <RubricSection
+                                            key={section.id}
+                                            section={section}
+                                            hasWeightage={hasWeigtage}
+                                            assignee_id={student.id}
+                                            type="individual"
+                                        />
+                                    ))}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </>
             ) : (
+                // <Tabs
+                //     value={tab}
+                //     onValueChange={(val) => {
+                //         ctx.syncScore()
+                //         setTimeout(() => {
+                //             setTab(val)
+                //         }, 0)
+                //     }}
+                //     className="w-full"
+                // >
+                //     <TabsList className="grid w-full grid-cols-2">
+                //         <TabsTrigger value="group">Group Score</TabsTrigger>
+                //         <TabsTrigger value="individual">
+                //             Individual Score
+                //         </TabsTrigger>
+                //     </TabsList>
+                //     <TabsContent value="group" className="w-full">
+                //         {groupScoreSections.map((section) => (
+                //             <RubricSection
+                //                 key={section.id}
+                //                 section={section}
+                //                 hasWeightage={hasWeigtage}
+                //                 assignee_id={entity.entity.id}
+                //                 type="group"
+                //             />
+                //         ))}
+                //     </TabsContent>
+                //     <TabsContent value="individual">
+                //         <div className="flex flex-col gap-y-6 mt-2">
+                //             {entity.entity.users.map((student) => {
+                //                 return (
+                //                     <div
+                //                         key={student.id}
+                //                         className="flex flex-col gap-y-2"
+                //                     >
+                //                         <div className="flex items-center gap-x-2">
+                //                             <div className="relative h-8 w-8 cursor-pointer">
+                //                                 <Image
+                //                                     src={
+                //                                         student.profile_picture
+                //                                     }
+                //                                     alt={
+                //                                         student.first_name +
+                //                                         ' ' +
+                //                                         student.last_name
+                //                                     }
+                //                                     fill
+                //                                     className="rounded-full"
+                //                                 />
+                //                             </div>
+                //                             <span>
+                //                                 {student.first_name +
+                //                                     ' ' +
+                //                                     student.last_name}
+                //                             </span>
+                //                         </div>
+                //                         {individualScoreSections.map(
+                //                             (section) => (
+                //                                 <RubricSection
+                //                                     key={section.id}
+                //                                     section={section}
+                //                                     hasWeightage={hasWeigtage}
+                //                                     assignee_id={student.id}
+                //                                     type="individual"
+                //                                 />
+                //                             )
+                //                         )}
+                //                     </div>
+                //                 )
+                //             })}
+                //         </div>
+                //     </TabsContent>
+                // </Tabs>
                 sections.map((section) => (
                     <RubricSection
                         key={section.id}
@@ -396,53 +474,23 @@ export function RubricCriteria({
     type,
 }: RubricCriteriaProps) {
     const ctx = useRubricScoreContext()
-    const [score, setScore] = useState<string>(() => {
-        const idx = ctx.scores.findIndex(
-            (s) => s.assignee_id === assignee_id && s.type === type
-        )
+    // const [score, setScore] = useState<string>(() => {
+    //     const idx = ctx.scores.findIndex(
+    //         (s) => s.assignee_id === assignee_id && s.type === type
+    //     )
 
-        if (idx === -1) return ''
+    //     if (idx === -1) return ''
 
-        const scoreIdx = ctx.scores[idx].scores.findIndex(
-            (s) => s.rubric_criteria_id === criteria.id
-        )
+    //     const scoreIdx = ctx.scores[idx].scores.findIndex(
+    //         (s) => s.rubric_criteria_id === criteria.id
+    //     )
 
-        if (scoreIdx === -1) return ''
+    //     if (scoreIdx === -1) return ''
 
-        return ctx.scores[idx].scores[scoreIdx].score.toString()
-    })
+    //     return ctx.scores[idx].scores[scoreIdx].score.toString()
+    // })
 
     const path = ['criteria', criteria.id, 'assignee', assignee_id]
-    let scoreRange = null
-    const scoreNum = parseFloat(score)
-    if (!isNaN(scoreNum)) {
-        for (let i = 0; i < criteria.criteria_score_ranges.length; i++) {
-            const isLastIndex = i === criteria.criteria_score_ranges.length - 1
-            const range = criteria.criteria_score_ranges[i]
-
-            if (
-                !isLastIndex &&
-                scoreNum >= range.min_score &&
-                scoreNum < range.max_score + 1
-            ) {
-                scoreRange = range
-                break
-            }
-
-            if (
-                isLastIndex &&
-                scoreNum >= range.min_score &&
-                scoreNum <= range.max_score
-            ) {
-                scoreRange = range
-                break
-            }
-        }
-    }
-
-    useEffect(() => {
-        ctx.updateScore(assignee_id, type, criteria.id, score)
-    }, [ctx.syncStatus])
 
     return (
         <div className="flex">
@@ -452,28 +500,6 @@ export function RubricCriteria({
                     <p className="text-base font-medium w-[15rem] text-center">
                         {`${criteria.name} (${criteria.max_score})`}
                     </p>
-                    {/* {(() => {
-                                const scoreNum = parseFloat(score)
-                                if (
-                                    getErrorMessageFromNestedPathValidationError(
-                                        ctx.errors,
-                                        path
-                                    ) ||
-                                    isNaN(scoreNum) ||
-                                    !(
-                                        scoreNum >= criteria.min_score &&
-                                        scoreNum <= criteria.max_score
-                                    )
-                                )
-                                    return null
-
-                                if (!scoreRange) return null
-                                return (
-                                    <p className="text-center text-sm text-muted-foreground">
-                                        {scoreRange.name}
-                                    </p>
-                                )
-                            })()} */}
                 </div>
                 <LabelWrapper
                     label={null}
@@ -493,20 +519,36 @@ export function RubricCriteria({
                         min={criteria.min_score}
                         max={criteria.max_score}
                         defaultValue={(() => {
-                            const scoreNum = parseFloat(score)
-                            if (isNaN(scoreNum)) return ''
-
-                            if (
-                                scoreNum >= criteria.min_score &&
-                                scoreNum <= criteria.max_score
+                            const idx = ctx.initialScores.findIndex(
+                                (s) =>
+                                    s.assignee_id === assignee_id &&
+                                    s.type === type
                             )
-                                return score
-                            return ''
+
+                            if (idx === -1) return ''
+
+                            const scoreIdx = ctx.initialScores[
+                                idx
+                            ].scores.findIndex(
+                                (s) => s.rubric_criteria_id === criteria.id
+                            )
+
+                            if (scoreIdx === -1) return ''
+
+                            console.log(
+                                ctx.initialScores[idx].scores[
+                                    scoreIdx
+                                ].score.toString()
+                            )
+
+                            return ctx.initialScores[idx].scores[
+                                scoreIdx
+                            ].score.toString()
                         })()}
-                        onBlur={(e) => {
+                        onChange={(e) => {
                             if (e.target.value == '') {
-                                setScore('')
                                 ctx.removeError(path)
+                                console.log('called from 2')
                                 ctx.updateScore(
                                     assignee_id,
                                     type,
@@ -529,11 +571,8 @@ export function RubricCriteria({
                                 scoreNum >= criteria.min_score &&
                                 scoreNum <= criteria.max_score
                             ) {
-                                setScore(e.target.value)
                                 ctx.removeError(path)
                             } else {
-                                setScore(e.target.value)
-
                                 setTimeout(() => {
                                     ctx.addOrReplaceError({
                                         field: path,
@@ -546,6 +585,10 @@ export function RubricCriteria({
                                 }, 0)
                             }
 
+                            console.log(
+                                'called from 1, target value:',
+                                e.target.value
+                            )
                             ctx.updateScore(
                                 assignee_id,
                                 type,

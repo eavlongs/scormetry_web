@@ -8,12 +8,11 @@ import { z } from 'zod'
 
 export type RubricScoreContextType = {
     // activity_assignment_id: string | null
+    initialScores: z.infer<typeof RubricScoreSchema>[]
     assignment_type: IndividualOrGroup | null
     scores: z.infer<typeof RubricScoreSchema>[]
-    syncStatus: boolean
     errors: NestedPathValidationError[]
 
-    syncScore: () => void
     updateScore: (
         id: string,
         type: IndividualOrGroup,
@@ -27,12 +26,11 @@ export type RubricScoreContextType = {
 
 const rubricScoreContextDefaultValue: RubricScoreContextType = {
     // activity_assignment_id: null,
+    initialScores: [],
     assignment_type: null,
     scores: [],
-    syncStatus: false,
     errors: [],
 
-    syncScore: () => {},
     updateScore: () => {},
     setErrors: () => {},
     addOrReplaceError: () => {},

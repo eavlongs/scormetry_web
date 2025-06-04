@@ -444,14 +444,13 @@ export const ImportGroupFileUploadSchema = z.object({
 export const RubricScoreSchema = z.object({
     assignee_id: z.string(),
     type: z.enum(['individual', 'group']),
-    scores: z
-        .array(
-            z.object({
-                rubric_criteria_id: z.string(),
-                score: z.coerce.number().nonnegative(),
-            })
-        )
-        .min(1, 'At least 1 score is required'),
+    scores: z.array(
+        z.object({
+            rubric_criteria_id: z.string(),
+            score: z.coerce.number().nonnegative(),
+        })
+    ),
+    // .min(1, 'At least 1 score is required'),
 })
 
 export const RangeScoreSchema = z.object({
