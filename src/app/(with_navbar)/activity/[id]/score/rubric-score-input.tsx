@@ -101,7 +101,7 @@ export function RubricScoreInput({
             const index = prev.findIndex(
                 (s) => s.assignee_id === id && s.type == type
             )
-            let newScores
+            let newScores: typeof scores
 
             if (index !== -1) {
                 const updatedScores = [...prev]
@@ -179,34 +179,22 @@ export function RubricScoreInput({
         })
     }
 
-    const contextValue = useMemo(
-        () => ({
-            assignment_type: entity.type,
-            scores: scores,
-            errors: errors,
-            updateScore: updateScore,
-            syncStatus: sync,
-            syncScore: () => {
-                setSync((prev) => !prev)
-            },
-            setErrors: setErrors,
-            addOrReplaceError: addOrReplaceError,
-            removeError: removeError,
-        }),
-        [
-            entity.type,
-            scores,
-            errors,
-            sync,
-            updateScore,
-            setSync,
-            addOrReplaceError,
-            removeError,
-        ]
-    )
-
     return (
-        <RubricScoreProvider value={contextValue}>
+        <RubricScoreProvider
+            value={{
+                assignment_type: entity.type,
+                scores: scores,
+                errors: errors,
+                updateScore: updateScore,
+                syncStatus: sync,
+                syncScore: () => {
+                    setSync((prev) => !prev)
+                },
+                setErrors: setErrors,
+                addOrReplaceError: addOrReplaceError,
+                removeError: removeError,
+            }}
+        >
             <_RubricScoreInput {...props} rubric={rubric} entity={entity} />
         </RubricScoreProvider>
     )
