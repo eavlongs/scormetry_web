@@ -445,6 +445,10 @@ export function RubricCriteria({
                         type="number"
                         min={criteria.min_score}
                         max={criteria.max_score}
+                        onWheel={(e) => {
+                            // @ts-expect-error for some reason blur is not typed in target
+                            e.target.blur()
+                        }}
                         defaultValue={(() => {
                             const idx = ctx.initialScores.findIndex(
                                 (s) =>
