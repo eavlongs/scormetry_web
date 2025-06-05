@@ -746,7 +746,9 @@ function ListStudentWithJudges({
                             </ConditionalTooltip>
                         ) : null}
 
-                        <AssignJudgeButton onClick={onAssign} />
+                        {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                            <AssignJudgeButton onClick={onAssign} />
+                        )}
                         {student.permitted_to_judge && (
                             <GiveScoreButton
                                 activityId={activity.id}

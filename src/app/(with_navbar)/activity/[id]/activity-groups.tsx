@@ -746,11 +746,16 @@ export default function ActivityGroups({
                                                 </Badge>
                                             </ConditionalTooltip>
                                         ) : null}
-                                        <AssignJudgeButton
-                                            onClick={() =>
-                                                setGroupToAssignJudges(group)
-                                            }
-                                        />
+                                        {classroom.role ==
+                                            CLASSROOM_ROLE_TEACHER && (
+                                            <AssignJudgeButton
+                                                onClick={() =>
+                                                    setGroupToAssignJudges(
+                                                        group
+                                                    )
+                                                }
+                                            />
+                                        )}
                                         {group.permitted_to_judge && (
                                             <GiveScoreButton
                                                 activityId={activity.id}
