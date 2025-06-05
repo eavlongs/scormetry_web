@@ -142,9 +142,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         setFilteredEntities(entities)
 
         // Auto-select first entity if available
-        if (entities.length > 0) {
-            setSelectedEntity(entities[0])
-        }
+        // if (entities.length > 0) {
+        //     setSelectedEntity(entities[0])
+        // }
     }, [activity])
 
     useEffect(() => {
