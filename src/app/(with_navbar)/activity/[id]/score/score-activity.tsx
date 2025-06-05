@@ -16,9 +16,9 @@ import {
 } from '@/types/classroom'
 import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -58,6 +58,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         shouldAutomaticallySelectScoringEntity,
         setShouldAutomaticallySelectScoringEntity,
     ] = useState(true)
+
+    // const router = useRouter();
+    const pathname = usePathname()
 
     useEffect(() => {
         if (!shouldAutomaticallySelectScoringEntity) return
@@ -360,8 +363,17 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                     ? 'bg-muted'
                                                     : 'hover:bg-muted/50 transition-colors'
                                             )}
-                                            onClick={() =>
-                                                setSelectedEntity(entity)
+                                            onClick={
+                                                () => {
+                                                    let searchParam = ''
+                                                    if (entity.type == 'group')
+                                                        searchParam = `?gid=${entity.entity.id}`
+                                                    else {
+                                                        searchParam = `?sid=${entity.entity.id}`
+                                                    }
+                                                    window.location.href = `${pathname}${searchParam}`
+                                                }
+                                                // setSelectedEntity(entity)
                                             }
                                             tabIndex={0}
                                             role="button"
