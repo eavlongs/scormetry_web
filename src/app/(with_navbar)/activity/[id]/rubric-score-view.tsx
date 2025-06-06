@@ -1,16 +1,12 @@
 'use client'
 
 import TinyEditor from '@/components/tiny-editor'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { cn, getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 import { RubricScoreSchema } from '@/schema'
 import { GetRubric, IndividualOrGroup, ScoringEntity } from '@/types/classroom'
 import Image from 'next/image'
@@ -66,7 +62,11 @@ function _RubricScoreInput({
     entity,
     ...props
 }: RubricScoreInputProps & React.ComponentProps<'div'>) {
-    const [tab, setTab] = useState<string>('group')
+    const [tab, setTab] = useState<'group' | 'individual'>(
+        rubric.rubric_sections.filter((s) => s.is_group_score).length > 0
+            ? 'group'
+            : 'individual'
+    )
 
     const [sections] = useState<GetRubric['rubric_sections']>(
         rubric.rubric_sections
@@ -84,7 +84,18 @@ function _RubricScoreInput({
         <div {...props} className="flex flex-col gap-y-4 ">
             {entity.type == 'group' ? (
                 <>
-                    <div className="w-full grid grid-cols-2">
+                    <div
+                        className={cn(
+                            'w-full grid',
+                            rubric.rubric_sections.filter(
+                                (s) => s.is_group_score
+                            ).length > 0 &&
+                                rubric.rubric_sections.filter(
+                                    (s) => !s.is_group_score
+                                ).length > 0 &&
+                                'grid-cols-2'
+                        )}
+                    >
                         <Button
                             variant="outline"
                             onClick={() => setTab('group')}
@@ -196,34 +207,20 @@ function RubricSection({
 }) {
     return (
         <div className="flex w-full">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <div className="flex flex-col items-center p-3 rounded-none bg-paragon text-white">
-                            <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
-                                <div>
-                                    {hasWeightage && (
-                                        <p className="text-center font-semibold bg-transparent text-sm rotate-180">
-                                            {section.score_percentage}%
-                                        </p>
-                                    )}
-                                    <p className="text-center font-semibold bg-transparent text-sm rotate-180">
-                                        {section.name}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[20rem]">
-                        <p className="font-bold text-center text-base mb-1">
+            <div className="flex flex-col items-center p-3 rounded-none bg-paragon text-white">
+                <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
+                    <div>
+                        {hasWeightage && (
+                            <p className="text-center font-semibold bg-transparent text-sm rotate-180">
+                                {section.score_percentage}%
+                            </p>
+                        )}
+                        <p className="text-center font-semibold bg-transparent text-sm rotate-180">
                             {section.name}
-                            {hasWeightage && ` (${section.score_percentage}%)`}
                         </p>
-
-                        <p className="text-center">{section.description}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+                    </div>
+                </div>
+            </div>
 
             <div className="w-full min-w-0">
                 {/* <div className="ml-2 mb-2 text-sm">
@@ -258,6 +255,7 @@ export function RubricCriteria({
     type,
 }: RubricCriteriaProps) {
     const ctx = useRubricScoreContext()
+    const isMobile = useIsMobile()
     const score = (() => {
         const idx = ctx.scores.findIndex(
             (s) => s.assignee_id === assignee_id && s.type === type
@@ -274,7 +272,6 @@ export function RubricCriteria({
         return ctx.scores[idx].scores[scoreIdx].score.toString()
     })()
 
-    const path = ['criteria', criteria.id, 'assignee', assignee_id]
     let scoreRange = null
     const scoreNum = parseFloat(score)
     if (!isNaN(scoreNum)) {
@@ -303,100 +300,79 @@ export function RubricCriteria({
     }
 
     return (
-        <div className="flex">
+        <div className={cn('flex', isMobile && 'overflow-x-auto')}>
             {/* Criteria name */}
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div className="border py-4 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4">
-                        <div>
-                            <p className="text-base font-medium w-[15rem] text-center">
-                                {`${criteria.name} (${criteria.max_score})`}
-                            </p>
-                        </div>
-                        <LabelWrapper
-                            label={null}
-                            error={getErrorMessageFromNestedPathValidationError(
-                                ctx.errors,
-                                path
-                            )}
-                            options={{
-                                error_display: 'tooltip',
-                            }}
-                            className="w-4/5"
-                        >
-                            <Input
-                                id={criteria.id + assignee_id}
-                                className="w-full text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
-                                type="number"
-                                min={criteria.min_score}
-                                max={criteria.max_score}
-                                readOnly
-                                value={(() => {
-                                    const scoreNum = parseFloat(score)
-                                    if (isNaN(scoreNum)) return ''
-
-                                    if (
-                                        scoreNum >= criteria.min_score &&
-                                        scoreNum <= criteria.max_score
-                                    )
-                                        return score
-                                    return ''
-                                })()}
-                            />
-                        </LabelWrapper>
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-[20rem]">
-                    <p className="font-bold text-center text-base mb-1">
-                        {criteria.name}
+            <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 w-[15rem]">
+                <div>
+                    <p className="text-base font-medium text-center">
+                        {`${criteria.name} (${criteria.max_score})`}
                     </p>
+                </div>
+                <LabelWrapper label={null} className="w-4/5">
+                    <Input
+                        id={criteria.id + assignee_id}
+                        className="w-full text-sm focus-visible:ring-0 focus-visible:border-input text-center hide-arrows"
+                        type="number"
+                        min={criteria.min_score}
+                        max={criteria.max_score}
+                        readOnly
+                        value={(() => {
+                            const scoreNum = parseFloat(score)
+                            if (isNaN(scoreNum)) return ''
 
-                    {!isNaN(scoreNum) && (
-                        <p className="text-center">
-                            {`${scoreNum}${scoreRange ? ` (${scoreRange.name})` : ''}`}
-                        </p>
-                    )}
-                </TooltipContent>
-            </Tooltip>
+                            if (
+                                scoreNum >= criteria.min_score &&
+                                scoreNum <= criteria.max_score
+                            )
+                                return score
+                            return ''
+                        })()}
+                    />
+                </LabelWrapper>
+                {scoreRange && (
+                    <Badge className="text-sm text-center" variant="paragon">
+                        {scoreRange.name}
+                    </Badge>
+                )}
+            </div>
 
             {/* Score range blocks */}
-            <div className="flex w-full overflow-x-auto">
+            <div className={cn('flex w-full', !isMobile && 'overflow-x-auto')}>
                 {criteria.criteria_score_ranges.map((range) => {
                     return (
                         <div
                             key={range.id}
-                            className="border p-3 flex-shrink-0 w-[10rem] flex flex-col justify-center"
+                            className={cn(
+                                'border p-2 flex-shrink-0 w-[15rem] flex flex-col justify-start',
+                                scoreRange &&
+                                    scoreRange.id == range.id &&
+                                    'border-paragon border-1'
+                            )}
                         >
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div>
-                                            <p className="border-0 p-1  focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
-                                                {range.name}
-                                            </p>
+                            <div>
+                                <p className="border-0 p-1 focus-visible:ring-0 text-sm font-bold placeholder:text-gray-400 text-center line-clamp-1">
+                                    {range.name}
+                                </p>
 
-                                            <div className="flex items-center justify-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                                <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                    {range.min_score}
-                                                </p>
-                                                -
-                                                <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                    {range.max_score}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </TooltipTrigger>
-
-                                    <TooltipContent className="max-w-[20rem]">
-                                        <p className="font-bold text-center text-base mb-1">
-                                            {`${range.name} (${range.min_score} - ${range.max_score})`}
-                                        </p>
-                                        <p className="text-center">
-                                            {range.description}
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                                <div className="flex items-center justify-center mb-1 text-sm text-muted-foreground gap-x-1">
+                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                        {range.min_score}
+                                    </p>
+                                    -
+                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                        {range.max_score}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-sm overflow-y-auto h-[120px]">
+                                {range.description.length > 0 ? (
+                                    range.description
+                                ) : (
+                                    <p className="text-gray-600 text-center mt-2">
+                                        (No Description)
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     )
                 })}

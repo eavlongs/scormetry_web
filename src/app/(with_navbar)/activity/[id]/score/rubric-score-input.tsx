@@ -199,7 +199,11 @@ function _RubricScoreInput({
     entity,
     ...props
 }: RubricScoreInputProps & React.ComponentProps<'div'>) {
-    const [tab, setTab] = useState<'group' | 'individual'>('group')
+    const [tab, setTab] = useState<'group' | 'individual'>(
+        rubric.rubric_sections.filter((s) => s.is_group_score).length > 0
+            ? 'group'
+            : 'individual'
+    )
 
     const [sections] = useState<GetRubric['rubric_sections']>(
         rubric.rubric_sections
@@ -221,27 +225,44 @@ function _RubricScoreInput({
         <div {...props} className="flex flex-col gap-y-4 ">
             {entity.type == 'group' ? (
                 <>
-                    <div className="w-full grid grid-cols-2">
-                        <Button
-                            variant="outline"
-                            className={cn(
-                                tab == 'group' &&
-                                    'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
-                            )}
-                            onClick={() => setTab('group')}
-                        >
-                            Group Score
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => setTab('individual')}
-                            className={cn(
-                                tab == 'individual' &&
-                                    'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
-                            )}
-                        >
-                            Individual Score
-                        </Button>
+                    <div
+                        className={cn(
+                            'w-full grid',
+                            rubric.rubric_sections.filter(
+                                (s) => s.is_group_score
+                            ).length > 0 &&
+                                rubric.rubric_sections.filter(
+                                    (s) => !s.is_group_score
+                                ).length > 0 &&
+                                'grid-cols-2'
+                        )}
+                    >
+                        {rubric.rubric_sections.filter((s) => s.is_group_score)
+                            .length > 0 && (
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    tab == 'group' &&
+                                        'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
+                                )}
+                                onClick={() => setTab('group')}
+                            >
+                                Group Score
+                            </Button>
+                        )}
+                        {rubric.rubric_sections.filter((s) => !s.is_group_score)
+                            .length > 0 && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setTab('individual')}
+                                className={cn(
+                                    tab == 'individual' &&
+                                        'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
+                                )}
+                            >
+                                Individual Score
+                            </Button>
+                        )}
                     </div>
                     <div
                         className={cn(
@@ -579,13 +600,14 @@ export function RubricCriteria({
                                     </p>
                                 </div>
                             </div>
+
                             <div className="text-sm overflow-y-auto h-[120px]">
                                 {range.description.length > 0 ? (
                                     range.description
                                 ) : (
-                                    <span className="text-gray-600">
+                                    <p className="text-gray-600 text-center mt-2">
                                         (No Description)
-                                    </span>
+                                    </p>
                                 )}
                             </div>
                         </div>

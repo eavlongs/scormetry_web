@@ -6,18 +6,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 import { GetRubric } from '@/types/classroom'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import TinyEditor from './tiny-editor'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from './ui/tooltip'
 
 interface ViewRubricDialogProps {
     open: boolean
@@ -133,6 +129,7 @@ interface RubricCriteriaProps {
 }
 
 export function RubricCriteria({ criteria }: RubricCriteriaProps) {
+    const isMobile = useIsMobile()
     return (
         <div>
             <div className="flex">
@@ -145,40 +142,46 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
                     </div>
 
                     {/* Score range blocks */}
-                    <div className="flex overflow-x-auto">
-                        {criteria.criteria_score_ranges.map((range) => (
-                            <div
-                                key={range.id}
-                                className="border p-3 flex-shrink-0 relative w-[12rem] h-[8rem] flex items-center justify-center"
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div>
-                                                <p className="border-0 p-1  focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
-                                                    {range.name}
-                                                </p>
+                    <div
+                        className={cn(
+                            'flex w-full',
+                            !isMobile && 'overflow-x-auto'
+                        )}
+                    >
+                        {criteria.criteria_score_ranges.map((range) => {
+                            return (
+                                <div
+                                    key={range.id}
+                                    className="border p-2 flex-shrink-0 w-[15rem] flex flex-col justify-start"
+                                >
+                                    <div>
+                                        <p className="border-0 p-1 focus-visible:ring-0 text-sm font-bold placeholder:text-gray-400 text-center line-clamp-1">
+                                            {range.name}
+                                        </p>
 
-                                                <div className="flex items-center justify-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                        {range.min_score}
-                                                    </p>
-                                                    -
-                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                        {range.max_score}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </TooltipTrigger>
-                                        {range.description.length > 0 && (
-                                            <TooltipContent>
-                                                <p>{range.description}</p>
-                                            </TooltipContent>
+                                        <div className="flex items-center justify-center mb-1 text-sm text-muted-foreground gap-x-1">
+                                            <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                                {range.min_score}
+                                            </p>
+                                            -
+                                            <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                                {range.max_score}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-sm overflow-y-auto h-[120px]">
+                                        {range.description.length > 0 ? (
+                                            range.description
+                                        ) : (
+                                            <p className="text-gray-600 text-center mt-2">
+                                                (No Description)
+                                            </p>
                                         )}
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        ))}
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             </div>
