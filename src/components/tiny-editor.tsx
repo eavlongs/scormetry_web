@@ -45,15 +45,15 @@ export default function TinyEditor({
                           'lists',
                           'link',
                           // 'image',
-                          'charmap',
+                          //   'charmap',
                           'anchor',
                           //   'searchreplace',
                           'visualblocks',
                           'code',
                           'fullscreen',
                           'insertdatetime',
-                          'media',
-                          'table',
+                          //   'media',
+                          //   'table',
                           'autoresize',
                           //   'preview',
                       ]
@@ -63,15 +63,15 @@ export default function TinyEditor({
                           'lists',
                           'link',
                           // 'image',
-                          'charmap',
+                          //   'charmap',
                           'anchor',
                           //   'searchreplace',
                           'visualblocks',
                           'code',
                           'fullscreen',
                           'insertdatetime',
-                          'media',
-                          'table',
+                          //   'media',
+                          //   'table',
                           //   'preview',
                           'wordcount',
                       ],
@@ -83,7 +83,7 @@ export default function TinyEditor({
                 //     'removeformat | help',
                 toolbar: readOnly
                     ? ''
-                    : 'undo redo | blocks | ' +
+                    : 'undo redo | ' +
                       'bold italic forecolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat',

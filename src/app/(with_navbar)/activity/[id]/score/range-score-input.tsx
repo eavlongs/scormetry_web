@@ -245,6 +245,10 @@ function ScoreInput({
                 placeholder={`Enter score (0-${maxScore})`}
                 className="hide-arrows"
                 onBlur={onBlur}
+                onWheel={(e) => {
+                    // @ts-expect-error for some reason blur is not typed in target
+                    e.target.blur()
+                }}
             />
         </LabelWrapper>
     )

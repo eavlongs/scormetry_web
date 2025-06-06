@@ -648,7 +648,7 @@ export default function EditActivityForm({
                         <div>
                             <LabelWrapper
                                 label={{
-                                    text: 'Assignment',
+                                    text: 'Assign to',
                                     field: 'grouping_id',
                                 }}
                                 error={getErrorMessageFromValidationError(
