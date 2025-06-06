@@ -69,17 +69,28 @@ export function SelectJudges({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between"
+                    className="w-full justify-start min-h-10 h-auto p-2"
                 >
-                    {selected.length === 0 && 'Select judges...'}
-                    {selected.length > 0 &&
-                        selected
-                            .map(
-                                (judge) =>
-                                    judge.first_name + ' ' + judge.last_name
-                            )
-                            .join(', ')}
-                    <ChevronDown className="ml-auto h-4 w-4 shrink-0" />
+                    <div className="flex flex-wrap items-center gap-1 w-full">
+                        {selected.length === 0 && (
+                            <span className="text-muted-foreground">
+                                Select judges...
+                            </span>
+                        )}
+                        {selected.length > 0 && (
+                            <>
+                                {selected.map((judge, index) => (
+                                    <span
+                                        key={index}
+                                        className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium"
+                                    >
+                                        {judge.first_name} {judge.last_name}
+                                    </span>
+                                ))}
+                            </>
+                        )}
+                        <ChevronDown className="ml-auto h-4 w-4 shrink-0" />
+                    </div>
                 </Button>
                 {/* <Button variant="outline" className="w-full justify-start ">
                     {selected.length === 0 && 'Select judges...'}
