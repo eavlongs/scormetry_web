@@ -19,6 +19,7 @@ import {
     RubricScoreProvider,
     useRubricScoreContext,
 } from './rubric-score-provider'
+import { useScoreInputVisibilityContext } from './visibility-provider'
 
 interface RubricScoreInputProps {
     rubric: GetRubric
@@ -456,6 +457,8 @@ export function RubricCriteria({
         }
     }
 
+    const { hideScore, show: showScore } = useScoreInputVisibilityContext()
+
     return (
         <div className={cn('flex', isMobile && 'overflow-x-auto')}>
             {/* Criteria name */}
@@ -474,7 +477,7 @@ export function RubricCriteria({
                     options={{
                         error_display: 'under-label',
                     }}
-                    className="w-4/5"
+                    className={cn('w-4/5', hideScore && 'hidden')}
                 >
                     <Input
                         id={criteria.id + assignee_id}
@@ -563,6 +566,7 @@ export function RubricCriteria({
                             )
                         }}
                     />
+
                     <Slider
                         min={criteria.min_score}
                         max={criteria.max_score}
@@ -624,10 +628,16 @@ export function RubricCriteria({
                         ]}
                     />
                 </LabelWrapper>
-                {scoreRange && (
+                {scoreRange && !hideScore && (
                     <Badge className="text-sm text-center" variant="paragon">
                         {scoreRange.name}
                     </Badge>
+                )}
+
+                {hideScore && (
+                    <Button variant="outline" onClick={() => showScore()}>
+                        Show Score
+                    </Button>
                 )}
             </div>
 

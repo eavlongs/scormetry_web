@@ -1,5 +1,6 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +17,7 @@ import {
 } from '@/types/classroom'
 import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -29,6 +30,7 @@ import {
 import RangeScoreInput, { RangeScore } from './range-score-input'
 import { RubricScoreInput } from './rubric-score-input'
 import { RubricScoreContextType } from './rubric-score-provider'
+import { ScoreInputVisibilityProvider } from './visibility-provider'
 
 export type ScoreData = {
     range_based_scores?: RangeScore[]
@@ -58,6 +60,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         shouldAutomaticallySelectScoringEntity,
         setShouldAutomaticallySelectScoringEntity,
     ] = useState(true)
+
+    const [hideScore, setHideScore] = useState(false)
 
     // const router = useRouter();
     const pathname = usePathname()
@@ -463,108 +467,138 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                         </p>
                     </div>
                 ) : (
-                    <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
-                        <div className="h-full overflow-y-auto flex flex-col gap-y-4">
-                            <div>
-                                {selectedEntity.type == 'group' ? (
-                                    <p className="text-lg font-semibold">
-                                        {selectedEntity.entity.name}
-                                    </p>
-                                ) : (
-                                    <>
+                    <ScoreInputVisibilityProvider
+                        value={{
+                            hideScore: hideScore,
+                            show: () => setHideScore(false),
+                        }}
+                    >
+                        <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
+                            <div className="h-full overflow-y-auto flex flex-col gap-y-4">
+                                <div className="flex gap-x-2 items-center">
+                                    {selectedEntity.type == 'group' ? (
                                         <p className="text-lg font-semibold">
-                                            {selectedEntity.entity.first_name +
-                                                ' ' +
-                                                selectedEntity.entity.last_name}
+                                            {selectedEntity.entity.name}
                                         </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {selectedEntity.entity.email}
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="w-full flex flex-col flex-grow">
-                                {activity.scoring_type === SCORING_TYPE_RANGE &&
-                                    activity.max_score !== null &&
-                                    scoreFetched && (
-                                        <RangeScoreInput
-                                            initialScores={
-                                                initialScore.range_based_scores
-                                            }
-                                            entity={selectedEntity}
-                                            onScoreUpdate={(scores) => {
-                                                setScoreData({
-                                                    rubric_score: undefined,
-                                                    range_based_scores: scores,
-                                                })
-                                            }}
-                                            maxScore={activity.max_score}
-                                        />
+                                    ) : (
+                                        <>
+                                            <p className="text-lg font-semibold">
+                                                {selectedEntity.entity
+                                                    .first_name +
+                                                    ' ' +
+                                                    selectedEntity.entity
+                                                        .last_name}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {selectedEntity.entity.email}
+                                            </p>
+                                        </>
                                     )}
 
-                                {activity.scoring_type ===
-                                    SCORING_TYPE_RUBRIC &&
-                                    scoreFetched &&
-                                    activity.rubric && (
-                                        <div>
-                                            <RubricScoreInput
-                                                rubric={activity.rubric}
-                                                entity={selectedEntity}
+                                    {!hideScore ? (
+                                        <SimpleToolTip text="Hide score">
+                                            <Eye
+                                                onClick={() =>
+                                                    setHideScore(true)
+                                                }
+                                            />
+                                        </SimpleToolTip>
+                                    ) : (
+                                        <SimpleToolTip text="Show score">
+                                            <EyeOff
+                                                onClick={() =>
+                                                    setHideScore(false)
+                                                }
+                                            />
+                                        </SimpleToolTip>
+                                    )}
+                                </div>
+
+                                <div className="w-full flex flex-col flex-grow">
+                                    {activity.scoring_type ===
+                                        SCORING_TYPE_RANGE &&
+                                        activity.max_score !== null &&
+                                        scoreFetched && (
+                                            <RangeScoreInput
                                                 initialScores={
-                                                    initialScore.rubric_score
+                                                    initialScore.range_based_scores
                                                 }
-                                                parentErrors={errors}
-                                                onScoreUpdate={(scores) =>
+                                                entity={selectedEntity}
+                                                onScoreUpdate={(scores) => {
                                                     setScoreData({
+                                                        rubric_score: undefined,
                                                         range_based_scores:
-                                                            undefined,
-                                                        rubric_score: scores,
+                                                            scores,
                                                     })
-                                                }
-                                                onSetParentErrors={() =>
-                                                    setErrors([])
-                                                }
+                                                }}
+                                                maxScore={activity.max_score}
                                             />
-                                        </div>
-                                    )}
+                                        )}
 
-                                <div className="flex-grow flex flex-col justify-end mt-4">
-                                    <div className="space-y-4">
-                                        <LabelWrapper
-                                            label={{
-                                                text: 'Feedback',
-                                                field: 'comment',
-                                            }}
-                                            options={{ required: false }}
-                                        >
-                                            <Textarea
-                                                id="comment"
-                                                placeholder="Provide detailed feedback..."
-                                                rows={6}
-                                                ref={commentRef}
-                                                className="resize-none field-sizing-fixed"
-                                            />
-                                        </LabelWrapper>
-                                        <Button
-                                            onClick={handleSubmit}
-                                            disabled={isSubmitting}
-                                            className="block ml-auto"
-                                        >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Submitting...
-                                                </>
-                                            ) : (
-                                                'Submit Score'
-                                            )}
-                                        </Button>
+                                    {activity.scoring_type ===
+                                        SCORING_TYPE_RUBRIC &&
+                                        scoreFetched &&
+                                        activity.rubric && (
+                                            <div>
+                                                <RubricScoreInput
+                                                    rubric={activity.rubric}
+                                                    entity={selectedEntity}
+                                                    initialScores={
+                                                        initialScore.rubric_score
+                                                    }
+                                                    parentErrors={errors}
+                                                    onScoreUpdate={(scores) =>
+                                                        setScoreData({
+                                                            range_based_scores:
+                                                                undefined,
+                                                            rubric_score:
+                                                                scores,
+                                                        })
+                                                    }
+                                                    onSetParentErrors={() =>
+                                                        setErrors([])
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+
+                                    <div className="flex-grow flex flex-col justify-end mt-4">
+                                        <div className="space-y-4">
+                                            <LabelWrapper
+                                                label={{
+                                                    text: 'Feedback',
+                                                    field: 'comment',
+                                                }}
+                                                options={{ required: false }}
+                                            >
+                                                <Textarea
+                                                    id="comment"
+                                                    placeholder="Provide detailed feedback..."
+                                                    rows={6}
+                                                    ref={commentRef}
+                                                    className="resize-none field-sizing-fixed"
+                                                />
+                                            </LabelWrapper>
+                                            <Button
+                                                onClick={handleSubmit}
+                                                disabled={isSubmitting}
+                                                className="block ml-auto"
+                                            >
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Submitting...
+                                                    </>
+                                                ) : (
+                                                    'Submit Score'
+                                                )}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </ScoreInputVisibilityProvider>
                 )}
             </div>
         </div>
