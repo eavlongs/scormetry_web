@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
+import { Slider } from '@/components/ui/slider'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn, getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
 import { RubricScoreSchema } from '@/schema'
@@ -458,7 +459,7 @@ export function RubricCriteria({
     return (
         <div className={cn('flex', isMobile && 'overflow-x-auto')}>
             {/* Criteria name */}
-            <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 w-[15rem]">
+            <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 min-w-[10rem] w-[15rem] max-w-[15rem]">
                 <div>
                     <p className="text-base font-medium text-center">
                         {`${criteria.name} (${criteria.max_score})`}
@@ -485,8 +486,8 @@ export function RubricCriteria({
                             // @ts-expect-error for some reason blur is not typed in target
                             e.target.blur()
                         }}
-                        defaultValue={(() => {
-                            const idx = ctx.initialScores.findIndex(
+                        value={(() => {
+                            const idx = ctx.scores.findIndex(
                                 (s) =>
                                     s.assignee_id === assignee_id &&
                                     s.type === type
@@ -494,21 +495,19 @@ export function RubricCriteria({
 
                             if (idx === -1) return ''
 
-                            const scoreIdx = ctx.initialScores[
-                                idx
-                            ].scores.findIndex(
+                            const scoreIdx = ctx.scores[idx].scores.findIndex(
                                 (s) => s.rubric_criteria_id === criteria.id
                             )
 
                             if (scoreIdx === -1) return ''
 
                             console.log(
-                                ctx.initialScores[idx].scores[
+                                ctx.scores[idx].scores[
                                     scoreIdx
                                 ].score.toString()
                             )
 
-                            return ctx.initialScores[idx].scores[
+                            return ctx.scores[idx].scores[
                                 scoreIdx
                             ].score.toString()
                         })()}
@@ -563,6 +562,66 @@ export function RubricCriteria({
                                 e.target.value
                             )
                         }}
+                    />
+                    <Slider
+                        min={criteria.min_score}
+                        max={criteria.max_score}
+                        step={0.1}
+                        onValueChange={(val) => {
+                            if (val.length == 0) return
+                            const scoreNum = val[0]
+                            if (
+                                scoreNum >= criteria.min_score &&
+                                scoreNum <= criteria.max_score
+                            ) {
+                                ctx.removeError(path)
+                            } else {
+                                setTimeout(() => {
+                                    ctx.addOrReplaceError({
+                                        field: path,
+                                        message:
+                                            'Score should be between ' +
+                                            criteria.min_score +
+                                            ' and ' +
+                                            criteria.max_score,
+                                    })
+                                }, 0)
+                            }
+
+                            ctx.updateScore(
+                                assignee_id,
+                                type,
+                                criteria.id,
+                                scoreNum.toString()
+                            )
+                        }}
+                        value={[
+                            (() => {
+                                const idx = ctx.scores.findIndex(
+                                    (s) =>
+                                        s.assignee_id === assignee_id &&
+                                        s.type === type
+                                )
+
+                                if (idx === -1) return 0
+
+                                const scoreIdx = ctx.scores[
+                                    idx
+                                ].scores.findIndex(
+                                    (s) => s.rubric_criteria_id === criteria.id
+                                )
+
+                                if (scoreIdx === -1) return 0
+
+                                console.log(
+                                    ctx.scores[idx].scores[
+                                        scoreIdx
+                                    ].score.toString()
+                                )
+
+                                return ctx.scores[idx].scores[scoreIdx].score
+                            })(),
+                        ]}
                     />
                 </LabelWrapper>
                 {scoreRange && (

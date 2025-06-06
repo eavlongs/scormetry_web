@@ -303,7 +303,7 @@ export default function EditActivityForm({
         setIsSubmitting(false)
         if (response.success) {
             toast.success(response.message)
-            router.push(`/classroom/${classroom.classroom.id}`)
+            router.back()
             return
         }
 
