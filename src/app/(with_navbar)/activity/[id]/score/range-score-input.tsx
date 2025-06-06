@@ -4,13 +4,14 @@ import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { cn, getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
 import { Copy } from 'lucide-react'
 import Image from 'next/image'
 import { ComponentProps, FocusEvent, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { useScoreInputVisibilityContext } from './visibility-provider'
 
 export type RangeScore = {
     student_id: string
@@ -230,6 +231,7 @@ function ScoreInput({
     defaultValue?: number | string
 }) {
     const inputRef = useRef<HTMLInputElement>(null)
+    const { hideScore, show: showScore } = useScoreInputVisibilityContext()
 
     useEffect(() => {
         console.log('defaultValue', defaultValue)
@@ -237,13 +239,24 @@ function ScoreInput({
             inputRef.current.value = defaultValue?.toString() || ''
         }
     }, [defaultValue, inputRef.current])
+
     return (
-        <LabelWrapper label={null} error={error} className="max-w-xs">
+        <LabelWrapper
+            label={{ text: `Score (Max: ${maxScore}):`, field: '' }}
+            error={error}
+            className="max-w-xs"
+        >
             <Input
                 ref={inputRef}
+                min={0}
+                max={maxScore}
                 type="number"
+                onClick={() => showScore()}
                 placeholder={`Enter score (0-${maxScore})`}
-                className="hide-arrows"
+                className={cn(
+                    'hide-arrows',
+                    hideScore && 'blur-xs border-black'
+                )}
                 onBlur={onBlur}
                 onWheel={(e) => {
                     // @ts-expect-error for some reason blur is not typed in target

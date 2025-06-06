@@ -635,9 +635,12 @@ export function RubricCriteria({
                 )}
 
                 {hideScore && (
-                    <Button variant="outline" onClick={() => showScore()}>
-                        Show Score
-                    </Button>
+                    <span
+                        className="cursor-pointer"
+                        onClick={() => showScore()}
+                    >
+                        ***
+                    </span>
                 )}
             </div>
 
