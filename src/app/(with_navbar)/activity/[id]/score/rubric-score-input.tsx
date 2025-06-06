@@ -1,15 +1,11 @@
 'use client'
 
 import TinyEditor from '@/components/tiny-editor'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn, getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
 import { RubricScoreSchema } from '@/schema'
 import { GetRubric, IndividualOrGroup, ScoringEntity } from '@/types/classroom'
@@ -203,7 +199,7 @@ function _RubricScoreInput({
     entity,
     ...props
 }: RubricScoreInputProps & React.ComponentProps<'div'>) {
-    const [tab, setTab] = useState<string>('group')
+    const [tab, setTab] = useState<'group' | 'individual'>('group')
 
     const [sections] = useState<GetRubric['rubric_sections']>(
         rubric.rubric_sections
@@ -228,6 +224,10 @@ function _RubricScoreInput({
                     <div className="w-full grid grid-cols-2">
                         <Button
                             variant="outline"
+                            className={cn(
+                                tab == 'group' &&
+                                    'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
+                            )}
                             onClick={() => setTab('group')}
                         >
                             Group Score
@@ -235,6 +235,10 @@ function _RubricScoreInput({
                         <Button
                             variant="outline"
                             onClick={() => setTab('individual')}
+                            className={cn(
+                                tab == 'individual' &&
+                                    'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
+                            )}
                         >
                             Individual Score
                         </Button>
@@ -339,35 +343,20 @@ function RubricSection({
 }) {
     return (
         <div className="flex w-full">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <div className="flex flex-col items-center p-3 rounded-none bg-paragon text-white">
-                            <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
-                                <div>
-                                    {hasWeightage && (
-                                        <p className="text-center font-semibold bg-transparent text-sm rotate-180">
-                                            {section.score_percentage}%
-                                        </p>
-                                    )}
-                                    <p className="text-center font-semibold bg-transparent text-sm rotate-180">
-                                        {section.name}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[20rem]">
-                        <p className="font-bold text-center text-base mb-1">
+            <div className="flex flex-col items-center p-3 rounded-none bg-paragon text-white">
+                <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
+                    <div>
+                        {hasWeightage && (
+                            <p className="text-center font-semibold bg-transparent text-sm rotate-180">
+                                {section.score_percentage}%
+                            </p>
+                        )}
+                        <p className="text-center font-semibold bg-transparent text-sm rotate-180">
                             {section.name}
-                            {hasWeightage && ` (${section.score_percentage}%)`}
                         </p>
-
-                        <p className="text-center">{section.description}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-
+                    </div>
+                </div>
+            </div>
             <div className="w-full min-w-0">
                 {/* <div className="ml-2 mb-2 text-sm">
                     <Badge variant="paragon">
@@ -401,30 +390,56 @@ export function RubricCriteria({
     type,
 }: RubricCriteriaProps) {
     const ctx = useRubricScoreContext()
-    // const [score, setScore] = useState<string>(() => {
-    //     const idx = ctx.scores.findIndex(
-    //         (s) => s.assignee_id === assignee_id && s.type === type
-    //     )
+    const isMobile = useIsMobile()
 
-    //     if (idx === -1) return ''
+    let score = ''
+    const idx = ctx.scores.findIndex(
+        (s) => s.assignee_id === assignee_id && s.type === type
+    )
 
-    //     const scoreIdx = ctx.scores[idx].scores.findIndex(
-    //         (s) => s.rubric_criteria_id === criteria.id
-    //     )
+    if (idx !== -1) {
+        const scoreIdx = ctx.scores[idx].scores.findIndex(
+            (s) => s.rubric_criteria_id === criteria.id
+        )
 
-    //     if (scoreIdx === -1) return ''
-
-    //     return ctx.scores[idx].scores[scoreIdx].score.toString()
-    // })
+        if (scoreIdx !== -1)
+            score = ctx.scores[idx].scores[scoreIdx].score.toString()
+    }
 
     const path = ['criteria', criteria.id, 'assignee', assignee_id]
+    let scoreRange = null
+    const scoreNum = parseFloat(score)
+    if (!isNaN(scoreNum)) {
+        for (let i = 0; i < criteria.criteria_score_ranges.length; i++) {
+            const isLastIndex = i === criteria.criteria_score_ranges.length - 1
+            const range = criteria.criteria_score_ranges[i]
+
+            if (
+                !isLastIndex &&
+                scoreNum >= range.min_score &&
+                scoreNum < range.max_score + 1
+            ) {
+                scoreRange = range
+                break
+            }
+
+            if (
+                isLastIndex &&
+                scoreNum >= range.min_score &&
+                scoreNum <= range.max_score
+            ) {
+                scoreRange = range
+                break
+            }
+        }
+    }
 
     return (
-        <div className="flex">
+        <div className={cn('flex', isMobile && 'overflow-x-auto')}>
             {/* Criteria name */}
-            <div className="border py-4 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4">
+            <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 w-[15rem]">
                 <div>
-                    <p className="text-base font-medium w-[15rem] text-center">
+                    <p className="text-base font-medium text-center">
                         {`${criteria.name} (${criteria.max_score})`}
                     </p>
                 </div>
@@ -435,7 +450,7 @@ export function RubricCriteria({
                         path
                     )}
                     options={{
-                        error_display: 'over-label',
+                        error_display: 'under-label',
                     }}
                     className="w-4/5"
                 >
@@ -529,46 +544,50 @@ export function RubricCriteria({
                         }}
                     />
                 </LabelWrapper>
+                {scoreRange && (
+                    <Badge className="text-sm text-center" variant="paragon">
+                        {scoreRange.name}
+                    </Badge>
+                )}
             </div>
 
             {/* Score range blocks */}
-            <div className="flex w-full overflow-x-auto">
+            <div className={cn('flex w-full', !isMobile && 'overflow-x-auto')}>
                 {criteria.criteria_score_ranges.map((range) => {
                     return (
                         <div
                             key={range.id}
-                            className="border p-3 flex-shrink-0 w-[10rem] flex flex-col justify-center"
+                            className={cn(
+                                'border p-2 flex-shrink-0 w-[15rem] flex flex-col justify-start',
+                                scoreRange &&
+                                    scoreRange.id == range.id &&
+                                    'border-paragon border-1'
+                            )}
                         >
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div>
-                                            <p className="border-0 p-1  focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400 mb-2 text-center line-clamp-1">
-                                                {range.name}
-                                            </p>
+                            <div>
+                                <p className="border-0 p-1 focus-visible:ring-0 text-sm font-bold placeholder:text-gray-400 text-center line-clamp-1">
+                                    {range.name}
+                                </p>
 
-                                            <div className="flex items-center justify-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                                <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                    {range.min_score}
-                                                </p>
-                                                -
-                                                <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
-                                                    {range.max_score}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </TooltipTrigger>
-
-                                    <TooltipContent className="max-w-[20rem]">
-                                        <p className="font-bold text-center text-base mb-1">
-                                            {`${range.name} (${range.min_score} - ${range.max_score})`}
-                                        </p>
-                                        <p className="text-center">
-                                            {range.description}
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                                <div className="flex items-center justify-center mb-1 text-sm text-muted-foreground gap-x-1">
+                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                        {range.min_score}
+                                    </p>
+                                    -
+                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                        {range.max_score}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-sm overflow-y-auto h-[120px]">
+                                {range.description.length > 0 ? (
+                                    range.description
+                                ) : (
+                                    <span className="text-gray-600">
+                                        (No Description)
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     )
                 })}
