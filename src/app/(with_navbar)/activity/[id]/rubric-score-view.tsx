@@ -96,18 +96,32 @@ function _RubricScoreInput({
                                 'grid-cols-2'
                         )}
                     >
-                        <Button
-                            variant="outline"
-                            onClick={() => setTab('group')}
-                        >
-                            Group Score
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => setTab('individual')}
-                        >
-                            Individual Score
-                        </Button>
+                        {rubric.rubric_sections.filter((s) => s.is_group_score)
+                            .length > 0 && (
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    tab == 'group' &&
+                                        'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
+                                )}
+                                onClick={() => setTab('group')}
+                            >
+                                Group Score
+                            </Button>
+                        )}
+                        {rubric.rubric_sections.filter((s) => !s.is_group_score)
+                            .length > 0 && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setTab('individual')}
+                                className={cn(
+                                    tab == 'individual' &&
+                                        'bg-paragon text-white hover:bg-paragon-hover hover:text-white'
+                                )}
+                            >
+                                Individual Score
+                            </Button>
+                        )}
                     </div>
                     <div
                         className={cn(
