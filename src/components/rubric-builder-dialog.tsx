@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
     cn,
     convertZodErrorToValidationErrorWithNestedPath,
+    formatDecimalNumber,
     getErrorMessageFromNestedPathValidationError,
     getValidationErrorMessage,
 } from '@/lib/utils'
@@ -633,6 +634,13 @@ export function RubricBuilderDialog({
                 section={sectionToEdit}
                 onClose={() => setSectionToEdit(null)}
                 onSubmit={updateSection}
+                currentPercentage={(() => {
+                    let sum = 0
+                    for (const section of sections) {
+                        sum += section.score_percentage
+                    }
+                    return sum
+                })()}
             />
         </RubricBuilderContext.Provider>
     )
@@ -1048,6 +1056,7 @@ export function RubricCriteria({
 
 function EditSectionDialog({
     section,
+    currentPercentage,
     onClose,
     onSubmit,
 }: {
@@ -1056,6 +1065,7 @@ function EditSectionDialog({
             index: number
         }
     > | null
+    currentPercentage: number
     onClose: () => void
     onSubmit: (
         index: number,
@@ -1070,13 +1080,27 @@ function EditSectionDialog({
 
     function handleSubmit() {
         if (!section || !nameRef.current || !scorePercentRef.current) return
+        const scorePercentage = parseFloat(scorePercentRef.current.value || '0')
+        if (isNaN(scorePercentage)) {
+            toast.error('Score percentage must be a number')
+            return
+        }
 
-        onSubmit(
-            section.index,
-            nameRef.current.value,
-            Number(scorePercentRef.current.value),
-            descriptionRef.current?.value || ''
-        )
+        if (currentPercentage + scorePercentage > 100) {
+            const best = 100 - currentPercentage
+            toast.error(
+                `The total score percentage cannot exceed 100%. The most you can put in this section is ${formatDecimalNumber(best)}%`
+            )
+            return
+        }
+
+        if (currentPercentage + scorePercentRef.current.value)
+            onSubmit(
+                section.index,
+                nameRef.current.value,
+                parseFloat(scorePercentRef.current.value || '0'),
+                descriptionRef.current?.value || ''
+            )
     }
     if (section === null) return null
     return (
