@@ -4,12 +4,13 @@ import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
+import { Slider } from '@/components/ui/slider'
 import { cn, getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
 import { Copy } from 'lucide-react'
 import Image from 'next/image'
-import { ComponentProps, FocusEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useScoreInputVisibilityContext } from './visibility-provider'
 
@@ -87,13 +88,16 @@ export default function RangeScoreInput({
         setErrors(filtered)
     }
 
-    function handleOnBlur(student_id: string, e: FocusEvent<HTMLInputElement>) {
-        if (e.target.value == '') {
+    function handleOnScoreChange(student_id: string, valueStr: string) {
+        console.log(valueStr)
+        if (valueStr == '') {
             removeScore(student_id)
             return
         }
-        const scoreNum = parseFloat(e.target.value)
+        const scoreNum = parseFloat(valueStr)
+        console.log(scoreNum)
         if (isNaN(scoreNum)) {
+            console.log('here')
             addOrReplaceError({
                 field: student_id,
                 message: 'Score must be a number',
@@ -140,12 +144,14 @@ export default function RangeScoreInput({
             {entity.type == 'individual' && (
                 <ScoreInput
                     maxScore={maxScore}
-                    onBlur={(e) => handleOnBlur(entity.entity.id, e)}
+                    onScoreChange={(e) =>
+                        handleOnScoreChange(entity.entity.id, e)
+                    }
                     error={getErrorMessageFromValidationError(
                         errors,
                         entity.entity.id
                     )}
-                    defaultValue={
+                    value={
                         scores.find((s) => s.student_id === entity.entity.id)
                             ?.score
                     }
@@ -181,14 +187,14 @@ export default function RangeScoreInput({
                                 <div className="flex items-start">
                                     <ScoreInput
                                         maxScore={maxScore}
-                                        onBlur={(e) =>
-                                            handleOnBlur(student.id, e)
+                                        onScoreChange={(e) =>
+                                            handleOnScoreChange(student.id, e)
                                         }
                                         error={getErrorMessageFromValidationError(
                                             errors,
                                             student.id
                                         )}
-                                        defaultValue={
+                                        value={
                                             scores.find(
                                                 (s) =>
                                                     s.student_id === student.id
@@ -221,35 +227,23 @@ export default function RangeScoreInput({
 
 function ScoreInput({
     maxScore,
-    onBlur,
+    onScoreChange,
     error,
-    defaultValue,
+    value,
 }: {
     maxScore: number
-    onBlur: ComponentProps<'input'>['onBlur']
+    onScoreChange: (valueStr: string) => void
     error: string
-    defaultValue?: number | string
+    value?: number | string
 }) {
-    const inputRef = useRef<HTMLInputElement>(null)
     const { hideScore, show: showScore } = useScoreInputVisibilityContext()
 
-    useEffect(() => {
-        console.log('defaultValue', defaultValue)
-        if (inputRef.current) {
-            inputRef.current.value = defaultValue?.toString() || ''
-        }
-    }, [defaultValue, inputRef.current])
-
     return (
-        <LabelWrapper
-            label={{ text: `Score (Max: ${maxScore}):`, field: '' }}
-            error={error}
-            className="max-w-xs"
-        >
+        <LabelWrapper label={null} error={error} className="w-xs">
             <Input
-                ref={inputRef}
                 min={0}
                 max={maxScore}
+                value={value}
                 type="number"
                 onClick={() => showScore()}
                 placeholder={`Enter score (0-${maxScore})`}
@@ -257,11 +251,29 @@ function ScoreInput({
                     'hide-arrows',
                     hideScore && 'blur-xs border-black'
                 )}
-                onBlur={onBlur}
+                onChange={(e) => {
+                    onScoreChange(e.target.value)
+                }}
                 onWheel={(e) => {
                     // @ts-expect-error for some reason blur is not typed in target
                     e.target.blur()
                 }}
+            />
+            <Slider
+                min={0}
+                max={maxScore}
+                step={0.1}
+                onValueChange={(val) => {
+                    if (val.length == 0) return
+                    const scoreNum = val[0]
+
+                    onScoreChange(scoreNum.toString())
+                }}
+                value={[
+                    value !== undefined && !isNaN(parseFloat(value.toString()))
+                        ? parseFloat(value.toString())
+                        : 0,
+                ]}
             />
         </LabelWrapper>
     )
