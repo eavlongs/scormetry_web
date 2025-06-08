@@ -464,7 +464,10 @@ export function RubricCriteria({
             {/* Criteria name */}
             <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 min-w-[10rem] w-[15rem] max-w-[15rem]">
                 <div>
-                    <p className="text-base font-medium text-center">
+                    <p
+                        className="text-base font-medium text-center"
+                        onClick={() => showScore()}
+                    >
                         {`${criteria.name} (${criteria.max_score})`}
                     </p>
                 </div>
