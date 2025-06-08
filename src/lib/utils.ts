@@ -1,4 +1,5 @@
-import { classroomColorsWithType } from '@/types/classroom'
+import { RubricScoreSchema } from '@/schema'
+import { classroomColorsWithType, GetRubric } from '@/types/classroom'
 import {
     ActionResponse,
     NestedPathValidationError,
@@ -9,7 +10,7 @@ import { clsx, type ClassValue } from 'clsx'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { ZodError } from 'zod'
+import { z, ZodError } from 'zod'
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -227,5 +228,224 @@ export function limitFloatInputDecimalPlaces(
 
     if (input.length - decimalPointIndex > maxDecimalPlaces) {
         e.preventDefault()
+    }
+}
+
+export function calculateRubricScore(
+    rubric: GetRubric,
+    scores: z.infer<typeof RubricScoreSchema>[]
+): {
+    groupScore: number | null
+    individualScores:
+        | {
+              student_id: string
+              score: number
+          }[]
+        | null
+    overallScore: number | null // null for implicit zero (the judge hasn't give any score)
+} {
+    if (!scores || scores.length === 0) {
+        return {
+            groupScore: null,
+            individualScores: null,
+            overallScore: null,
+        }
+    }
+
+    // Get all unique student IDs from individual scores
+    const studentIds = new Set<string>()
+    scores.forEach((score) => {
+        if (score.type === 'individual') {
+            studentIds.add(score.assignee_id)
+        }
+    })
+
+    // Organize scores by section, entity (group/student), and criteria
+    const sectionScores = new Map<
+        string,
+        {
+            isGroupScore: boolean
+            weight: number
+            maxScore: number
+            groupScore: number | null
+            studentScores: Map<string, number>
+        }
+    >()
+
+    // Initialize section data
+    for (const section of rubric.rubric_sections) {
+        sectionScores.set(section.id, {
+            isGroupScore: section.is_group_score,
+            weight: section.score_percentage,
+            maxScore: section.max_score,
+            groupScore: null,
+            studentScores: new Map<string, number>(),
+        })
+    }
+
+    // Process all scores
+    for (const score of scores) {
+        for (const criteriaScore of score.scores) {
+            // Find which section this criteria belongs to
+            let sectionId = ''
+            let criteriaData = null
+
+            for (const section of rubric.rubric_sections) {
+                for (const criteria of section.rubric_criterias) {
+                    if (criteria.id === criteriaScore.rubric_criteria_id) {
+                        sectionId = section.id
+                        criteriaData = criteria
+                        break
+                    }
+                }
+                if (sectionId) break
+            }
+
+            if (!sectionId || !criteriaData) continue
+
+            const sectionData = sectionScores.get(sectionId)!
+
+            if (score.type === 'group' && sectionData.isGroupScore) {
+                // Handle group score
+                const currentScore = sectionData.groupScore || 0
+                sectionData.groupScore = currentScore + criteriaScore.score
+            } else if (
+                score.type === 'individual' &&
+                !sectionData.isGroupScore
+            ) {
+                // Handle individual score
+                const studentId = score.assignee_id
+                const currentScore =
+                    sectionData.studentScores.get(studentId) || 0
+                sectionData.studentScores.set(
+                    studentId,
+                    currentScore + criteriaScore.score
+                )
+            }
+        }
+    }
+
+    // Calculate final scores
+    let groupScore: number | null = null
+    let individualScores: { student_id: string; score: number }[] = []
+
+    if (rubric.has_weightage) {
+        // With weightage - apply section weights
+
+        // Calculate group score with weightage
+        let totalGroupWeightedScore = 0
+        let totalGroupWeight = 0
+
+        for (const [_, sectionData] of sectionScores) {
+            if (sectionData.isGroupScore && sectionData.groupScore !== null) {
+                totalGroupWeightedScore +=
+                    (sectionData.groupScore / sectionData.maxScore) *
+                    sectionData.weight
+                totalGroupWeight += sectionData.weight
+            }
+        }
+
+        if (totalGroupWeight > 0) {
+            groupScore = totalGroupWeightedScore
+        }
+
+        // Calculate individual scores with weightage
+        for (const studentId of studentIds) {
+            let totalStudentWeightedScore = 0
+            let totalStudentWeight = 0
+
+            for (const [_, sectionData] of sectionScores) {
+                if (
+                    sectionData.isGroupScore &&
+                    sectionData.groupScore !== null
+                ) {
+                    // Add weighted group score
+                    totalStudentWeightedScore +=
+                        (sectionData.groupScore / sectionData.maxScore) *
+                        sectionData.weight
+                    totalStudentWeight += sectionData.weight
+                } else if (
+                    !sectionData.isGroupScore &&
+                    sectionData.studentScores.has(studentId)
+                ) {
+                    // Add weighted individual score
+                    const studentScore =
+                        sectionData.studentScores.get(studentId)!
+                    totalStudentWeightedScore +=
+                        (studentScore / sectionData.maxScore) *
+                        sectionData.weight
+                    totalStudentWeight += sectionData.weight
+                }
+            }
+
+            if (totalStudentWeight > 0) {
+                individualScores.push({
+                    student_id: studentId,
+                    score: totalStudentWeightedScore,
+                })
+            }
+        }
+    } else {
+        // Without weightage - just sum and divide by max possible
+        let totalMaxScore = rubric.max_score
+
+        // Calculate group score
+        let totalGroupScore = 0
+        for (const [_, sectionData] of sectionScores) {
+            if (sectionData.isGroupScore && sectionData.groupScore !== null) {
+                totalGroupScore += sectionData.groupScore
+            }
+        }
+
+        // Calculate individual scores
+        for (const studentId of studentIds) {
+            let totalStudentScore = 0
+
+            for (const [_, sectionData] of sectionScores) {
+                if (
+                    sectionData.isGroupScore &&
+                    sectionData.groupScore !== null
+                ) {
+                    // Add group score
+                    totalStudentScore += sectionData.groupScore
+                } else if (
+                    !sectionData.isGroupScore &&
+                    sectionData.studentScores.has(studentId)
+                ) {
+                    // Add individual score
+                    totalStudentScore +=
+                        sectionData.studentScores.get(studentId)!
+                }
+            }
+
+            if (totalMaxScore > 0) {
+                // Convert to percentage
+                individualScores.push({
+                    student_id: studentId,
+                    score: (totalStudentScore / totalMaxScore) * 100,
+                })
+            }
+        }
+
+        if (totalMaxScore > 0 && totalGroupScore > 0) {
+            // Convert to percentage
+            groupScore = (totalGroupScore / totalMaxScore) * 100
+        }
+    }
+
+    // Calculate overall score (average of individual scores)
+    let overallScore: number | null = null
+    if (individualScores.length > 0) {
+        const total = individualScores.reduce(
+            (sum, score) => sum + score.score,
+            0
+        )
+        overallScore = total / individualScores.length
+    }
+
+    return {
+        groupScore,
+        individualScores: individualScores.length > 0 ? individualScores : null,
+        overallScore,
     }
 }

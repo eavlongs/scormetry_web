@@ -158,6 +158,7 @@ export default function Grouping({
 
         if (respones.success) {
             toast.success('Changes saved successfully')
+            setSaving(false)
             // this is to make sure that the "save change" button is disabled, and user can navigate to other pages
             _setOriginalData((prev) => {
                 return {

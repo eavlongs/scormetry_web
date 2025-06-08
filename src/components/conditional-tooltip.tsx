@@ -9,7 +9,6 @@ export default function ConditionalTooltip({
     show: boolean
     children: React.ReactNode
 }) {
-    console.log('show is', show)
     return show ? (
         <SimpleToolTip text={text}>{children}</SimpleToolTip>
     ) : (
