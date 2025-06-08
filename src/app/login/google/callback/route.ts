@@ -29,6 +29,7 @@ export async function GET(request: Request): Promise<Response> {
         storedState === null ||
         codeVerifier === null
     ) {
+        console.log({ code, state, storedState, codeVerifier })
         const errorMessage = 'Failed to log in. Please try again.'
         return new Response(null, {
             status: 302,
@@ -38,6 +39,7 @@ export async function GET(request: Request): Promise<Response> {
         })
     }
     if (state !== storedState) {
+        console.log('state mismatch')
         const errorMessage = 'Failed to log in. Please try again.'
         return new Response(null, {
             status: 302,
@@ -55,7 +57,8 @@ export async function GET(request: Request): Promise<Response> {
         cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
         cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
 
-        const errorMessage = e.message || 'Failed to log in'
+        console.log('failed to get token from google')
+        const errorMessage = e.message || 'ailed to log in. Please try again.'
         return new Response(null, {
             status: 302,
             headers: {
@@ -86,6 +89,7 @@ export async function GET(request: Request): Promise<Response> {
         cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
         cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
 
+        console.log('failed to login in backend')
         const errorMessage =
             e.response.data.message || 'Failed to log in. Please try again.'
         return new Response(null, {
@@ -106,6 +110,7 @@ export async function GET(request: Request): Promise<Response> {
         cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
         cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
 
+        console.log('failed to create session')
         const errorMessage = 'Failed to log in. Please try again.'
         return new Response(null, {
             status: 302,

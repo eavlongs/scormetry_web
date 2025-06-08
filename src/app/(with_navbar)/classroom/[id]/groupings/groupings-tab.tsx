@@ -1,5 +1,6 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -11,14 +12,13 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Grouping } from '@/types/classroom'
-import { EditIcon, FileTextIcon, Plus, Trash2 } from 'lucide-react'
+import { EditIcon, Eye, FileTextIcon, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { GetClassroomResponse } from '../actions'
 import { CreateGroupingDialog } from './create-grouping-dialog'
 import { DeleteGroupingDialog } from './delete-grouping-dialog'
 import { EditGroupingDialog } from './edit-grouping-dialog'
-import { SimpleToolTip } from '@/components/simple-tooltip'
 
 export default function GroupingsTab({
     classroom,
@@ -81,11 +81,7 @@ export function GroupingList({
                 <TableBody>
                     {classroom.groupings.map((grouping) => (
                         <TableRow key={grouping.id}>
-                            <TableCell>
-                                <Link href={`/grouping/${grouping.id}`}>
-                                    {grouping.name}
-                                </Link>
-                            </TableCell>
+                            <TableCell>{grouping.name}</TableCell>
                             <TableCell className="overflow-hidden whitespace-nowrap overflow-ellipsis">
                                 {grouping.description ? (
                                     grouping.description
@@ -97,6 +93,16 @@ export function GroupingList({
                             </TableCell>
                             <TableCell className="flex justify-center">
                                 <div className="flex items-center gap-2">
+                                    <SimpleToolTip text="View Groups">
+                                        <Link href={`/grouping/${grouping.id}`}>
+                                            <Button size="sm" variant="ghost">
+                                                <Eye className="h-4 w-4" />
+                                                <span className="sr-only">
+                                                    View Groups
+                                                </span>
+                                            </Button>
+                                        </Link>
+                                    </SimpleToolTip>
                                     <SimpleToolTip text="Edit Grouping Name and Description">
                                         <Button
                                             size="sm"
@@ -107,7 +113,8 @@ export function GroupingList({
                                         >
                                             <EditIcon className="h-4 w-4" />
                                             <span className="sr-only">
-                                                Edit
+                                                Edit Grouping Name and
+                                                Description
                                             </span>
                                         </Button>
                                     </SimpleToolTip>
