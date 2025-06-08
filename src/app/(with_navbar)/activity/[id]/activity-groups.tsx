@@ -27,7 +27,13 @@ import {
     SCORING_TYPE_RUBRIC,
 } from '@/types/classroom'
 import { Prettify } from '@/types/general'
-import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
+import {
+    AlertCircle,
+    ChevronDown,
+    FileDown,
+    FileSpreadsheet,
+    FileText,
+} from 'lucide-react'
 import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -662,88 +668,109 @@ export default function ActivityGroups({
                                         {activity.rubric_id !== null ? (
                                             group.score_percentage !== null && (
                                                 <ConditionalTooltip
-                                                    text="See detail"
+                                                    text={
+                                                        group.all_judge_scored
+                                                            ? 'See detail'
+                                                            : 'See detail (Not all judges has submitted yet)'
+                                                    }
                                                     show={
                                                         classroom.role ==
                                                         CLASSROOM_ROLE_TEACHER
                                                     }
                                                 >
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={cn(
+                                                    <ScoreBadge
+                                                        isTeacher={
                                                             classroom.role ==
-                                                                CLASSROOM_ROLE_TEACHER &&
-                                                                'hover:border-black'
-                                                        )}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
+                                                            CLASSROOM_ROLE_TEACHER
+                                                        }
+                                                        allJudgesScored={
+                                                            group.all_judge_scored
+                                                        }
+                                                        onClick={() =>
                                                             setGroupToViewScoreDetail(
                                                                 group
                                                             )
-                                                        }}
+                                                        }
                                                     >
+                                                        {!group.all_judge_scored && (
+                                                            <AlertCircle color="red" />
+                                                        )}
                                                         {formatDecimalNumber(
                                                             group.score_percentage
                                                         )}
                                                         /100
-                                                    </Badge>
+                                                    </ScoreBadge>
                                                 </ConditionalTooltip>
                                             )
                                         ) : group.score !== null ? (
                                             <ConditionalTooltip
-                                                text="See detail"
+                                                text={
+                                                    group.all_judge_scored
+                                                        ? 'See detail'
+                                                        : 'See detail (Not all judges has submitted yet)'
+                                                }
                                                 show={
                                                     classroom.role ==
                                                     CLASSROOM_ROLE_TEACHER
                                                 }
                                             >
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
+                                                <ScoreBadge
+                                                    isTeacher={
                                                         classroom.role ==
-                                                            CLASSROOM_ROLE_TEACHER &&
-                                                            'hover:border-black'
-                                                    )}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
+                                                        CLASSROOM_ROLE_TEACHER
+                                                    }
+                                                    allJudgesScored={
+                                                        group.all_judge_scored
+                                                    }
+                                                    onClick={() =>
                                                         setGroupToViewScoreDetail(
                                                             group
                                                         )
-                                                    }}
+                                                    }
                                                 >
+                                                    {!group.all_judge_scored && (
+                                                        <AlertCircle color="red" />
+                                                    )}
                                                     {formatDecimalNumber(
                                                         group.score
                                                     )}
                                                     /{activity.max_score}
-                                                </Badge>
+                                                </ScoreBadge>
                                             </ConditionalTooltip>
                                         ) : group.score_percentage !== null ? (
                                             <ConditionalTooltip
-                                                text="See detail"
+                                                text={
+                                                    group.all_judge_scored
+                                                        ? 'See detail'
+                                                        : 'See detail (Not all judges has submitted yet)'
+                                                }
                                                 show={
                                                     classroom.role ==
                                                     CLASSROOM_ROLE_TEACHER
                                                 }
                                             >
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
+                                                <ScoreBadge
+                                                    isTeacher={
                                                         classroom.role ==
-                                                            CLASSROOM_ROLE_TEACHER &&
-                                                            'hover:border-black'
-                                                    )}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
+                                                        CLASSROOM_ROLE_TEACHER
+                                                    }
+                                                    allJudgesScored={
+                                                        group.all_judge_scored
+                                                    }
+                                                    onClick={() =>
                                                         setGroupToViewScoreDetail(
                                                             group
                                                         )
-                                                    }}
+                                                    }
                                                 >
+                                                    {!group.all_judge_scored && (
+                                                        <AlertCircle color="red" />
+                                                    )}
                                                     {formatDecimalNumber(
                                                         group.score_percentage
                                                     )}
                                                     /100
-                                                </Badge>
+                                                </ScoreBadge>
                                             </ConditionalTooltip>
                                         ) : null}
                                         {classroom.role ==
@@ -910,4 +937,36 @@ function generateRubricScoreRow(
     }
 
     return result
+}
+
+export function ScoreBadge({
+    isTeacher,
+    allJudgesScored,
+    children,
+    onClick,
+    ...props // needed for tooltip to work
+}: {
+    isTeacher: boolean
+    allJudgesScored: boolean
+    children: React.ReactNode
+    onClick?: () => void
+} & React.ComponentProps<typeof Badge>) {
+    const shouldWarn = !allJudgesScored
+    return (
+        <Badge
+            {...props}
+            variant="outline"
+            className={cn(
+                isTeacher &&
+                    (shouldWarn ? 'border-red-600' : 'hover:border-black')
+            )}
+            onClick={(e) => {
+                if (!onClick) return
+                e.stopPropagation()
+                onClick()
+            }}
+        >
+            {children}
+        </Badge>
+    )
 }

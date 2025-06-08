@@ -1,7 +1,6 @@
 'use client'
 
 import ConditionalTooltip from '@/components/conditional-tooltip'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
     Collapsible,
@@ -26,7 +25,13 @@ import {
     SCORING_TYPE_RUBRIC,
 } from '@/types/classroom'
 import { Prettify } from '@/types/general'
-import { ChevronDown, FileDown, FileSpreadsheet, FileText } from 'lucide-react'
+import {
+    AlertCircle,
+    ChevronDown,
+    FileDown,
+    FileSpreadsheet,
+    FileText,
+} from 'lucide-react'
 import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -40,7 +45,7 @@ import {
     GetRubricScoreFromJudge,
     getScoresOfActivity,
 } from './actions'
-import { ListUser } from './activity-groups'
+import { ListUser, ScoreBadge } from './activity-groups'
 import AssignJudgeAll from './assign-judge-all'
 import { AssignJudgeButton } from './assign-judge-button'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
@@ -671,78 +676,82 @@ function ListStudentWithJudges({
                         {activity.rubric_id !== null ? (
                             student.score_percentage !== null && (
                                 <ConditionalTooltip
-                                    text="See detail"
+                                    text={
+                                        student.all_judge_scored
+                                            ? 'See detail'
+                                            : 'See detail (Not all judges has submitted yet)'
+                                    }
                                     show={
                                         classroom.role == CLASSROOM_ROLE_TEACHER
                                     }
                                 >
-                                    <Badge
-                                        variant="outline"
-                                        className={cn(
+                                    <ScoreBadge
+                                        isTeacher={
                                             classroom.role ==
-                                                CLASSROOM_ROLE_TEACHER &&
-                                                'hover:border-black'
-                                        )}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            onViewScoreDetail()
-                                        }}
+                                            CLASSROOM_ROLE_TEACHER
+                                        }
+                                        allJudgesScored={
+                                            student.all_judge_scored
+                                        }
+                                        onClick={() => onViewScoreDetail()}
                                     >
+                                        {!student.all_judge_scored && (
+                                            <AlertCircle color="red" />
+                                        )}
                                         {formatDecimalNumber(
                                             student.score_percentage
                                         )}
                                         /100
-                                    </Badge>
+                                    </ScoreBadge>
                                 </ConditionalTooltip>
                             )
                         ) : student.score !== null ? (
                             <ConditionalTooltip
-                                text="See detail"
+                                text={
+                                    student.all_judge_scored
+                                        ? 'See detail'
+                                        : 'See detail (Not all judges has submitted yet)'
+                                }
                                 show={classroom.role == CLASSROOM_ROLE_TEACHER}
                             >
-                                <Badge
-                                    variant="outline"
-                                    className={cn(
-                                        classroom.role ==
-                                            CLASSROOM_ROLE_TEACHER &&
-                                            'hover:border-black'
-                                    )}
-                                    onClick={(e) => {
-                                        if (
-                                            classroom.role !==
-                                            CLASSROOM_ROLE_TEACHER
-                                        )
-                                            return
-                                        e.stopPropagation()
-                                        onViewScoreDetail()
-                                    }}
+                                <ScoreBadge
+                                    isTeacher={
+                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                                    }
+                                    allJudgesScored={student.all_judge_scored}
+                                    onClick={() => onViewScoreDetail()}
                                 >
+                                    {!student.all_judge_scored && (
+                                        <AlertCircle color="red" />
+                                    )}
                                     {formatDecimalNumber(student.score)}/
                                     {activity.max_score}
-                                </Badge>
+                                </ScoreBadge>
                             </ConditionalTooltip>
                         ) : student.score_percentage !== null ? (
                             <ConditionalTooltip
-                                text="See detail"
+                                text={
+                                    student.all_judge_scored
+                                        ? 'See detail'
+                                        : 'See detail (Not all judges has submitted yet)'
+                                }
                                 show={classroom.role == CLASSROOM_ROLE_TEACHER}
                             >
-                                <Badge
-                                    variant="outline"
-                                    className={cn(
-                                        classroom.role ==
-                                            CLASSROOM_ROLE_TEACHER &&
-                                            'hover:border-black'
-                                    )}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onViewScoreDetail()
-                                    }}
+                                <ScoreBadge
+                                    isTeacher={
+                                        classroom.role == CLASSROOM_ROLE_TEACHER
+                                    }
+                                    allJudgesScored={student.all_judge_scored}
+                                    onClick={() => onViewScoreDetail()}
                                 >
+                                    {!student.all_judge_scored && (
+                                        <AlertCircle color="red" />
+                                    )}
                                     {formatDecimalNumber(
                                         student.score_percentage
                                     )}
                                     /100
-                                </Badge>
+                                </ScoreBadge>
                             </ConditionalTooltip>
                         ) : null}
 

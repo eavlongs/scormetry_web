@@ -151,6 +151,7 @@ export type GetGroupWithScoreInfo = Prettify<
 export type GetGroupWithJudgePermission = GetGroupWithScoreInfo & {
     activity_assignment_id: string
     permitted_to_judge: boolean
+    all_judge_scored: boolean
 }
 
 export type GetActivity = Activity & {
@@ -165,6 +166,7 @@ export type GetActivity = Activity & {
                   judges: UserEssentialDetail[]
                   score: number | null
                   score_percentage: number | null
+                  all_judge_scored: boolean
               }
           >[]
         | null
