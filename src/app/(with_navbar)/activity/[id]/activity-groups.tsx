@@ -692,9 +692,11 @@ export default function ActivityGroups({
                                                             )
                                                         }
                                                     >
-                                                        {!group.all_judge_scored && (
-                                                            <AlertCircle color="red" />
-                                                        )}
+                                                        {classroom.role ==
+                                                            CLASSROOM_ROLE_TEACHER &&
+                                                            !group.all_judge_scored && (
+                                                                <AlertCircle color="red" />
+                                                            )}
                                                         {formatDecimalNumber(
                                                             group.score_percentage
                                                         )}
@@ -728,9 +730,11 @@ export default function ActivityGroups({
                                                         )
                                                     }
                                                 >
-                                                    {!group.all_judge_scored && (
-                                                        <AlertCircle color="red" />
-                                                    )}
+                                                    {classroom.role ==
+                                                        CLASSROOM_ROLE_TEACHER &&
+                                                        !group.all_judge_scored && (
+                                                            <AlertCircle color="red" />
+                                                        )}
                                                     {formatDecimalNumber(
                                                         group.score
                                                     )}
@@ -763,9 +767,11 @@ export default function ActivityGroups({
                                                         )
                                                     }
                                                 >
-                                                    {!group.all_judge_scored && (
-                                                        <AlertCircle color="red" />
-                                                    )}
+                                                    {classroom.role ==
+                                                        CLASSROOM_ROLE_TEACHER &&
+                                                        !group.all_judge_scored && (
+                                                            <AlertCircle color="red" />
+                                                        )}
                                                     {formatDecimalNumber(
                                                         group.score_percentage
                                                     )}

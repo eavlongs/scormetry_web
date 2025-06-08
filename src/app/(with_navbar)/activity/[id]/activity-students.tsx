@@ -695,9 +695,11 @@ function ListStudentWithJudges({
                                         }
                                         onClick={() => onViewScoreDetail()}
                                     >
-                                        {!student.all_judge_scored && (
-                                            <AlertCircle color="red" />
-                                        )}
+                                        {classroom.role ==
+                                            CLASSROOM_ROLE_TEACHER &&
+                                            !student.all_judge_scored && (
+                                                <AlertCircle color="red" />
+                                            )}
                                         {formatDecimalNumber(
                                             student.score_percentage
                                         )}
@@ -721,9 +723,10 @@ function ListStudentWithJudges({
                                     allJudgesScored={student.all_judge_scored}
                                     onClick={() => onViewScoreDetail()}
                                 >
-                                    {!student.all_judge_scored && (
-                                        <AlertCircle color="red" />
-                                    )}
+                                    {classroom.role == CLASSROOM_ROLE_TEACHER &&
+                                        !student.all_judge_scored && (
+                                            <AlertCircle color="red" />
+                                        )}
                                     {formatDecimalNumber(student.score)}/
                                     {activity.max_score}
                                 </ScoreBadge>
@@ -744,9 +747,10 @@ function ListStudentWithJudges({
                                     allJudgesScored={student.all_judge_scored}
                                     onClick={() => onViewScoreDetail()}
                                 >
-                                    {!student.all_judge_scored && (
-                                        <AlertCircle color="red" />
-                                    )}
+                                    {classroom.role == CLASSROOM_ROLE_TEACHER &&
+                                        !student.all_judge_scored && (
+                                            <AlertCircle color="red" />
+                                        )}
                                     {formatDecimalNumber(
                                         student.score_percentage
                                     )}

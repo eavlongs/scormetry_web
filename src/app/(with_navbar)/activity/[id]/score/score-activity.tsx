@@ -619,7 +619,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                 SCORING_TYPE_RUBRIC && (
                                                 <div className="border rounded-md p-4 bg-muted/30 mb-4 mt-6">
                                                     <h3 className="font-medium mb-3">
-                                                        Your Score Preview
+                                                        Your Score Overview
                                                     </h3>
 
                                                     {selectedEntity?.type ===
