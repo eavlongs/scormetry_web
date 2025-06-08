@@ -654,7 +654,7 @@ function RubricSection({
     return (
         <div className="mb-4">
             <div className="flex">
-                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white">
+                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white min-w-16">
                     <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
                         {/* <div className="flex-grow flex flex-col items-center justify-center gap-y-2 relative">
                                 <Input
@@ -687,7 +687,7 @@ function RubricSection({
                                     ref={sectionNameInputRef}
                                 />
                             </div> */}
-                        <div className="absolute flex flex-col items-center bottom-2 gap-y-1">
+                        <div className="absolute flex flex-col items-center bottom-2 left-[50%] translate-x-[-50%] gap-y-1">
                             {ctx.rubric_sections.length > 1 && (
                                 <Trash2
                                     className="inline-block h-4 w-4 cursor-pointer"

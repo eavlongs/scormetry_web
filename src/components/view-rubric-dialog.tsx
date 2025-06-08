@@ -87,7 +87,7 @@ function RubricSection({
     return (
         <div>
             <div className="flex">
-                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white">
+                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white min-w-16">
                     <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
                         <div>
                             {hasWeightage && (
