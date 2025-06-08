@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { calculateRubricScore, cn, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
 import {
     GetActivity,
@@ -45,6 +45,39 @@ export default function ViewScoreDetailDialog({
     const [score, setScore] = useState<
         ScoreData['range_based_scores'] | ScoreData['rubric_score'] | null
     >(null)
+
+    const [scorePreview, setScorePreview] = useState<ReturnType<
+        typeof calculateRubricScore
+    > | null>(null)
+
+    useEffect(() => {
+        console.log('updating preview')
+        if (
+            !selectedJudge ||
+            activity.scoring_type !== SCORING_TYPE_RUBRIC ||
+            activity.rubric === null ||
+            score === undefined ||
+            score === null
+        )
+            return
+
+        if (score.length == 0) {
+            console.log('no score')
+            setScorePreview({
+                groupScore: null,
+                individualScores: null,
+                overallScore: null,
+            })
+            return
+        }
+
+        const result = calculateRubricScore(
+            activity.rubric,
+            score as NonNullable<ScoreData['rubric_score']>
+        )
+
+        setScorePreview(result)
+    }, [score, selectedJudge, activity])
 
     useEffect(() => {
         if (selectedJudge) {
@@ -332,6 +365,89 @@ export default function ViewScoreDetailDialog({
                                                         className="resize-none field-sizing-fixed disabled:text-black disabled:placeholder:text-black"
                                                     />
                                                 </LabelWrapper>
+                                                {activity.scoring_type ===
+                                                    SCORING_TYPE_RUBRIC && (
+                                                    <div className="border rounded-md p-4 bg-muted/30 mb-4 mt-6">
+                                                        <h3 className="font-medium mb-3">
+                                                            Your Score Preview
+                                                        </h3>
+
+                                                        {scoringEntity?.type ===
+                                                        'group' ? (
+                                                            <div className="space-y-3">
+                                                                {/* For each group member */}
+                                                                {scoringEntity.entity.users.map(
+                                                                    (user) => (
+                                                                        <div
+                                                                            key={
+                                                                                user.id
+                                                                            }
+                                                                            className="flex justify-between items-center"
+                                                                        >
+                                                                            <span>
+                                                                                {`${user.first_name} ${user.last_name}`}
+                                                                            </span>
+                                                                            <span className="font-medium">
+                                                                                {scorePreview &&
+                                                                                scorePreview.individualScores
+                                                                                    ? (() => {
+                                                                                          const userScore =
+                                                                                              scorePreview.individualScores.find(
+                                                                                                  (
+                                                                                                      is
+                                                                                                  ) =>
+                                                                                                      is.student_id ==
+                                                                                                      user.id
+                                                                                              )?.score
+                                                                                          return userScore !==
+                                                                                              undefined
+                                                                                              ? formatDecimalNumber(
+                                                                                                    userScore
+                                                                                                ) +
+                                                                                                    '/100'
+                                                                                              : '--/100'
+                                                                                      })()
+                                                                                    : '--/100'}
+                                                                            </span>
+                                                                        </div>
+                                                                    )
+                                                                )}
+                                                                <div className="border-t pt-3 mt-2 flex justify-between items-center">
+                                                                    <span className="font-medium">
+                                                                        Overall
+                                                                        Group
+                                                                        Score
+                                                                    </span>
+                                                                    <span className="font-bold">
+                                                                        {scorePreview &&
+                                                                        scorePreview.overallScore
+                                                                            ? formatDecimalNumber(
+                                                                                  scorePreview.overallScore
+                                                                              ) +
+                                                                              '/100'
+                                                                            : '--/100'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="font-medium">
+                                                                    Overall
+                                                                    Score
+                                                                </span>
+                                                                <span className="font-bold">
+                                                                    {scorePreview &&
+                                                                    scorePreview.overallScore
+                                                                        ? formatDecimalNumber(
+                                                                              scorePreview.overallScore
+                                                                          ) +
+                                                                          '/100'
+                                                                        : '--/100'}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

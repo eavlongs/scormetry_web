@@ -443,6 +443,19 @@ export function calculateRubricScore(
         overallScore = total / individualScores.length
     }
 
+    if (
+        (groupScore && groupScore > 100) ||
+        (individualScores &&
+            individualScores.findIndex((is) => is.score > 100) !== -1) ||
+        (overallScore && overallScore > 100)
+    ) {
+        return {
+            groupScore: null,
+            individualScores: null,
+            overallScore: null,
+        }
+    }
+
     return {
         groupScore,
         individualScores: individualScores.length > 0 ? individualScores : null,

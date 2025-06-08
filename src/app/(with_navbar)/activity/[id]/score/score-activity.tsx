@@ -69,6 +69,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     useEffect(() => {
         console.log('updating preview')
         if (
+            !selectedEntity ||
             activity.scoring_type !== SCORING_TYPE_RUBRIC ||
             activity.rubric === null ||
             scoreData.rubric_score === undefined
@@ -329,6 +330,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             }
         } else return
 
+        setIsSubmitting(true)
         const response = await saveScoringData(
             selectedEntity.activity_assignment_id,
             paramForValidationSchema,
@@ -337,7 +339,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
 
         if (response.success) {
             toast.success('Scores saved successfully')
+            setIsSubmitting(false)
         } else {
+            setIsSubmitting(false)
             if (response.error && response.error.length > 0) {
                 for (const error of response.error) {
                     if (
@@ -698,10 +702,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                 className="block ml-auto"
                                             >
                                                 {isSubmitting ? (
-                                                    <>
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                        Submitting...
-                                                    </>
+                                                    <>Submitting...</>
                                                 ) : (
                                                     'Submit Score'
                                                 )}
