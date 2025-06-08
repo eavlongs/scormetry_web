@@ -14,7 +14,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { TextFileWriter } from '@/lib/text-file-writer'
 import { cn, formatDecimalNumber, generateFileNameForExport } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
@@ -581,92 +580,184 @@ export default function ActivityGroups({
 
     return (
         // <ScrollArea className="h-[calc(100vh-5rem)]">
-        <ScrollArea>
-            <div>
-                {classroom.role === CLASSROOM_ROLE_TEACHER && (
-                    <div className="mb-4 flex items-center gap-x-2">
-                        <AssignJudgeAll
-                            activityID={activity.id}
-                            judges={judges}
-                        />
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center gap-2"
-                                >
-                                    <FileDown size={16} />
-                                    Export Data
-                                    <ChevronDown size={16} />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onClick={() => exportData('csv', 'final')}
-                                >
-                                    <FileText size={16} className="mr-2" />
-                                    Export Final Score (CSV)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => exportData('xlsx', 'final')}
-                                >
-                                    <FileSpreadsheet
-                                        size={16}
-                                        className="mr-2"
-                                    />
-                                    Export Final Score (Excel)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        exportData('csv', 'detailed')
-                                    }
-                                >
-                                    <FileText size={16} className="mr-2" />
-                                    Export Detailed Score (CSV)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        exportData('xlsx', 'detailed')
-                                    }
-                                >
-                                    <FileSpreadsheet
-                                        size={16}
-                                        className="mr-2"
-                                    />
-                                    Export Detailed Score (Excel)
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+        // <ScrollArea>
+        <div>
+            {groups.length === 0 ? (
+                <div className="border rounded-lg bg-card p-8 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="rounded-full bg-muted p-3">
+                            <AlertCircle className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <h3 className="font-medium text-lg">No groups found</h3>
                     </div>
-                )}
-                <div className="space-y-3">
-                    {groups.map((group) => (
-                        <Collapsible
-                            key={group.id}
-                            open={openGroups.includes(group.id)}
-                            onOpenChange={() => toggleGroup(group.id)}
-                            className="border rounded-lg bg-card"
-                        >
-                            <CollapsibleTrigger className="w-full">
-                                <div
-                                    className={cn(
-                                        `px-4 py-3 border-b bg-muted/40 flex items-center justify-between hover:bg-muted/60 transition-colors cursor-pointer`,
-                                        groupToHighlight !== null &&
-                                            groupToHighlight === group.id &&
-                                            'border border-paragon relative animate-border-pulse'
-                                    )}
-                                >
-                                    <div className="w-full flex items-center gap-2 px-2">
-                                        <span className="font-medium">
-                                            {group.name}
-                                        </span>
-                                        <Badge variant="secondary">
-                                            {group.users.length} members
-                                        </Badge>
-                                    </div>
-                                    <div className="ml-auto flex items-center gap-x-2">
-                                        {activity.rubric_id !== null ? (
-                                            group.score_percentage !== null && (
+                </div>
+            ) : (
+                <div>
+                    {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                        <div className="mb-4 flex items-center gap-x-2">
+                            <AssignJudgeAll
+                                activityID={activity.id}
+                                judges={judges}
+                            />
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <FileDown size={16} />
+                                        Export Data
+                                        <ChevronDown size={16} />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            exportData('csv', 'final')
+                                        }
+                                    >
+                                        <FileText size={16} className="mr-2" />
+                                        Export Final Score (CSV)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            exportData('xlsx', 'final')
+                                        }
+                                    >
+                                        <FileSpreadsheet
+                                            size={16}
+                                            className="mr-2"
+                                        />
+                                        Export Final Score (Excel)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            exportData('csv', 'detailed')
+                                        }
+                                    >
+                                        <FileText size={16} className="mr-2" />
+                                        Export Detailed Score (CSV)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            exportData('xlsx', 'detailed')
+                                        }
+                                    >
+                                        <FileSpreadsheet
+                                            size={16}
+                                            className="mr-2"
+                                        />
+                                        Export Detailed Score (Excel)
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    )}
+                    <div className="space-y-3">
+                        {groups.map((group) => (
+                            <Collapsible
+                                key={group.id}
+                                open={openGroups.includes(group.id)}
+                                onOpenChange={() => toggleGroup(group.id)}
+                                className="border rounded-lg bg-card"
+                            >
+                                <CollapsibleTrigger className="w-full">
+                                    <div
+                                        className={cn(
+                                            `px-4 py-3 border-b bg-muted/40 flex items-center justify-between hover:bg-muted/60 transition-colors cursor-pointer`,
+                                            groupToHighlight !== null &&
+                                                groupToHighlight === group.id &&
+                                                'border border-paragon relative animate-border-pulse'
+                                        )}
+                                    >
+                                        <div className="w-full flex items-center gap-2 px-2">
+                                            <span className="font-medium">
+                                                {group.name}
+                                            </span>
+                                            <Badge variant="secondary">
+                                                {group.users.length} members
+                                            </Badge>
+                                        </div>
+                                        <div className="ml-auto flex items-center gap-x-2">
+                                            {activity.rubric_id !== null ? (
+                                                group.score_percentage !==
+                                                    null && (
+                                                    <ConditionalTooltip
+                                                        text={
+                                                            group.all_judge_scored
+                                                                ? 'See detail'
+                                                                : 'See detail (Not all judges has submitted yet)'
+                                                        }
+                                                        show={
+                                                            classroom.role ==
+                                                            CLASSROOM_ROLE_TEACHER
+                                                        }
+                                                    >
+                                                        <ScoreBadge
+                                                            isTeacher={
+                                                                classroom.role ==
+                                                                CLASSROOM_ROLE_TEACHER
+                                                            }
+                                                            allJudgesScored={
+                                                                group.all_judge_scored
+                                                            }
+                                                            onClick={() =>
+                                                                setGroupToViewScoreDetail(
+                                                                    group
+                                                                )
+                                                            }
+                                                        >
+                                                            {classroom.role ==
+                                                                CLASSROOM_ROLE_TEACHER &&
+                                                                !group.all_judge_scored && (
+                                                                    <AlertCircle color="red" />
+                                                                )}
+                                                            {formatDecimalNumber(
+                                                                group.score_percentage
+                                                            )}
+                                                            /100
+                                                        </ScoreBadge>
+                                                    </ConditionalTooltip>
+                                                )
+                                            ) : group.score !== null ? (
+                                                <ConditionalTooltip
+                                                    text={
+                                                        group.all_judge_scored
+                                                            ? 'See detail'
+                                                            : 'See detail (Not all judges has submitted yet)'
+                                                    }
+                                                    show={
+                                                        classroom.role ==
+                                                        CLASSROOM_ROLE_TEACHER
+                                                    }
+                                                >
+                                                    <ScoreBadge
+                                                        isTeacher={
+                                                            classroom.role ==
+                                                            CLASSROOM_ROLE_TEACHER
+                                                        }
+                                                        allJudgesScored={
+                                                            group.all_judge_scored
+                                                        }
+                                                        onClick={() =>
+                                                            setGroupToViewScoreDetail(
+                                                                group
+                                                            )
+                                                        }
+                                                    >
+                                                        {classroom.role ==
+                                                            CLASSROOM_ROLE_TEACHER &&
+                                                            !group.all_judge_scored && (
+                                                                <AlertCircle color="red" />
+                                                            )}
+                                                        {formatDecimalNumber(
+                                                            group.score
+                                                        )}
+                                                        /{activity.max_score}
+                                                    </ScoreBadge>
+                                                </ConditionalTooltip>
+                                            ) : group.score_percentage !==
+                                              null ? (
                                                 <ConditionalTooltip
                                                     text={
                                                         group.all_judge_scored
@@ -703,142 +794,70 @@ export default function ActivityGroups({
                                                         /100
                                                     </ScoreBadge>
                                                 </ConditionalTooltip>
-                                            )
-                                        ) : group.score !== null ? (
-                                            <ConditionalTooltip
-                                                text={
-                                                    group.all_judge_scored
-                                                        ? 'See detail'
-                                                        : 'See detail (Not all judges has submitted yet)'
-                                                }
-                                                show={
-                                                    classroom.role ==
-                                                    CLASSROOM_ROLE_TEACHER
-                                                }
-                                            >
-                                                <ScoreBadge
-                                                    isTeacher={
-                                                        classroom.role ==
-                                                        CLASSROOM_ROLE_TEACHER
-                                                    }
-                                                    allJudgesScored={
-                                                        group.all_judge_scored
-                                                    }
+                                            ) : null}
+                                            {classroom.role ==
+                                                CLASSROOM_ROLE_TEACHER && (
+                                                <AssignJudgeButton
                                                     onClick={() =>
-                                                        setGroupToViewScoreDetail(
+                                                        setGroupToAssignJudges(
                                                             group
                                                         )
                                                     }
-                                                >
-                                                    {classroom.role ==
-                                                        CLASSROOM_ROLE_TEACHER &&
-                                                        !group.all_judge_scored && (
-                                                            <AlertCircle color="red" />
-                                                        )}
-                                                    {formatDecimalNumber(
-                                                        group.score
-                                                    )}
-                                                    /{activity.max_score}
-                                                </ScoreBadge>
-                                            </ConditionalTooltip>
-                                        ) : group.score_percentage !== null ? (
-                                            <ConditionalTooltip
-                                                text={
-                                                    group.all_judge_scored
-                                                        ? 'See detail'
-                                                        : 'See detail (Not all judges has submitted yet)'
-                                                }
-                                                show={
-                                                    classroom.role ==
-                                                    CLASSROOM_ROLE_TEACHER
-                                                }
-                                            >
-                                                <ScoreBadge
-                                                    isTeacher={
-                                                        classroom.role ==
-                                                        CLASSROOM_ROLE_TEACHER
-                                                    }
-                                                    allJudgesScored={
-                                                        group.all_judge_scored
-                                                    }
-                                                    onClick={() =>
-                                                        setGroupToViewScoreDetail(
-                                                            group
-                                                        )
-                                                    }
-                                                >
-                                                    {classroom.role ==
-                                                        CLASSROOM_ROLE_TEACHER &&
-                                                        !group.all_judge_scored && (
-                                                            <AlertCircle color="red" />
-                                                        )}
-                                                    {formatDecimalNumber(
-                                                        group.score_percentage
-                                                    )}
-                                                    /100
-                                                </ScoreBadge>
-                                            </ConditionalTooltip>
-                                        ) : null}
-                                        {classroom.role ==
-                                            CLASSROOM_ROLE_TEACHER && (
-                                            <AssignJudgeButton
-                                                onClick={() =>
-                                                    setGroupToAssignJudges(
-                                                        group
-                                                    )
-                                                }
-                                            />
-                                        )}
-                                        {group.permitted_to_judge && (
-                                            <GiveScoreButton
-                                                activityId={activity.id}
-                                                groupId={group.id}
-                                            />
-                                        )}
-                                        <ChevronDown
-                                            className={cn(
-                                                'h-4 w-4 text-muted-foreground transition-transform',
-                                                openGroups.includes(group.id) &&
-                                                    'transform rotate-180'
+                                                />
                                             )}
-                                        />
+                                            {group.permitted_to_judge && (
+                                                <GiveScoreButton
+                                                    activityId={activity.id}
+                                                    groupId={group.id}
+                                                />
+                                            )}
+                                            <ChevronDown
+                                                className={cn(
+                                                    'h-4 w-4 text-muted-foreground transition-transform',
+                                                    openGroups.includes(
+                                                        group.id
+                                                    ) && 'transform rotate-180'
+                                                )}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="divide-y divide-border">
-                                {group.users.map((user) => (
-                                    <ListUser
-                                        user={user}
-                                        key={user.id}
-                                        scoreString={
-                                            activity.rubric_id !== null
-                                                ? user.score_percentage !== null
-                                                    ? `${formatDecimalNumber(user.score_percentage)}/100`
-                                                    : undefined
-                                                : user.score !== null
-                                                  ? `${formatDecimalNumber(user.score)}/${activity.max_score}`
-                                                  : user.score_percentage !==
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="divide-y divide-border">
+                                    {group.users.map((user) => (
+                                        <ListUser
+                                            user={user}
+                                            key={user.id}
+                                            scoreString={
+                                                activity.rubric_id !== null
+                                                    ? user.score_percentage !==
                                                       null
-                                                    ? `${formatDecimalNumber(
-                                                          user.score_percentage
-                                                      )}/100`
-                                                    : undefined
-                                        }
-                                    />
-                                ))}
+                                                        ? `${formatDecimalNumber(user.score_percentage)}/100`
+                                                        : undefined
+                                                    : user.score !== null
+                                                      ? `${formatDecimalNumber(user.score)}/${activity.max_score}`
+                                                      : user.score_percentage !==
+                                                          null
+                                                        ? `${formatDecimalNumber(
+                                                              user.score_percentage
+                                                          )}/100`
+                                                        : undefined
+                                            }
+                                        />
+                                    ))}
 
-                                {group.judges.map((judge) => (
-                                    <ListUser
-                                        user={judge}
-                                        isJudge
-                                        key={judge.id}
-                                    />
-                                ))}
-                            </CollapsibleContent>
-                        </Collapsible>
-                    ))}
+                                    {group.judges.map((judge) => (
+                                        <ListUser
+                                            user={judge}
+                                            isJudge
+                                            key={judge.id}
+                                        />
+                                    ))}
+                                </CollapsibleContent>
+                            </Collapsible>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
             <AssignJudgeDialog
                 open={!!groupToAssignJudges}
                 onClose={() => setGroupToAssignJudges(null)}
@@ -868,7 +887,8 @@ export default function ActivityGroups({
                 }
                 activity={activity}
             />
-        </ScrollArea>
+            {/* </ScrollArea> */}
+        </div>
     )
 }
 
