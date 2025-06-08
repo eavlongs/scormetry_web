@@ -12,13 +12,19 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Grouping } from '@/types/classroom'
-import { EditIcon, Eye, FileTextIcon, Plus, Trash2 } from 'lucide-react'
+import { EditIcon, Eye, FileTextIcon, Info, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { GetClassroomResponse } from '../actions'
 import { CreateGroupingDialog } from './create-grouping-dialog'
 import { DeleteGroupingDialog } from './delete-grouping-dialog'
 import { EditGroupingDialog } from './edit-grouping-dialog'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 export default function GroupingsTab({
     classroom,
@@ -26,10 +32,28 @@ export default function GroupingsTab({
     classroom: GetClassroomResponse
 }) {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const isMobile = useIsMobile()
     return (
         <>
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Groupings</h2>
+                <h2 className="text-xl font-bold flex items-center gap-x-2">
+                    Groupings
+                    <Popover>
+                        <PopoverTrigger>
+                            <Info className="h-4 w-4 cursor-pointer" />
+                        </PopoverTrigger>
+                        <PopoverContent
+                            className="text-xs px-4 py-2 bg-paragon text-primary-foreground text-justify"
+                            align="center"
+                            side={isMobile ? 'bottom' : 'right'}
+                        >
+                            Grouping lets you split users into smaller teams.
+                            You can create groups and assign members for each
+                            group. This allows you to score students on a
+                            group-by-group basis.
+                        </PopoverContent>
+                    </Popover>
+                </h2>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" /> New Grouping
                 </Button>
