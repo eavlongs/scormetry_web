@@ -656,6 +656,7 @@ export function RubricCriteria({
                             className={cn(
                                 'border p-2 flex-shrink-0 w-[15rem] flex flex-col justify-start',
                                 scoreRange &&
+                                    !hideScore &&
                                     scoreRange.id == range.id &&
                                     'border-paragon border-1'
                             )}
