@@ -43,7 +43,7 @@ export default function GroupingsTab({
                             <Info className="h-4 w-4 cursor-pointer" />
                         </PopoverTrigger>
                         <PopoverContent
-                            className="text-xs px-4 py-2 bg-paragon text-primary-foreground text-justify"
+                            className="text-xs px-4 py-2 border-black text-justify"
                             align="center"
                             side={isMobile ? 'bottom' : 'right'}
                         >

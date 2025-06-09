@@ -196,7 +196,7 @@ export default function ViewActivity({
                             className="inline-block align-middle mr-1"
                             strokeWidth={1.5}
                             size={18}
-                        />{' '}
+                        />
                         Back to {classroom.classroom.name}
                     </Link>
                     {classroom.role === CLASSROOM_ROLE_TEACHER && (

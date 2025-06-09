@@ -17,8 +17,9 @@ import {
 } from '@/types/classroom'
 import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -360,312 +361,359 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     }
 
     return (
-        <div className="grid lg:grid-cols-5 gap-4 mb-4">
-            {/* Left side: Student/Group list */}
-            <div className="border rounded-lg bg-card lg:row-span-full overflow-y-auto">
-                <div className="p-3 border-b bg-muted/40">
-                    <h2 className="font-medium">
-                        {activity.groups ? 'Groups' : 'Students'} to Score
-                    </h2>
+        <div>
+            <Link
+                href={`/activity/${activity.id}`}
+                className="text-sm opacity-70 cursor-pointer flex items-center mb-4"
+            >
+                <ArrowLeft
+                    className="inline-block align-middle mr-1"
+                    strokeWidth={1.5}
+                    size={18}
+                />
+                Back to {activity.title}
+            </Link>
+            <div className="grid lg:grid-cols-5 gap-4 mb-4">
+                {/* Left side: Student/Group list */}
+                <div className="border rounded-lg bg-card lg:row-span-full overflow-y-auto">
+                    <div className="p-3 border-b bg-muted/40">
+                        <h2 className="font-medium">
+                            {activity.groups ? 'Groups' : 'Students'} to Score
+                        </h2>
+                    </div>
+                    <div>
+                        {entities.length === 0 ? (
+                            <div className="flex items-center justify-center h-full p-4 ">
+                                <p className="text-muted-foreground">
+                                    No students or groups assigned for scoring
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="">
+                                <div className="p-2 sticky top-0 bg-background z-10">
+                                    <Input
+                                        placeholder="Search..."
+                                        value={searchQuery}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
+                                        className="w-full"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    {filteredEntities.length === 0 ? (
+                                        <p className="p-4 text-sm text-muted-foreground">
+                                            No results found
+                                        </p>
+                                    ) : (
+                                        filteredEntities.map((entity) => (
+                                            <div
+                                                key={entity.entity.id}
+                                                className={cn(
+                                                    'flex items-center p-3 rounded-md cursor-pointer gap-3',
+                                                    selectedEntity?.entity
+                                                        .id === entity.entity.id
+                                                        ? 'bg-muted'
+                                                        : 'hover:bg-muted/50 transition-colors'
+                                                )}
+                                                onClick={
+                                                    () => {
+                                                        let searchParam = ''
+                                                        if (
+                                                            entity.type ==
+                                                            'group'
+                                                        )
+                                                            searchParam = `?gid=${entity.entity.id}`
+                                                        else {
+                                                            searchParam = `?sid=${entity.entity.id}`
+                                                        }
+                                                        window.location.href = `${pathname}${searchParam}`
+                                                    }
+                                                    // setSelectedEntity(entity)
+                                                }
+                                                tabIndex={0}
+                                                role="button"
+                                                onKeyDown={(e) => {
+                                                    if (
+                                                        e.key === 'Enter' ||
+                                                        e.key === ' '
+                                                    ) {
+                                                        setSelectedEntity(
+                                                            entity
+                                                        )
+                                                    }
+                                                }}
+                                            >
+                                                {entity.type == 'group' ? (
+                                                    <div className="h-10 w-10 rounded-md bg-muted-foreground/10 flex items-center justify-center">
+                                                        <Badge variant="outline">
+                                                            {entity.entity.name.substring(
+                                                                0,
+                                                                2
+                                                            )}
+                                                        </Badge>
+                                                    </div>
+                                                ) : (
+                                                    <div className="relative h-10 w-10">
+                                                        <Image
+                                                            src={
+                                                                entity.entity
+                                                                    .profile_picture
+                                                            }
+                                                            alt={
+                                                                entity.entity
+                                                                    .first_name +
+                                                                ' ' +
+                                                                entity.entity
+                                                                    .last_name
+                                                            }
+                                                            fill
+                                                            className="rounded-full object-cover"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div className="flex-1 min-w-0">
+                                                    {entity.type == 'group' ? (
+                                                        <p className="text-sm font-medium truncate">
+                                                            {entity.entity.name}
+                                                        </p>
+                                                    ) : (
+                                                        <>
+                                                            <p className="text-sm font-medium truncate">
+                                                                {' '}
+                                                                {entity.entity
+                                                                    .first_name +
+                                                                    ' ' +
+                                                                    entity
+                                                                        .entity
+                                                                        .last_name}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {
+                                                                    entity
+                                                                        .entity
+                                                                        .email
+                                                                }
+                                                            </p>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                {/* {entity.isScored ? (
+                                                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                                ) : (
+                                                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                                                )} */}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div>
-                    {entities.length === 0 ? (
-                        <div className="flex items-center justify-center h-full p-4 ">
+
+                {/* Right side: Scoring interface */}
+                <div className="lg:col-span-4 !w-full min-w-0 lg:row-span-full">
+                    {!selectedEntity ? (
+                        <div className="flex items-center justify-center h-full">
                             <p className="text-muted-foreground">
-                                No students or groups assigned for scoring
+                                No student or group selected
                             </p>
                         </div>
                     ) : (
-                        <div className="">
-                            <div className="p-2 sticky top-0 bg-background z-10">
-                                <Input
-                                    placeholder="Search..."
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    className="w-full"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                {filteredEntities.length === 0 ? (
-                                    <p className="p-4 text-sm text-muted-foreground">
-                                        No results found
-                                    </p>
-                                ) : (
-                                    filteredEntities.map((entity) => (
-                                        <div
-                                            key={entity.entity.id}
-                                            className={cn(
-                                                'flex items-center p-3 rounded-md cursor-pointer gap-3',
-                                                selectedEntity?.entity.id ===
-                                                    entity.entity.id
-                                                    ? 'bg-muted'
-                                                    : 'hover:bg-muted/50 transition-colors'
-                                            )}
-                                            onClick={
-                                                () => {
-                                                    let searchParam = ''
-                                                    if (entity.type == 'group')
-                                                        searchParam = `?gid=${entity.entity.id}`
-                                                    else {
-                                                        searchParam = `?sid=${entity.entity.id}`
+                        <ScoreInputVisibilityProvider
+                            value={{
+                                hideScore: hideScore,
+                                show: () => setHideScore(false),
+                            }}
+                        >
+                            <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
+                                <div className="h-full overflow-y-auto flex flex-col gap-y-4">
+                                    <div className="flex gap-x-2 items-center">
+                                        {selectedEntity.type == 'group' ? (
+                                            <p className="text-lg font-semibold">
+                                                {selectedEntity.entity.name}
+                                            </p>
+                                        ) : (
+                                            <>
+                                                <p className="text-lg font-semibold">
+                                                    {selectedEntity.entity
+                                                        .first_name +
+                                                        ' ' +
+                                                        selectedEntity.entity
+                                                            .last_name}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {
+                                                        selectedEntity.entity
+                                                            .email
                                                     }
-                                                    window.location.href = `${pathname}${searchParam}`
-                                                }
-                                                // setSelectedEntity(entity)
-                                            }
-                                            tabIndex={0}
-                                            role="button"
-                                            onKeyDown={(e) => {
-                                                if (
-                                                    e.key === 'Enter' ||
-                                                    e.key === ' '
-                                                ) {
-                                                    setSelectedEntity(entity)
-                                                }
-                                            }}
-                                        >
-                                            {entity.type == 'group' ? (
-                                                <div className="h-10 w-10 rounded-md bg-muted-foreground/10 flex items-center justify-center">
-                                                    <Badge variant="outline">
-                                                        {entity.entity.name.substring(
-                                                            0,
-                                                            2
-                                                        )}
-                                                    </Badge>
-                                                </div>
-                                            ) : (
-                                                <div className="relative h-10 w-10">
-                                                    <Image
-                                                        src={
-                                                            entity.entity
-                                                                .profile_picture
+                                                </p>
+                                            </>
+                                        )}
+
+                                        {!hideScore ? (
+                                            <SimpleToolTip text="Hide score">
+                                                <Eye
+                                                    onClick={() =>
+                                                        setHideScore(true)
+                                                    }
+                                                />
+                                            </SimpleToolTip>
+                                        ) : (
+                                            <SimpleToolTip text="Show score">
+                                                <EyeOff
+                                                    onClick={() =>
+                                                        setHideScore(false)
+                                                    }
+                                                />
+                                            </SimpleToolTip>
+                                        )}
+                                    </div>
+
+                                    <div className="w-full flex flex-col flex-grow">
+                                        {activity.scoring_type ===
+                                            SCORING_TYPE_RANGE &&
+                                            activity.max_score !== null &&
+                                            scoreFetched && (
+                                                <RangeScoreInput
+                                                    initialScores={
+                                                        initialScore.range_based_scores
+                                                    }
+                                                    entity={selectedEntity}
+                                                    onScoreUpdate={(scores) => {
+                                                        setScoreData({
+                                                            rubric_score:
+                                                                undefined,
+                                                            range_based_scores:
+                                                                scores,
+                                                        })
+                                                    }}
+                                                    maxScore={
+                                                        activity.max_score
+                                                    }
+                                                />
+                                            )}
+
+                                        {activity.scoring_type ===
+                                            SCORING_TYPE_RUBRIC &&
+                                            scoreFetched &&
+                                            activity.rubric && (
+                                                <div>
+                                                    <RubricScoreInput
+                                                        rubric={activity.rubric}
+                                                        entity={selectedEntity}
+                                                        initialScores={
+                                                            initialScore.rubric_score
                                                         }
-                                                        alt={
-                                                            entity.entity
-                                                                .first_name +
-                                                            ' ' +
-                                                            entity.entity
-                                                                .last_name
+                                                        parentErrors={errors}
+                                                        onScoreUpdate={(
+                                                            scores
+                                                        ) =>
+                                                            setScoreData({
+                                                                range_based_scores:
+                                                                    undefined,
+                                                                rubric_score:
+                                                                    scores,
+                                                            })
                                                         }
-                                                        fill
-                                                        className="rounded-full object-cover"
+                                                        onSetParentErrors={() =>
+                                                            setErrors([])
+                                                        }
                                                     />
                                                 </div>
                                             )}
 
-                                            <div className="flex-1 min-w-0">
-                                                {entity.type == 'group' ? (
-                                                    <p className="text-sm font-medium truncate">
-                                                        {entity.entity.name}
-                                                    </p>
-                                                ) : (
-                                                    <>
-                                                        <p className="text-sm font-medium truncate">
-                                                            {' '}
-                                                            {entity.entity
-                                                                .first_name +
-                                                                ' ' +
-                                                                entity.entity
-                                                                    .last_name}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground truncate">
-                                                            {
-                                                                entity.entity
-                                                                    .email
-                                                            }
-                                                        </p>
-                                                    </>
-                                                )}
-                                            </div>
+                                        <div className="flex-grow flex flex-col justify-end mt-4">
+                                            <div className="space-y-4">
+                                                <LabelWrapper
+                                                    label={{
+                                                        text: 'Feedback',
+                                                        field: 'comment',
+                                                    }}
+                                                    options={{
+                                                        required: false,
+                                                    }}
+                                                >
+                                                    <Textarea
+                                                        id="comment"
+                                                        placeholder="Provide detailed feedback..."
+                                                        rows={6}
+                                                        ref={commentRef}
+                                                        className="resize-none field-sizing-fixed"
+                                                    />
+                                                </LabelWrapper>
+                                                {activity.scoring_type ===
+                                                    SCORING_TYPE_RUBRIC && (
+                                                    <div className="border rounded-md p-4 bg-muted/30 mb-4 mt-6">
+                                                        <h3 className="font-medium mb-3">
+                                                            Your Score Overview
+                                                        </h3>
 
-                                            {/* {entity.isScored ? (
-                                                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                            ) : (
-                                                <AlertCircle className="h-5 w-5 text-amber-500" />
-                                            )} */}
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Right side: Scoring interface */}
-            <div className="lg:col-span-4 !w-full min-w-0 lg:row-span-full">
-                {!selectedEntity ? (
-                    <div className="flex items-center justify-center h-full">
-                        <p className="text-muted-foreground">
-                            No student or group selected
-                        </p>
-                    </div>
-                ) : (
-                    <ScoreInputVisibilityProvider
-                        value={{
-                            hideScore: hideScore,
-                            show: () => setHideScore(false),
-                        }}
-                    >
-                        <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
-                            <div className="h-full overflow-y-auto flex flex-col gap-y-4">
-                                <div className="flex gap-x-2 items-center">
-                                    {selectedEntity.type == 'group' ? (
-                                        <p className="text-lg font-semibold">
-                                            {selectedEntity.entity.name}
-                                        </p>
-                                    ) : (
-                                        <>
-                                            <p className="text-lg font-semibold">
-                                                {selectedEntity.entity
-                                                    .first_name +
-                                                    ' ' +
-                                                    selectedEntity.entity
-                                                        .last_name}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {selectedEntity.entity.email}
-                                            </p>
-                                        </>
-                                    )}
-
-                                    {!hideScore ? (
-                                        <SimpleToolTip text="Hide score">
-                                            <Eye
-                                                onClick={() =>
-                                                    setHideScore(true)
-                                                }
-                                            />
-                                        </SimpleToolTip>
-                                    ) : (
-                                        <SimpleToolTip text="Show score">
-                                            <EyeOff
-                                                onClick={() =>
-                                                    setHideScore(false)
-                                                }
-                                            />
-                                        </SimpleToolTip>
-                                    )}
-                                </div>
-
-                                <div className="w-full flex flex-col flex-grow">
-                                    {activity.scoring_type ===
-                                        SCORING_TYPE_RANGE &&
-                                        activity.max_score !== null &&
-                                        scoreFetched && (
-                                            <RangeScoreInput
-                                                initialScores={
-                                                    initialScore.range_based_scores
-                                                }
-                                                entity={selectedEntity}
-                                                onScoreUpdate={(scores) => {
-                                                    setScoreData({
-                                                        rubric_score: undefined,
-                                                        range_based_scores:
-                                                            scores,
-                                                    })
-                                                }}
-                                                maxScore={activity.max_score}
-                                            />
-                                        )}
-
-                                    {activity.scoring_type ===
-                                        SCORING_TYPE_RUBRIC &&
-                                        scoreFetched &&
-                                        activity.rubric && (
-                                            <div>
-                                                <RubricScoreInput
-                                                    rubric={activity.rubric}
-                                                    entity={selectedEntity}
-                                                    initialScores={
-                                                        initialScore.rubric_score
-                                                    }
-                                                    parentErrors={errors}
-                                                    onScoreUpdate={(scores) =>
-                                                        setScoreData({
-                                                            range_based_scores:
-                                                                undefined,
-                                                            rubric_score:
-                                                                scores,
-                                                        })
-                                                    }
-                                                    onSetParentErrors={() =>
-                                                        setErrors([])
-                                                    }
-                                                />
-                                            </div>
-                                        )}
-
-                                    <div className="flex-grow flex flex-col justify-end mt-4">
-                                        <div className="space-y-4">
-                                            <LabelWrapper
-                                                label={{
-                                                    text: 'Feedback',
-                                                    field: 'comment',
-                                                }}
-                                                options={{ required: false }}
-                                            >
-                                                <Textarea
-                                                    id="comment"
-                                                    placeholder="Provide detailed feedback..."
-                                                    rows={6}
-                                                    ref={commentRef}
-                                                    className="resize-none field-sizing-fixed"
-                                                />
-                                            </LabelWrapper>
-                                            {activity.scoring_type ===
-                                                SCORING_TYPE_RUBRIC && (
-                                                <div className="border rounded-md p-4 bg-muted/30 mb-4 mt-6">
-                                                    <h3 className="font-medium mb-3">
-                                                        Your Score Overview
-                                                    </h3>
-
-                                                    {selectedEntity?.type ===
-                                                    'group' ? (
-                                                        <div className="space-y-3">
-                                                            {/* For each group member */}
-                                                            {selectedEntity.entity.users.map(
-                                                                (user) => (
-                                                                    <div
-                                                                        key={
-                                                                            user.id
-                                                                        }
-                                                                        className="flex justify-between items-center"
-                                                                    >
-                                                                        <span>
-                                                                            {`${user.first_name} ${user.last_name}`}
-                                                                        </span>
-                                                                        <span className="font-medium">
-                                                                            {scorePreview &&
-                                                                            scorePreview.individualScores
-                                                                                ? (() => {
-                                                                                      const userScore =
-                                                                                          scorePreview.individualScores.find(
-                                                                                              (
-                                                                                                  is
-                                                                                              ) =>
-                                                                                                  is.student_id ==
-                                                                                                  user.id
-                                                                                          )?.score
-                                                                                      return userScore !==
-                                                                                          undefined
-                                                                                          ? formatDecimalNumber(
-                                                                                                userScore
-                                                                                            ) +
-                                                                                                '/100'
-                                                                                          : '--/100'
-                                                                                  })()
-                                                                                : '--/100'}
-                                                                        </span>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                            <div className="border-t pt-3 mt-2 flex justify-between items-center">
+                                                        {selectedEntity?.type ===
+                                                        'group' ? (
+                                                            <div className="space-y-3">
+                                                                {/* For each group member */}
+                                                                {selectedEntity.entity.users.map(
+                                                                    (user) => (
+                                                                        <div
+                                                                            key={
+                                                                                user.id
+                                                                            }
+                                                                            className="flex justify-between items-center"
+                                                                        >
+                                                                            <span>
+                                                                                {`${user.first_name} ${user.last_name}`}
+                                                                            </span>
+                                                                            <span className="font-medium">
+                                                                                {scorePreview &&
+                                                                                scorePreview.individualScores
+                                                                                    ? (() => {
+                                                                                          const userScore =
+                                                                                              scorePreview.individualScores.find(
+                                                                                                  (
+                                                                                                      is
+                                                                                                  ) =>
+                                                                                                      is.student_id ==
+                                                                                                      user.id
+                                                                                              )?.score
+                                                                                          return userScore !==
+                                                                                              undefined
+                                                                                              ? formatDecimalNumber(
+                                                                                                    userScore
+                                                                                                ) +
+                                                                                                    '/100'
+                                                                                              : '--/100'
+                                                                                      })()
+                                                                                    : '--/100'}
+                                                                            </span>
+                                                                        </div>
+                                                                    )
+                                                                )}
+                                                                <div className="border-t pt-3 mt-2 flex justify-between items-center">
+                                                                    <span className="font-medium">
+                                                                        Overall
+                                                                        Group
+                                                                        Score
+                                                                    </span>
+                                                                    <span className="font-bold">
+                                                                        {scorePreview &&
+                                                                        scorePreview.overallScore
+                                                                            ? formatDecimalNumber(
+                                                                                  scorePreview.overallScore
+                                                                              ) +
+                                                                              '/100'
+                                                                            : '--/100'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex justify-between items-center">
                                                                 <span className="font-medium">
                                                                     Overall
-                                                                    Group Score
+                                                                    Score
                                                                 </span>
                                                                 <span className="font-bold">
                                                                     {scorePreview &&
@@ -677,43 +725,29 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                                         : '--/100'}
                                                                 </span>
                                                             </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="font-medium">
-                                                                Overall Score
-                                                            </span>
-                                                            <span className="font-bold">
-                                                                {scorePreview &&
-                                                                scorePreview.overallScore
-                                                                    ? formatDecimalNumber(
-                                                                          scorePreview.overallScore
-                                                                      ) + '/100'
-                                                                    : '--/100'}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            <Button
-                                                onClick={handleSubmit}
-                                                disabled={isSubmitting}
-                                                className="block ml-auto"
-                                            >
-                                                {isSubmitting ? (
-                                                    <>Submitting...</>
-                                                ) : (
-                                                    'Submit Score'
+                                                        )}
+                                                    </div>
                                                 )}
-                                            </Button>
+
+                                                <Button
+                                                    onClick={handleSubmit}
+                                                    disabled={isSubmitting}
+                                                    className="block ml-auto"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <>Submitting...</>
+                                                    ) : (
+                                                        'Submit Score'
+                                                    )}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </ScoreInputVisibilityProvider>
-                )}
+                        </ScoreInputVisibilityProvider>
+                    )}
+                </div>
             </div>
         </div>
     )
