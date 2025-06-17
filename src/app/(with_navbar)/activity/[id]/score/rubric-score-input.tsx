@@ -1,5 +1,6 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
 import TinyEditor from '@/components/tiny-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import { cn, getErrorMessageFromNestedPathValidationError } from '@/lib/utils'
 import { RubricScoreSchema } from '@/schema'
 import { GetRubric, IndividualOrGroup, ScoringEntity } from '@/types/classroom'
 import { NestedPathValidationError } from '@/types/response'
+import { Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
@@ -43,6 +45,45 @@ export function RubricScoreInput({
     const [scores, setScores] = useState<z.infer<typeof RubricScoreSchema>[]>(
         initialScores ? [...initialScores] : []
     )
+
+    const [groupScoreSections] = useState<GetRubric['rubric_sections']>(
+        rubric.rubric_sections.filter((s) => s.is_group_score)
+    )
+    const [individualScoreSections] = useState<GetRubric['rubric_sections']>(
+        rubric.rubric_sections.filter((s) => !s.is_group_score)
+    )
+
+    const { triggerHideAll, hide: hideScore } = useScoreInputVisibilityContext()
+    useEffect(() => {
+        console.log('triggerHideAll', triggerHideAll)
+        if (triggerHideAll === null) return
+
+        const ids: string[] = []
+
+        if (entity.type === 'group') {
+            groupScoreSections.forEach((section) => {
+                section.rubric_criterias.forEach((criteria) => {
+                    ids.push(`${criteria.id}-${entity.entity.id}`)
+                })
+            })
+
+            individualScoreSections.forEach((section) => {
+                section.rubric_criterias.forEach((criteria) => {
+                    entity.entity.users.forEach((user) => {
+                        ids.push(`${criteria.id}-${user.id}`)
+                    })
+                })
+            })
+        } else {
+            individualScoreSections.forEach((section) => {
+                section.rubric_criterias.forEach((criteria) => {
+                    ids.push(`${criteria.id}-${entity.entity.id}`)
+                })
+            })
+        }
+
+        if (ids.length > 0) hideScore(ids)
+    }, [triggerHideAll])
 
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
 
@@ -457,19 +498,42 @@ export function RubricCriteria({
         }
     }
 
-    const { hideScore, show: showScore } = useScoreInputVisibilityContext()
+    const {
+        itemsToHide,
+        show: showScore,
+        hide: hideScore,
+    } = useScoreInputVisibilityContext()
+
+    const scoreIsHidden = itemsToHide.has(`${criteria.id}-${assignee_id}`)
 
     return (
         <div className={cn('flex', isMobile && 'overflow-x-auto')}>
             {/* Criteria name */}
             <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 min-w-[10rem] w-[15rem] max-w-[15rem]">
-                <div>
+                <div className="flex items-center gap-x-1">
                     <p
                         className="text-base font-medium text-center"
-                        onClick={() => showScore()}
+                        onClick={() => showScore([criteria.id])}
                     >
                         {`${criteria.name} (${criteria.max_score})`}
                     </p>
+                    {!scoreIsHidden ? (
+                        <SimpleToolTip text="Hide score">
+                            <Eye
+                                onClick={() =>
+                                    hideScore([`${criteria.id}-${assignee_id}`])
+                                }
+                            />
+                        </SimpleToolTip>
+                    ) : (
+                        <SimpleToolTip text="Show score">
+                            <EyeOff
+                                onClick={() => {
+                                    showScore([`${criteria.id}-${assignee_id}`])
+                                }}
+                            />
+                        </SimpleToolTip>
+                    )}
                 </div>
                 <LabelWrapper
                     label={null}
@@ -480,7 +544,7 @@ export function RubricCriteria({
                     options={{
                         error_display: 'under-label',
                     }}
-                    className={cn('w-4/5', hideScore && 'hidden')}
+                    className={cn('w-4/5', scoreIsHidden && 'hidden')}
                 >
                     <Input
                         id={criteria.id + assignee_id}
@@ -631,16 +695,18 @@ export function RubricCriteria({
                         ]}
                     />
                 </LabelWrapper>
-                {scoreRange && !hideScore && (
+                {scoreRange && !scoreIsHidden && (
                     <Badge className="text-sm text-center" variant="paragon">
                         {scoreRange.name}
                     </Badge>
                 )}
 
-                {hideScore && (
+                {scoreIsHidden && (
                     <span
                         className="cursor-pointer"
-                        onClick={() => showScore()}
+                        onClick={() =>
+                            showScore([`${criteria.id}-${assignee_id}`])
+                        }
                     >
                         ***
                     </span>
@@ -656,7 +722,7 @@ export function RubricCriteria({
                             className={cn(
                                 'border p-2 flex-shrink-0 w-[15rem] flex flex-col justify-start',
                                 scoreRange &&
-                                    !hideScore &&
+                                    !scoreIsHidden &&
                                     scoreRange.id == range.id &&
                                     'border-paragon border-1'
                             )}
