@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider'
 import { cn, getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
-import { Copy } from 'lucide-react'
+import { Copy, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -32,6 +32,27 @@ export default function RangeScoreInput({
 }) {
     const [scores, setScores] = useState<RangeScore[]>(initialScores ?? [])
     const [errors, setErrors] = useState<ValidationError[]>([])
+    const {
+        triggerHideAll,
+        hide: hideScore,
+        show: showScore,
+    } = useScoreInputVisibilityContext()
+    useEffect(() => {
+        console.log('triggerHideAll', triggerHideAll)
+        if (triggerHideAll === null) return
+
+        const ids: string[] = []
+
+        if (entity.type === 'group') {
+            entity.entity.users.forEach((user) => {
+                ids.push(user.id)
+            })
+        } else {
+            ids.push(entity.entity.id)
+        }
+
+        if (ids.length > 0) hideScore(ids)
+    }, [triggerHideAll])
 
     useEffect(() => {
         setScores(initialScores ?? [])
@@ -143,6 +164,7 @@ export default function RangeScoreInput({
         <>
             {entity.type == 'individual' && (
                 <ScoreInput
+                    userId={entity.entity.id}
                     maxScore={maxScore}
                     onScoreChange={(e) =>
                         handleOnScoreChange(entity.entity.id, e)
@@ -160,6 +182,10 @@ export default function RangeScoreInput({
             {entity.type == 'group' && (
                 <div className="flex flex-col gap-y-4">
                     {entity.entity.users.map((student) => {
+                        const scoreIsHidden =
+                            useScoreInputVisibilityContext().itemsToHide.has(
+                                student.id
+                            )
                         return (
                             <div
                                 key={student.id}
@@ -183,9 +209,27 @@ export default function RangeScoreInput({
                                             ' ' +
                                             student.last_name}
                                     </span>
+                                    {!scoreIsHidden ? (
+                                        <SimpleToolTip text="Hide score">
+                                            <Eye
+                                                onClick={() =>
+                                                    hideScore([student.id])
+                                                }
+                                            />
+                                        </SimpleToolTip>
+                                    ) : (
+                                        <SimpleToolTip text="Show score">
+                                            <EyeOff
+                                                onClick={() => {
+                                                    showScore([student.id])
+                                                }}
+                                            />
+                                        </SimpleToolTip>
+                                    )}
                                 </div>
                                 <div className="flex items-start">
                                     <ScoreInput
+                                        userId={student.id}
                                         maxScore={maxScore}
                                         onScoreChange={(e) =>
                                             handleOnScoreChange(student.id, e)
@@ -226,17 +270,20 @@ export default function RangeScoreInput({
 }
 
 function ScoreInput({
+    userId,
     maxScore,
     onScoreChange,
     error,
     value,
 }: {
+    userId: string
     maxScore: number
     onScoreChange: (valueStr: string) => void
     error: string
     value?: number | string
 }) {
-    const { hideScore, show: showScore } = useScoreInputVisibilityContext()
+    const { itemsToHide, show: showScore } = useScoreInputVisibilityContext()
+    const scoreIsHidden = itemsToHide.has(userId)
 
     return (
         <LabelWrapper label={null} error={error} className="w-xs">
@@ -245,11 +292,11 @@ function ScoreInput({
                 max={maxScore}
                 value={value}
                 type="number"
-                onClick={() => showScore()}
+                onClick={() => showScore([userId])}
                 placeholder={`Enter score (0-${maxScore})`}
                 className={cn(
                     'hide-arrows',
-                    hideScore && 'blur-xs border-black'
+                    scoreIsHidden && 'blur-xs border-black'
                 )}
                 onChange={(e) => {
                     onScoreChange(e.target.value)
@@ -274,6 +321,8 @@ function ScoreInput({
                         ? parseFloat(value.toString())
                         : 0,
                 ]}
+                className={cn('w-full', scoreIsHidden && 'hidden')}
+                disabled={scoreIsHidden}
             />
         </LabelWrapper>
     )
