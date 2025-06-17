@@ -247,18 +247,21 @@ export default function RangeScoreInput({
                                     />
                                     {scores.find(
                                         (s) => s.student_id === student.id
-                                    )?.score !== undefined && (
-                                        <SimpleToolTip text="Apply to all students in group">
-                                            <Button
-                                                variant="ghost"
-                                                onClick={() =>
-                                                    handleApplyAll(student.id)
-                                                }
-                                            >
-                                                <Copy />
-                                            </Button>
-                                        </SimpleToolTip>
-                                    )}
+                                    )?.score !== undefined &&
+                                        !scoreIsHidden && (
+                                            <SimpleToolTip text="Apply to all students in group">
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        handleApplyAll(
+                                                            student.id
+                                                        )
+                                                    }
+                                                >
+                                                    <Copy />
+                                                </Button>
+                                            </SimpleToolTip>
+                                        )}
                                 </div>
                             </div>
                         )
