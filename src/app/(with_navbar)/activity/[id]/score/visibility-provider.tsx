@@ -3,14 +3,21 @@
 import React from 'react'
 
 export type ScoreInputVisibilityContextType = {
-    hideScore: boolean
-    show: () => void
+    itemsToHide: Set<string>
+    triggerHideAll: boolean | null
+
+    hide: (ids: string[]) => void
+    show: (ids: string[]) => void
+    showAll: () => void
 }
 
 const scoreInputvisibilityContextDefaultValue: ScoreInputVisibilityContextType =
     {
-        hideScore: false,
+        itemsToHide: new Set(),
+        triggerHideAll: false,
+        hide: () => {},
         show: () => {},
+        showAll: () => {},
     }
 
 const ScoreInputVisibilityContext =

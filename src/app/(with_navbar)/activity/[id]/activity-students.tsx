@@ -265,14 +265,18 @@ export default function ActivityStudents({
                 // since there will always at least one row, we will set the one row outside the loop
                 const firstRowData: Record<string, any> = {
                     ...initalData,
-                    'Judge Name': judges
-                        ? `${judges[0].first_name} ${judges[0].last_name}`
-                        : '',
-                    'Judge Email': judges ? judges[0].email : '',
+                    'Judge Name':
+                        judges && judges.length > 0
+                            ? `${judges[0].first_name} ${judges[0].last_name}`
+                            : '',
+                    'Judge Email':
+                        judges && judges.length > 0 ? judges[0].email : '',
                     ...generateRubricScoreRow(
                         sections,
-                        scores.find((s) => s.judge.id == judges[0].id)
-                            ?.scores ?? []
+                        judges && judges.length > 0
+                            ? (scores.find((s) => s.judge.id == judges[0].id)
+                                  ?.scores ?? [])
+                            : []
                     ),
                 }
 
@@ -333,14 +337,17 @@ export default function ActivityStudents({
                 // since there will always at least one row, we will set the one row outside the loop
                 const firstRowData: Record<string, any> = {
                     ...initalData,
-                    'Judge Name': judges
-                        ? `${judges[0].first_name} ${judges[0].last_name}`
-                        : '',
-                    'Judge Email': judges ? judges[0].email : '',
-                    'Given Score': judges
-                        ? (scores.find((s) => s.judge.id == judges[0].id)
-                              ?.score ?? '')
-                        : '',
+                    'Judge Name':
+                        judges && judges.length > 0
+                            ? `${judges[0].first_name} ${judges[0].last_name}`
+                            : '',
+                    'Judge Email':
+                        judges && judges.length > 0 ? judges[0].email : '',
+                    'Given Score':
+                        judges && judges.length > 0
+                            ? (scores.find((s) => s.judge.id == judges[0].id)
+                                  ?.score ?? '')
+                            : '',
                     'Max Score': activity.max_score,
                 }
 

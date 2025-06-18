@@ -62,7 +62,8 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         setShouldAutomaticallySelectScoringEntity,
     ] = useState(true)
 
-    const [hideScore, setHideScore] = useState(false)
+    const [itemsToHide, setItemsToHide] = useState<Set<string>>(new Set())
+    const [triggerHideAll, setTriggerHideAll] = useState<boolean | null>(null)
     const [scorePreview, setScorePreview] = useState<ReturnType<
         typeof calculateRubricScore
     > | null>(null)
@@ -147,6 +148,10 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
             setShouldAutomaticallySelectScoringEntity(false)
         }
     }, [searchParams, entities, shouldAutomaticallySelectScoringEntity])
+
+    function showAll() {
+        setItemsToHide(new Set())
+    }
 
     // Initialize entities based on activity type (groups or individual students)
     useEffect(() => {
@@ -525,8 +530,23 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                     ) : (
                         <ScoreInputVisibilityProvider
                             value={{
-                                hideScore: hideScore,
-                                show: () => setHideScore(false),
+                                itemsToHide: itemsToHide,
+                                triggerHideAll: triggerHideAll,
+                                hide: (ids: string[]) => {
+                                    setItemsToHide((prev) => {
+                                        const newSet = new Set(prev)
+                                        ids.forEach((id) => newSet.add(id))
+                                        return newSet
+                                    })
+                                },
+                                show: (ids: string[]) => {
+                                    setItemsToHide((prev) => {
+                                        const newSet = new Set(prev)
+                                        ids.forEach((id) => newSet.delete(id))
+                                        return newSet
+                                    })
+                                },
+                                showAll: showAll,
                             }}
                         >
                             <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
@@ -554,21 +574,27 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                             </>
                                         )}
 
-                                        {!hideScore ? (
-                                            <SimpleToolTip text="Hide score">
+                                        {itemsToHide.size == 0 ? (
+                                            <SimpleToolTip text="Hide all scores">
                                                 <Eye
                                                     onClick={() =>
-                                                        setHideScore(true)
+                                                        setTriggerHideAll(
+                                                            (prev) => {
+                                                                if (
+                                                                    prev ===
+                                                                    null
+                                                                ) {
+                                                                    return true
+                                                                }
+                                                                return !prev
+                                                            }
+                                                        )
                                                     }
                                                 />
                                             </SimpleToolTip>
                                         ) : (
-                                            <SimpleToolTip text="Show score">
-                                                <EyeOff
-                                                    onClick={() =>
-                                                        setHideScore(false)
-                                                    }
-                                                />
+                                            <SimpleToolTip text="Show all scores">
+                                                <EyeOff onClick={showAll} />
                                             </SimpleToolTip>
                                         )}
                                     </div>
