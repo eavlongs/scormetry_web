@@ -1,8 +1,10 @@
 import { execSync } from 'child_process'
-import path from 'path'
 import fse from 'fs-extra'
+import os from 'os' // Add this import
+import path from 'path'
 
 const topDir = import.meta.dirname
+const isWindows = os.platform() === 'win32' // Check platform
 
 async function postinstall() {
     const tinymcePublicPath = path.join(topDir, 'public', 'tinymce')
@@ -14,19 +16,36 @@ async function postinstall() {
         // Ensure public directory exists
         await fse.ensureDir(path.join(topDir, 'public'))
 
-        // Use system commands for more reliable file operations
+        // Use platform-specific commands
         console.log('Removing existing TinyMCE directory...')
-        execSync(`rm -rf "${tinymcePublicPath}"`, { stdio: 'inherit' })
+        if (isWindows) {
+            execSync(
+                `if exist "${tinymcePublicPath}" rd /s /q "${tinymcePublicPath}"`,
+                { stdio: 'inherit' }
+            )
+        } else {
+            execSync(`rm -rf "${tinymcePublicPath}"`, { stdio: 'inherit' })
+        }
 
         console.log('Creating TinyMCE directory...')
-        execSync(`mkdir -p "${tinymcePublicPath}"`, { stdio: 'inherit' })
+        if (isWindows) {
+            execSync(`mkdir "${tinymcePublicPath}"`, { stdio: 'inherit' })
+        } else {
+            execSync(`mkdir -p "${tinymcePublicPath}"`, { stdio: 'inherit' })
+        }
 
         console.log('Copying TinyMCE files...')
-        // Copy the contents of the source directory into the destination directory
-        execSync(
-            `cp -r "${tinymceNodeModulesPath}/." "${tinymcePublicPath}/"`,
-            { stdio: 'inherit' }
-        )
+        if (isWindows) {
+            execSync(
+                `xcopy "${tinymceNodeModulesPath}" "${tinymcePublicPath}" /E /I /H /Y`,
+                { stdio: 'inherit' }
+            )
+        } else {
+            execSync(
+                `cp -r "${tinymceNodeModulesPath}/." "${tinymcePublicPath}/"`,
+                { stdio: 'inherit' }
+            )
+        }
 
         console.log('✓ TinyMCE setup completed successfully!')
     } catch (error) {
