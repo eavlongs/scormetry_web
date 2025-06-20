@@ -69,7 +69,7 @@ export async function editClassroom(
             }
         )
 
-        revalidatePath('/')
+        revalidatePath('/home')
 
         return {
             success: true,
@@ -89,7 +89,7 @@ export async function deleteClassroom(id: string): Promise<ActionResponse> {
             `/classroom/${id}`
         )
 
-        revalidatePath('/')
+        revalidatePath('/home')
 
         return {
             success: true,
@@ -156,7 +156,7 @@ export async function leaveClassroom(id: string): Promise<ActionResponse> {
             `/classroom/${id}/leave`
         )
 
-        revalidatePath('/')
+        revalidatePath('/home')
 
         return {
             success: true,

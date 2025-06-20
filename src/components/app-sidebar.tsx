@@ -36,7 +36,7 @@ export function AppSidebar({
         <Sidebar>
             <SidebarHeader>
                 <Link
-                    href="/"
+                    href="/home"
                     className="flex h-14 items-center px-4 font-semibold"
                 >
                     Scormetry

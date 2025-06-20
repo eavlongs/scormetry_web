@@ -16,7 +16,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     console.log({ searchParams: request.nextUrl.searchParams })
     const redirectUrl =
-        request.nextUrl.searchParams.get(REDIRECT_URL_NAME) ?? '/'
+        request.nextUrl.searchParams.get(REDIRECT_URL_NAME) ?? '/home'
 
     console.log('here')
     console.log(redirectUrl)

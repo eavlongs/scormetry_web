@@ -9,8 +9,19 @@ import './globals.css'
 const fontToDisplay = font
 
 export const metadata: Metadata = {
-    title: 'Scormetry',
-    description: 'Your comprehensive classroom management solution',
+    title: 'Scormetry - A Digital Score Tabulation System',
+    keywords: [
+        'Scormetry',
+        'Digital Score Tabulation',
+        'Paragon International University',
+        'Score Management',
+        'Student Scores',
+        'Tabulation System',
+        'Panel Evaluation',
+        'Multi-Judge Evaluation',
+    ],
+    description:
+        'Scormetry is a digital score tabulation system designed for Paragon International University',
 }
 
 export default function RootLayout({

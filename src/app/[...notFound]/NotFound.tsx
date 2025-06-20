@@ -30,7 +30,7 @@ export default function NotFound() {
 
                         <div className="mt-8 flex gap-4">
                             <Button asChild size="lg">
-                                <Link href="/">
+                                <Link href="/home">
                                     <Home className="mr-2 h-4 w-4" /> Go Home
                                 </Link>
                             </Button>

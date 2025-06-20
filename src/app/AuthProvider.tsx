@@ -85,7 +85,7 @@ export default function AuthProvider({
                 setSessionFetched(false)
             } else if (!session.accessToken) {
                 await logout()
-                window.location.href = '/login'
+                window.location.href = '/'
             }
         }
 

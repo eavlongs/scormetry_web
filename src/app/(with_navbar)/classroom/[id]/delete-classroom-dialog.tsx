@@ -30,7 +30,7 @@ export default function DeleteClassroomDialog({
 
         if (response.success) {
             toast.success(response.message)
-            router.replace('/')
+            router.replace('/home')
             return
         }
 

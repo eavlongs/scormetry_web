@@ -28,7 +28,7 @@ export async function createClassroom(
             }>
         >('/classroom', data)
 
-        revalidatePath('/')
+        revalidatePath('/home')
 
         return {
             success: true,

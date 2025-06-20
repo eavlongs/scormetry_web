@@ -59,7 +59,7 @@ export function JoinClassroomDialog({
         const response = await joinClassroomByCode(classCode)
 
         if (response.success) {
-            // await revalidateData('/')
+            // await revalidateData('/home')
             if (response.data)
                 router.push(
                     `/classroom/${response.data.classroom.id}?success_message=${response.message}`

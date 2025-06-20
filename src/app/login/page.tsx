@@ -18,7 +18,7 @@ export default async function Page({
                     Sign in to continue to Scormetry
                 </p>
             </div>
-            <LoginWithGoogle redirectUrl={redirectUrl ?? '/'} />
+            <LoginWithGoogle redirectUrl={redirectUrl ?? '/home'} />
             <LoginErrorToast />
         </div>
     )

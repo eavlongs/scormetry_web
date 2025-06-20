@@ -22,7 +22,8 @@ export async function GET(request: Request): Promise<Response> {
         cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE_NAME)?.value ?? null
     const codeVerifier =
         cookieStore.get(GOOGLE_CODE_VERIFIER_COOKIE_NAME)?.value ?? null
-    const redirectUrl = cookieStore.get(REDIRECT_URL_COOKIE_NAME)?.value ?? '/'
+    const redirectUrl =
+        cookieStore.get(REDIRECT_URL_COOKIE_NAME)?.value ?? '/home'
     if (
         code === null ||
         state === null ||
