@@ -22,6 +22,10 @@ export const metadata: Metadata = {
     ],
     description:
         'Scormetry is a digital score tabulation system designed for Paragon International University',
+    other: {
+        'google-site-verification':
+            'VaNPhkZrn2chTNnfLliY8DNJ_cN1jTRGODLJJ6X9-20',
+    },
 }
 
 export default function RootLayout({
