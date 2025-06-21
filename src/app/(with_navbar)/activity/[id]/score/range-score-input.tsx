@@ -180,7 +180,7 @@ export default function RangeScoreInput({
                 />
             )}
             {entity.type == 'group' && (
-                <div className="flex flex-col gap-y-4">
+                <div className="flex flex-col gap-y-8">
                     {entity.entity.users.map((student) => {
                         const scoreIsHidden =
                             useScoreInputVisibilityContext().itemsToHide.has(
@@ -204,7 +204,7 @@ export default function RangeScoreInput({
                                             className="rounded-full"
                                         />
                                     </div>
-                                    <span>
+                                    <span className="font-bold text-xl">
                                         {student.first_name +
                                             ' ' +
                                             student.last_name}

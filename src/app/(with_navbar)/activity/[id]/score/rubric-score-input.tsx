@@ -333,10 +333,10 @@ function _RubricScoreInput({
                             return (
                                 <div
                                     key={student.id}
-                                    className="flex flex-col gap-y-2"
+                                    className="flex flex-col gap-y-4"
                                 >
-                                    <div className="flex items-center gap-x-2">
-                                        <div className="relative h-8 w-8 cursor-pointer">
+                                    <div className="flex items-center gap-x-2 justify-center">
+                                        <div className="relative h-10 w-10 cursor-pointer">
                                             <Image
                                                 src={student.profile_picture}
                                                 alt={
@@ -348,7 +348,7 @@ function _RubricScoreInput({
                                                 className="rounded-full"
                                             />
                                         </div>
-                                        <span>
+                                        <span className="font-bold text-2xl">
                                             {student.first_name +
                                                 ' ' +
                                                 student.last_name}
