@@ -106,7 +106,7 @@ export function Navbar() {
                                     className="cursor-pointer p-2"
                                     onClick={async () => {
                                         await logout()
-                                        window.location.href = '/'
+                                        window.location.href = '/login'
                                     }}
                                 >
                                     <LogOut
