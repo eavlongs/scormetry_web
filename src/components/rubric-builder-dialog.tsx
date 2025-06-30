@@ -12,12 +12,17 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
     cn,
+    convertZodErrorToValidationError,
     convertZodErrorToValidationErrorWithNestedPath,
     formatDecimalNumber,
     getErrorMessageFromNestedPathValidationError,
     getValidationErrorMessage,
 } from '@/lib/utils'
-import { RubricSchema } from '@/schema'
+import {
+    RubricCriteriaSchema,
+    RubricSchema,
+    RubricSectionSchema,
+} from '@/schema'
 import { GetRubricInClassroomResponse } from '@/types/classroom'
 import { Prettify, TinyEditorType } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
@@ -695,7 +700,7 @@ function RubricSection({
                                     ref={sectionNameInputRef}
                                 />
                             </div> */}
-                        <div className="absolute flex flex-col items-center bottom-2 left-[50%] translate-x-[-50%] gap-y-1">
+                        <div className="flex flex-col items-center gap-y-1">
                             {ctx.rubric_sections.length > 1 && (
                                 <Trash2
                                     className="inline-block h-4 w-4 cursor-pointer"
@@ -708,7 +713,7 @@ function RubricSection({
                             />
                         </div>
 
-                        <div>
+                        <div className="flex-1">
                             {ctx.rubric_sections.findIndex(
                                 (s) => s.score_percentage !== 0
                             ) !== -1 && (
@@ -727,7 +732,7 @@ function RubricSection({
                     <div className="flex-none pl-2 ">
                         {!isIndividual && (
                             <>
-                                <div className="flex items-center gap-2 mb-2 text-sm">
+                                <div className="flex items-center gap-2 mb-2 text-sm ">
                                     {isIndividual}
                                     <span className="mr-2">Scoring Type:</span>
                                     <div className="flex bg-white rounded-full border">
@@ -1080,6 +1085,24 @@ function EditSectionDialog({
 
     function handleSubmit() {
         if (!section || !nameRef.current || !scorePercentRef.current) return
+
+        try {
+            RubricSectionSchema.pick({
+                name: true,
+            }).parse({ name: nameRef.current.value })
+        } catch (e: any) {
+            if (e instanceof ZodError) {
+                const validationError = convertZodErrorToValidationError(e)
+                if (validationError) {
+                    toast.error(getValidationErrorMessage(validationError))
+                    return
+                }
+            }
+
+            toast.error('Invalid section name')
+            return
+        }
+
         const scorePercentage = parseFloat(scorePercentRef.current.value || '0')
         if (isNaN(scorePercentage)) {
             toast.error('Score percentage must be a number')
