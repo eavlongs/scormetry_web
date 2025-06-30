@@ -35,7 +35,7 @@ export const CategorySchema = z.object({
     name: z.string().min(1, 'Name is required').max(50),
     score_percentage: z.coerce
         .number()
-        .gt(0, 'This value must be greater than 0')
+        .gte(0, 'This value must be at least 0')
         .lte(100, 'This value cannot exceed 100%'),
 })
 
