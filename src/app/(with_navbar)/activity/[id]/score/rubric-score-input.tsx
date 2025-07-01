@@ -43,7 +43,7 @@ export function RubricScoreInput({
     onSetParentErrors: () => void
 } & React.ComponentProps<'div'>) {
     const [scores, setScores] = useState<z.infer<typeof RubricScoreSchema>[]>(
-        initialScores ? [...initialScores] : []
+        initialScores ? structuredClone(initialScores) : []
     )
 
     const [groupScoreSections] = useState<GetRubric['rubric_sections']>(

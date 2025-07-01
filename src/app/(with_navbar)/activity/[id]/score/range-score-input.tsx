@@ -30,7 +30,9 @@ export default function RangeScoreInput({
     onScoreUpdate: (scores: RangeScore[]) => void
     maxScore: number
 }) {
-    const [scores, setScores] = useState<RangeScore[]>(initialScores ?? [])
+    const [scores, setScores] = useState<RangeScore[]>(
+        structuredClone(initialScores) ?? []
+    )
     const [errors, setErrors] = useState<ValidationError[]>([])
     const {
         triggerHideAll,
@@ -55,7 +57,7 @@ export default function RangeScoreInput({
     }, [triggerHideAll])
 
     useEffect(() => {
-        setScores(initialScores ?? [])
+        setScores(initialScores ? structuredClone(initialScores) : [])
     }, [initialScores])
 
     useEffect(() => {

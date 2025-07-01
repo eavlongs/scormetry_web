@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
+import { useWarnIfUnsavedChanges } from '@/hooks/useWarnIfUnsavedChanges'
 import { calculateRubricScore, cn, formatDecimalNumber } from '@/lib/utils'
 import { CreateActivityScoreSchema } from '@/schema'
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/types/classroom'
 import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
+import * as ld from 'lodash'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -67,6 +69,21 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
     const [scorePreview, setScorePreview] = useState<ReturnType<
         typeof calculateRubricScore
     > | null>(null)
+
+    const [hasDataChanged, setHasDataChanged] = useState(false)
+
+    useWarnIfUnsavedChanges(
+        hasDataChanged,
+        `/activity/${activity.id}/score?${searchParams.toString()}`
+    )
+
+    useEffect(() => {
+        if (!selectedEntity) return
+
+        const changed = !ld.isEqual(initialScore, scoreData)
+        console.log({ changed, initialScore })
+        setHasDataChanged(changed)
+    }, [selectedEntity, scoreData, initialScore])
 
     useEffect(() => {
         console.log('updating preview')
@@ -233,19 +250,22 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                               .data as unknown as RubricScoreContextType['scores'])
                         : undefined,
             })
-            setInitialScore({
-                range_based_scores:
-                    activity.scoring_type == 'range' &&
-                    Array.isArray(response.data.data.data)
-                        ? (response.data.data.data as unknown as RangeScore[])
-                        : undefined,
-                rubric_score:
-                    activity.scoring_type == 'rubric' &&
-                    Array.isArray(response.data.data.data)
-                        ? (response.data.data
-                              .data as unknown as RubricScoreContextType['scores'])
-                        : undefined,
-            })
+            setInitialScore(
+                structuredClone({
+                    range_based_scores:
+                        activity.scoring_type == 'range' &&
+                        Array.isArray(response.data.data.data)
+                            ? (response.data.data
+                                  .data as unknown as RangeScore[])
+                            : undefined,
+                    rubric_score:
+                        activity.scoring_type == 'rubric' &&
+                        Array.isArray(response.data.data.data)
+                            ? (response.data.data
+                                  .data as unknown as RubricScoreContextType['scores'])
+                            : undefined,
+                })
+            )
             if (commentRef.current) {
                 commentRef.current.value = response.data.data.comment || ''
             }
@@ -344,6 +364,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
         )
 
         if (response.success) {
+            setInitialScore(structuredClone(scoreData))
             toast.success('Scores saved successfully')
             setIsSubmitting(false)
         } else {
@@ -432,7 +453,11 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                         else {
                                                             searchParam = `?sid=${entity.entity.id}`
                                                         }
-                                                        window.location.href = `${pathname}${searchParam}`
+                                                        if (
+                                                            `${pathname}${searchParam}` !==
+                                                            `/activity/${activity.id}/score?${searchParams.toString()}`
+                                                        )
+                                                            window.location.href = `${pathname}${searchParam}`
                                                     }
                                                     // setSelectedEntity(entity)
                                                 }
