@@ -58,12 +58,12 @@ export async function GET(request: Request): Promise<Response> {
         cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
         cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
 
-        console.log('failed to get token from google')
+        console.log('failed to get token from google', e)
         const errorMessage = e.message || 'ailed to log in. Please try again.'
         return new Response(null, {
             status: 302,
             headers: {
-                Location: `/login?error=${errorMessage}&${REDIRECT_URL_NAME}=${redirectUrl}`,
+                Location: `/login?error=${encodeURIComponent(errorMessage)}&${REDIRECT_URL_NAME}=${encodeURIComponent(redirectUrl)}`,
             },
         })
     }

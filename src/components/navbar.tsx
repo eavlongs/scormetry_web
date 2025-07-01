@@ -105,8 +105,7 @@ export function Navbar() {
                                 <DropdownMenuItem
                                     className="cursor-pointer p-2"
                                     onClick={async () => {
-                                        await logout()
-                                        window.location.href = '/login'
+                                        window.location.href = '/logout'
                                     }}
                                 >
                                     <LogOut
