@@ -1,7 +1,8 @@
+import { CLASSROOM_ROLE_JUDGE, CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 import { notFound } from 'next/navigation'
+
 import { getActivity } from '../actions'
 import ScoreActivity from './score-activity'
-import { CLASSROOM_ROLE_JUDGE, CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 
 export default async function ActivityPage({
     params,

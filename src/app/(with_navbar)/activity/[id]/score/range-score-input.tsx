@@ -12,6 +12,7 @@ import { Copy, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+
 import { useScoreInputVisibilityContext } from './visibility-provider'
 
 export type RangeScore = {

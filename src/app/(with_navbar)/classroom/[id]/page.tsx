@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+
 import { getActivities } from './actions'
 import ActivitiesTab from './activities-tab'
 import ClassroomHeader from './classroom-header'

@@ -1,12 +1,13 @@
 import assert from 'assert'
 import { z } from 'zod'
+
 import {
     ALL_CLASSROOM_ROLES,
     CLASSROOM_COLORS,
     GetRubric,
+    SCORING_TYPES,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
-    SCORING_TYPES,
 } from './types/classroom'
 import {
     ACCEPTED_IMPORT_FILE_TYPES,

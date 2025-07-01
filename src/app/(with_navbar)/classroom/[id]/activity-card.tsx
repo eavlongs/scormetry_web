@@ -9,14 +9,15 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
     Activity,
-    Classroom,
     CLASSROOM_ROLE_TEACHER,
+    Classroom,
     ClassroomRole,
 } from '@/types/classroom'
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
 import { CalendarIcon, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+
 import { getActivities } from './actions'
 
 export function ActivityCard({

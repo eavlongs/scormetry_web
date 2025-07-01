@@ -15,9 +15,9 @@ import { cn } from '@/lib/utils'
 import {
     Classroom,
     ClassroomRelationJudge,
-    classroomRelations,
     ClassroomRelationStudent,
     ClassroomRelationTeacher,
+    classroomRelations,
     colorMap,
 } from '@/types/classroom'
 import Link from 'next/link'

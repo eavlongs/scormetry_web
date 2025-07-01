@@ -1,5 +1,6 @@
 import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 import { notFound } from 'next/navigation'
+
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
 import CategoriesTab from './categories-tab'

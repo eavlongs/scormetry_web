@@ -5,6 +5,7 @@ import { UserEssentialDetail } from '@/types/auth'
 import { GetActivity } from '@/types/classroom'
 import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
+
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import { ScoreData } from './score/score-activity'
 

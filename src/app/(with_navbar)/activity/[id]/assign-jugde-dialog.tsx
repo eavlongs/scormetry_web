@@ -10,10 +10,11 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
+import { cn } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
 import { useState } from 'react'
+
 import { SelectJudges } from './select-judges'
-import { cn } from '@/lib/utils'
 
 export function AssignJudgeDialog({
     open,

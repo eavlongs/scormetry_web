@@ -1,4 +1,5 @@
 'use client'
+
 import TinyEditor from '@/components/tiny-editor'
 
 export default function Page() {

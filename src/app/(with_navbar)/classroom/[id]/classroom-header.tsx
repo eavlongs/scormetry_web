@@ -12,10 +12,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useSession from '@/hooks/useSession'
 import { cn, copyUrlToClipboard } from '@/lib/utils'
 import {
-    Classroom,
     CLASSROOM_ROLE_JUDGE,
     CLASSROOM_ROLE_STUDENT,
     CLASSROOM_ROLE_TEACHER,
+    Classroom,
     ClassroomRole,
     colorMap,
 } from '@/types/classroom'
@@ -31,6 +31,7 @@ import {
 import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
+
 import { regenerateClassroomCode } from './actions'
 import DeleteClassroomDialog from './delete-classroom-dialog'
 import EditClassroomDialog from './edit-classroom-dialog'

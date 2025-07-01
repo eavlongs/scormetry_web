@@ -19,9 +19,10 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { Classroom, colorMap, ColorType } from '@/types/classroom'
+import { Classroom, ColorType, colorMap } from '@/types/classroom'
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
 import { editClassroom } from './actions'
 
 export default function EditClassroomDialog({

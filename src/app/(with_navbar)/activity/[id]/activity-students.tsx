@@ -35,13 +35,14 @@ import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import {
+    GetRangeScoreFromAJudge,
+    GetRubricScoreFromJudge,
     assignJudgesToStudent,
     getRangeScoreDetail,
-    GetRangeScoreFromAJudge,
     getRubricScoreDetail,
-    GetRubricScoreFromJudge,
     getScoresOfActivity,
 } from './actions'
 import { ListUser, ScoreBadge } from './activity-groups'

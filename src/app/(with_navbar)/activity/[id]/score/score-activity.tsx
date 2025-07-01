@@ -11,9 +11,9 @@ import { calculateRubricScore, cn, formatDecimalNumber } from '@/lib/utils'
 import { CreateActivityScoreSchema } from '@/schema'
 import {
     GetActivity,
+    SCORING_TYPES,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
-    SCORING_TYPES,
     ScoringEntity,
 } from '@/types/classroom'
 import { PATH_FOR_ERROR_TO_TOAST } from '@/types/general'
@@ -26,6 +26,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
+
 import {
     getActivityAssignmentScoreForStudent,
     saveScoringData,

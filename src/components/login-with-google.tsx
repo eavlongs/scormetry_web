@@ -1,6 +1,7 @@
-import Link from 'next/link'
-import { Button } from './ui/button'
 import { REDIRECT_URL_NAME } from '@/types/auth'
+import Link from 'next/link'
+
+import { Button } from './ui/button'
 
 export default function LoginWithGoogle({
     redirectUrl,

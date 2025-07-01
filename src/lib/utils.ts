@@ -1,16 +1,16 @@
 import { RubricScoreSchema } from '@/schema'
-import { classroomColorsWithType, GetRubric } from '@/types/classroom'
+import { GetRubric, classroomColorsWithType } from '@/types/classroom'
 import {
     ActionResponse,
     NestedPathValidationError,
     VALIDATION_ERROR_MESSAGE,
     ValidationError,
 } from '@/types/response'
-import { clsx, type ClassValue } from 'clsx'
+import { type ClassValue, clsx } from 'clsx'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { z, ZodError } from 'zod'
+import { ZodError, z } from 'zod'
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))

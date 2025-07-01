@@ -4,6 +4,11 @@ import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import {
     Table,
     TableBody,
     TableCell,
@@ -11,20 +16,16 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Grouping } from '@/types/classroom'
 import { EditIcon, Eye, FileTextIcon, Info, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
+
 import { GetClassroomResponse } from '../actions'
 import { CreateGroupingDialog } from './create-grouping-dialog'
 import { DeleteGroupingDialog } from './delete-grouping-dialog'
 import { EditGroupingDialog } from './edit-grouping-dialog'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
-import { useIsMobile } from '@/hooks/use-mobile'
 
 export default function GroupingsTab({
     classroom,

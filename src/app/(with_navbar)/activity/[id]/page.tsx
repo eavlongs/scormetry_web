@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+
 import { getActivity } from './actions'
 import ViewActivity from './view-activity'
 

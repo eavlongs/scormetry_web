@@ -7,6 +7,7 @@ import {
     colorMap,
 } from '@/types/classroom'
 import Link from 'next/link'
+
 import { getClassrooms } from '../actions'
 import CreateClassroomButton from '../classroom/[id]/create-classroom-button'
 

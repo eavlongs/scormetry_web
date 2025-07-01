@@ -19,10 +19,10 @@ import { formatBytes, getFileIcon } from '@/components/ui/file-upload'
 import { Separator } from '@/components/ui/separator'
 import { formatFileUrl } from '@/lib/utils'
 import {
+    type Activity,
     CLASSROOM_ROLE_JUDGE,
     CLASSROOM_ROLE_STUDENT,
     CLASSROOM_ROLE_TEACHER,
-    type Activity,
     type GetActivity,
 } from '@/types/classroom'
 import { ArrowLeft, MoreVertical, Pencil, Trash2 } from 'lucide-react'
@@ -30,9 +30,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
+
 import {
-    deleteActivity,
     GetClassroomResponse,
+    deleteActivity,
 } from '../../classroom/[id]/actions'
 import DeleteActivityDialog from '../../classroom/[id]/delete-activity-dialog'
 import ActivityCommentSection from './activity-comment-section'

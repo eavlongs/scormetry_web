@@ -1,5 +1,6 @@
 // lib/axios.js
 import axios, { InternalAxiosRequestConfig } from 'axios'
+
 import { getSession } from './session'
 
 const api = axios.create({

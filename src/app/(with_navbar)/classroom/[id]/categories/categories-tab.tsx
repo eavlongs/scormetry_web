@@ -1,5 +1,6 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -13,11 +14,11 @@ import {
 import { Category } from '@/types/classroom'
 import { EditIcon, FileTextIcon, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+
 import { GetClassroomResponse } from '../actions'
 import { CreateCategoryDialog } from './create-category-dialog'
 import { DeleteCategoryDialog } from './delete-category-dialog'
 import { EditCategoryDialog } from './edit-category-dialog'
-import { SimpleToolTip } from '@/components/simple-tooltip'
 
 export default function CategoriesTab({
     classroom,

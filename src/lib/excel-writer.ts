@@ -1,5 +1,6 @@
 import { EXCEL_XLSX_MIME_TYPE } from '@/types/general'
 import { utils, write as xlsxWrite } from 'xlsx'
+
 import { ITextFileWriter } from './text-file-writer'
 
 export class ExcelWriter implements ITextFileWriter {

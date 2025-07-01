@@ -1,4 +1,5 @@
 'use client'
+
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Home } from 'lucide-react'

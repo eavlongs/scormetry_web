@@ -24,7 +24,7 @@ import {
     getErrorMessageFromValidationError,
     getRandomColor,
 } from '@/lib/utils'
-import { colorMap, ColorType } from '@/types/classroom'
+import { ColorType, colorMap } from '@/types/classroom'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'

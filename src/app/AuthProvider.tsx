@@ -12,7 +12,7 @@ import {
     UnauthenticatedSession,
 } from '@/types/auth'
 import { useRouter } from 'next/navigation'
-import { createContext, ReactNode, useEffect, useState } from 'react'
+import { ReactNode, createContext, useEffect, useState } from 'react'
 
 export type AuthContextType = Session & {
     loading: boolean

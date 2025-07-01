@@ -1,7 +1,4 @@
 import { google } from '@/lib/auth'
-import { decodeIdToken } from 'arctic'
-import { cookies } from 'next/headers'
-
 import { api } from '@/lib/axios'
 import { createSession } from '@/lib/session'
 import {
@@ -11,7 +8,9 @@ import {
     REDIRECT_URL_NAME,
 } from '@/types/auth'
 import { ApiResponse } from '@/types/response'
+import { decodeIdToken } from 'arctic'
 import type { OAuth2Tokens } from 'arctic'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request): Promise<Response> {
     const url = new URL(request.url)

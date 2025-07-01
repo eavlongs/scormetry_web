@@ -2,6 +2,7 @@ import { formatDecimalNumber } from '@/lib/utils'
 import { CLASSROOM_ROLE_STUDENT } from '@/types/classroom'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
 import { getActivities } from '../actions'
 import ClassroomHeader from '../classroom-header'
 import { GetMyGrades } from './actions'

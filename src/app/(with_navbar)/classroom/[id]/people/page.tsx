@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
 import PeopleTab from './people-tab'

@@ -1,5 +1,6 @@
 import { EXCEL_MIME_TYPE, EXCEL_XLSX_MIME_TYPE } from '@/types/general'
 import { read, utils } from 'xlsx'
+
 import { ITextFileReader } from './text-file-reader'
 
 export class ExcelReader implements ITextFileReader {

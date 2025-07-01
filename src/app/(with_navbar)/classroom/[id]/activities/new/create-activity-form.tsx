@@ -1,4 +1,5 @@
 'use client'
+
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
 import TinyEditor from '@/components/tiny-editor'
 import { Button } from '@/components/ui/button'
@@ -46,6 +47,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
+
 import { GetClassroomResponse } from '../../actions'
 import { CreateCategoryDialog } from '../../categories/create-category-dialog'
 import { CreateGroupingDialog } from '../../groupings/create-grouping-dialog'

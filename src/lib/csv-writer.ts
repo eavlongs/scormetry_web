@@ -1,4 +1,5 @@
 import Papa from 'papaparse'
+
 import { ITextFileWriter } from './text-file-writer'
 
 export class CSVWriter implements ITextFileWriter {

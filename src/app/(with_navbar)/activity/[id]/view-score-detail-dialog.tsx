@@ -18,6 +18,7 @@ import {
 import { X } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+
 import RangeScoreView from './range-score-view'
 import { RubricScoreView } from './rubric-score-view'
 import { ScoreData } from './score/score-activity'

@@ -1,6 +1,7 @@
 import { getRubricsInClassroom } from '@/app/(with_navbar)/classroom/[id]/activities/new/actions'
 import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 import { notFound } from 'next/navigation'
+
 import { getActivity } from '../actions'
 import EditActivityForm from './edit-activity-form'
 

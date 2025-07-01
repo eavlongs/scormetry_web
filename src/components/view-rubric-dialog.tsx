@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { GetRubric } from '@/types/classroom'
 import { X } from 'lucide-react'
 import { useState } from 'react'
+
 import TinyEditor from './tiny-editor'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'

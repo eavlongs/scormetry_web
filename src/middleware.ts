@@ -1,5 +1,6 @@
 import { REDIRECT_URL_NAME } from '@/types/auth'
 import { NextRequest, NextResponse } from 'next/server'
+
 import { getServerSession } from './lib/server-session'
 
 export async function middleware(request: NextRequest) {

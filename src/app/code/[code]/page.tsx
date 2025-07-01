@@ -4,6 +4,7 @@ import { KEYOF_ERR_USER_ALREADY_IN_CLASSROOM } from '@/types/response'
 import { XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+
 import { joinClassroomByCode } from './actions'
 
 export default async function Page({

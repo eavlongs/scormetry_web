@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import {
     Activity,
-    Classroom,
     CLASSROOM_ROLE_TEACHER,
+    Classroom,
     ClassroomRole,
 } from '@/types/classroom'
 import { FileTextIcon, Plus } from 'lucide-react'
@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
 import { deleteActivity, getActivities } from './actions'
 import { ActivityCard } from './activity-card'
 import DeleteActivityDialog from './delete-activity-dialog'

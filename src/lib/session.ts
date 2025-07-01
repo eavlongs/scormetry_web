@@ -10,9 +10,10 @@ import {
     UnauthenticatedSession,
 } from '@/types/auth'
 import { ApiResponse } from '@/types/response'
-import { cookies } from 'next/headers'
-import { api } from './axios'
 import * as jose from 'jose'
+import { cookies } from 'next/headers'
+
+import { api } from './axios'
 
 export async function createSession(accessToken: string, refreshToken: string) {
     const accessTokenPayload = await getDataFromToken(accessToken)
