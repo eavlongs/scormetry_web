@@ -3,13 +3,20 @@
 import { logout } from '@/lib/session'
 import { REDIRECT_URL_NAME } from '@/types/auth'
 import { redirect, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 
-export default function Logout() {
+export default function Page() {
+    return (
+        <Suspense>
+            <Logout />
+        </Suspense>
+    )
+}
+
+function Logout() {
     const searchParams = useSearchParams()
 
     useEffect(() => {
-        console.log('here')
         async function handleLogout() {
             console.group(searchParams.toString())
             let redirectUrl = ''
@@ -27,4 +34,6 @@ export default function Logout() {
 
         handleLogout()
     }, [searchParams])
+
+    return <></>
 }
