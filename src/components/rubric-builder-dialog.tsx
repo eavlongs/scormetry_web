@@ -18,12 +18,8 @@ import {
     getErrorMessageFromNestedPathValidationError,
     getValidationErrorMessage,
 } from '@/lib/utils'
-import {
-    RubricCriteriaSchema,
-    RubricSchema,
-    RubricSectionSchema,
-} from '@/schema'
-import { GetRubricInClassroomResponse } from '@/types/classroom'
+import { RubricSchema, RubricSectionSchema } from '@/schema'
+import { Classroom } from '@/types/classroom'
 import { Prettify, TinyEditorType } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import assert from 'assert'
@@ -40,15 +36,9 @@ import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import { ZodError, z } from 'zod'
 
+import { SelectActivityInClassroomDialog } from './select-activity-in-classroom-dialog'
 import TinyEditor from './tiny-editor'
 import { LabelWrapper } from './ui/label-wrapper'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from './ui/select'
 
 interface ScoreRange {
     id: string
@@ -75,7 +65,7 @@ interface Section {
 
 interface RubricBuilderDialogProps {
     open: boolean
-    rubricsInClassroom: GetRubricInClassroomResponse[]
+    classrooms: Classroom[]
     onOpenChange: (open: boolean) => void
     initialData: z.infer<typeof RubricSchema> | null
     isIndividual: boolean
@@ -181,7 +171,7 @@ export function RubricBuilderDialog({
     onSave,
     isIndividual,
     initialData,
-    rubricsInClassroom,
+    classrooms,
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
         initialData
@@ -211,6 +201,8 @@ export function RubricBuilderDialog({
     const editorRef = useRef<TinyEditorType>(null)
     const note = initialData ? initialData.note : ''
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
+    const [isImportRubricDialogOpen, setIsImportRubricDialogOpen] =
+        useState(false)
 
     useEffect(() => {
         if (initialData) {
@@ -485,76 +477,13 @@ export function RubricBuilderDialog({
                         </div>
                     </DialogHeader>
 
-                    {rubricsInClassroom.length > 0 && (
-                        <div className="flex items-center justify-start gap-x-4 p-4">
-                            <Select
-                                onValueChange={(value) => {
-                                    if (value) {
-                                        const selectedRubric =
-                                            rubricsInClassroom.find(
-                                                (r) => r.id === value
-                                            )
-                                        if (selectedRubric) {
-                                            try {
-                                                const parsedData =
-                                                    RubricSchema.parse(
-                                                        selectedRubric
-                                                    )
-                                                setSections(
-                                                    parsedData.rubric_sections.map(
-                                                        (section) => ({
-                                                            id: uuidv4(),
-                                                            ...section,
-                                                            rubric_criterias:
-                                                                section.rubric_criterias.map(
-                                                                    (
-                                                                        criteria
-                                                                    ) => ({
-                                                                        id: uuidv4(),
-                                                                        ...criteria,
-                                                                        criteria_score_ranges:
-                                                                            criteria.criteria_score_ranges.map(
-                                                                                (
-                                                                                    range
-                                                                                ) => ({
-                                                                                    id: uuidv4(),
-                                                                                    ...range,
-                                                                                })
-                                                                            ),
-                                                                    })
-                                                                ),
-                                                        })
-                                                    )
-                                                )
-                                                toast.success(
-                                                    'Rubric loaded successfully'
-                                                )
-                                            } catch (error) {
-                                                toast.error(
-                                                    'Failed to load rubric'
-                                                )
-                                            }
-                                        }
-                                    }
-                                }}
-                            >
-                                <SelectTrigger className="w-[200px]">
-                                    <SelectValue placeholder="Select existing rubric" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {rubricsInClassroom.map((rubric) => (
-                                        <SelectItem
-                                            key={rubric.id}
-                                            value={rubric.id}
-                                        >
-                                            {rubric.activity_name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-
+                    <div className="flex ml-2">
+                        <Button
+                            onClick={() => setIsImportRubricDialogOpen(true)}
+                        >
+                            Import Rubric
+                        </Button>
+                    </div>
                     <div className="flex-1 overflow-auto p-4 px-0 pt-0 pb-20 flex flex-col gap-y-4">
                         {sections.map((section, sectionIndex) => (
                             <RubricSection
@@ -596,7 +525,6 @@ export function RubricBuilderDialog({
                         </div>
                         {/*  */}
                     </div>
-
                     <div className="border-t p-2 fixed bottom-0 left-0 right-0 bg-background z-10 flex items-center justify-end gap-x-4">
                         <Button
                             variant="destructive"
@@ -647,6 +575,41 @@ export function RubricBuilderDialog({
                     }
                     return sum
                 })()}
+            />
+            <SelectActivityInClassroomDialog
+                classrooms={classrooms}
+                open={isImportRubricDialogOpen}
+                onOpenChange={setIsImportRubricDialogOpen}
+                onSelect={(rubric) => {
+                    if (rubric) {
+                        try {
+                            const parsedData = RubricSchema.parse(rubric)
+                            setSections(
+                                parsedData.rubric_sections.map((section) => ({
+                                    id: uuidv4(),
+                                    ...section,
+                                    rubric_criterias:
+                                        section.rubric_criterias.map(
+                                            (criteria) => ({
+                                                id: uuidv4(),
+                                                ...criteria,
+                                                criteria_score_ranges:
+                                                    criteria.criteria_score_ranges.map(
+                                                        (range) => ({
+                                                            id: uuidv4(),
+                                                            ...range,
+                                                        })
+                                                    ),
+                                            })
+                                        ),
+                                }))
+                            )
+                            toast.success('Rubric loaded successfully')
+                        } catch (error) {
+                            toast.error('Failed to load rubric')
+                        }
+                    }
+                }}
             />
         </RubricBuilderContext.Provider>
     )

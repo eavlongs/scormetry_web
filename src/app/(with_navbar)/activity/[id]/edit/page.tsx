@@ -1,4 +1,4 @@
-import { getRubricsInClassroom } from '@/app/(with_navbar)/classroom/[id]/activities/new/actions'
+import { getClassrooms } from '@/app/(with_navbar)/actions'
 import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
 import { notFound } from 'next/navigation'
 
@@ -17,15 +17,18 @@ export default async function Page({
         notFound()
     }
 
-    const rubricsInClassroom = await getRubricsInClassroom(
-        response.classroom.classroom.id
-    )
+    const classrooms = await getClassrooms()
+    const allClassrooms = [
+        ...classrooms.judging_classrooms,
+        ...classrooms.teaching_classrooms,
+        ...classrooms.studying_classrooms,
+    ].sort((a, b) => a.name.localeCompare(b.name))
 
     return (
         <EditActivityForm
             classroom={response.classroom}
             activity={response.activity}
-            rubricsInClassroom={rubricsInClassroom}
+            classrooms={allClassrooms}
         />
     )
 }

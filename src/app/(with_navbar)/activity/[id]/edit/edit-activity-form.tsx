@@ -31,6 +31,7 @@ import { formatFileUrl, getErrorMessageFromValidationError } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import {
     Category,
+    Classroom,
     GetActivity,
     GetRubricInClassroomResponse,
     Grouping,
@@ -62,11 +63,11 @@ const scoringTypes = [
 export default function EditActivityForm({
     classroom,
     activity,
-    rubricsInClassroom,
+    classrooms,
 }: {
     classroom: GetClassroomResponse
     activity: GetActivity
-    rubricsInClassroom: GetRubricInClassroomResponse[]
+    classrooms: Classroom[]
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -823,7 +824,7 @@ export default function EditActivityForm({
 
             <RubricBuilderDialog
                 open={isRubricDialogOpen}
-                rubricsInClassroom={rubricsInClassroom}
+                classrooms={classrooms}
                 isIndividual={groupingId === 'individual'}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}

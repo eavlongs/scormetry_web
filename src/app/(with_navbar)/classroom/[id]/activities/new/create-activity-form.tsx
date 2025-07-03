@@ -28,7 +28,7 @@ import { getErrorMessageFromValidationError } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import {
     Category,
-    GetRubricInClassroomResponse,
+    Classroom,
     Grouping,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
@@ -61,10 +61,10 @@ const scoringTypes = [
 
 export default function CreateActivityForm({
     classroom,
-    rubricsInClassroom,
+    classrooms,
 }: {
     classroom: GetClassroomResponse
-    rubricsInClassroom: GetRubricInClassroomResponse[]
+    classrooms: Classroom[]
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -808,7 +808,7 @@ export default function CreateActivityForm({
 
             <RubricBuilderDialog
                 isIndividual={groupingId === 'individual'}
-                rubricsInClassroom={rubricsInClassroom}
+                classrooms={classrooms}
                 open={isRubricDialogOpen}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}
