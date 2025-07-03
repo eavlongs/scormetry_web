@@ -194,7 +194,7 @@ export function SelectActivityInClassroomDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px] h-[90dvh] overflow-hidden flex flex-col">
+            <DialogContent className="sm:max-w-[min(770px,90vw)] h-[90dvh] overflow-hidden flex flex-col">
                 <DialogHeader>
                     <DialogTitle>
                         {view === 'classrooms'
@@ -213,6 +213,12 @@ export function SelectActivityInClassroomDialog({
                     />
                 </div>
 
+                <p className="text-xs text-muted-foreground mt-1">
+                    {view === 'classrooms'
+                        ? 'Double-click to view activities'
+                        : 'Double-click to select rubric'}
+                </p>
+
                 {error && (
                     <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
                         {error}
@@ -220,10 +226,10 @@ export function SelectActivityInClassroomDialog({
                 )}
 
                 {/* Main content area with fixed height to ensure consistency */}
-                <div className="flex-1 overflow-hidden flex flex-col h-[350px]">
+                <div className="flex-1 overflow-hidden min-h-[350px]">
                     {view === 'classrooms' ? (
                         <>
-                            <div className="flex-1 overflow-y-auto pr-1">
+                            <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {filteredClassrooms.length > 0 ? (
                                     filteredClassrooms.map((classroom) => (
                                         <div
@@ -261,9 +267,6 @@ export function SelectActivityInClassroomDialog({
                                                     {classroom.name}
                                                 </h3>
                                             </div>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Double-click to view activities
-                                            </p>
                                         </div>
                                     ))
                                 ) : (
@@ -277,7 +280,7 @@ export function SelectActivityInClassroomDialog({
                         </>
                     ) : (
                         <>
-                            <div className="flex-1 overflow-y-auto pr-1">
+                            <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {isLoading ? (
                                     <p className="text-center text-muted-foreground py-8">
                                         Loading activities...
