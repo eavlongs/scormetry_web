@@ -577,7 +577,7 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                         >
                             <div className="border rounded-lg bg-card shadow-sm overflow-hidden h-full py-4 px-4">
                                 <div className="h-full overflow-y-auto flex flex-col gap-y-4">
-                                    <div className="flex gap-x-2 items-center">
+                                    <div className="flex gap-x-3 items-center">
                                         {selectedEntity.type == 'group' ? (
                                             <p className="text-lg font-semibold">
                                                 {selectedEntity.entity.name}

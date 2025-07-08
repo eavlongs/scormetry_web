@@ -510,7 +510,7 @@ export function RubricCriteria({
     return (
         <div className={cn('flex', isMobile && 'overflow-x-auto')}>
             {/* Criteria name */}
-            <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 min-w-[10rem] w-[15rem] max-w-[15rem]">
+            <div className="border py-2 px-2 bg-muted/10 flex flex-col justify-center items-center text-xs gap-y-4 min-w-[10rem] w-[15rem] max-w-[15rem] relative">
                 <div className="flex items-center gap-x-1">
                     <p
                         className="text-base font-medium text-center"
@@ -518,23 +518,37 @@ export function RubricCriteria({
                     >
                         {`${criteria.name} (${criteria.max_score})`}
                     </p>
-                    {!scoreIsHidden ? (
-                        <SimpleToolTip text="Hide score">
-                            <Eye
-                                onClick={() =>
-                                    hideScore([`${criteria.id}-${assignee_id}`])
-                                }
-                            />
-                        </SimpleToolTip>
-                    ) : (
-                        <SimpleToolTip text="Show score">
-                            <EyeOff
-                                onClick={() => {
-                                    showScore([`${criteria.id}-${assignee_id}`])
-                                }}
-                            />
-                        </SimpleToolTip>
-                    )}
+                    <div className="absolute top-2 right-2">
+                        {!scoreIsHidden ? (
+                            <SimpleToolTip text="Hide score">
+                                <Button
+                                    size="icon"
+                                    className="w-8 h-8 p-0 size-7"
+                                    onClick={() =>
+                                        hideScore([
+                                            `${criteria.id}-${assignee_id}`,
+                                        ])
+                                    }
+                                >
+                                    <Eye className="inline-block align-bottom" />
+                                </Button>
+                            </SimpleToolTip>
+                        ) : (
+                            <SimpleToolTip text="Show score">
+                                <Button
+                                    size="icon"
+                                    className="w-8 h-8 p-0 size-7"
+                                    onClick={() => {
+                                        showScore([
+                                            `${criteria.id}-${assignee_id}`,
+                                        ])
+                                    }}
+                                >
+                                    <EyeOff className="inline-block align-bottom" />
+                                </Button>
+                            </SimpleToolTip>
+                        )}
+                    </div>
                 </div>
                 <LabelWrapper
                     label={null}

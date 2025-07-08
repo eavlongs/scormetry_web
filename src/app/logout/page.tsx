@@ -18,7 +18,6 @@ function Logout() {
 
     useEffect(() => {
         async function handleLogout() {
-            console.group(searchParams.toString())
             let redirectUrl = ''
             if (searchParams.has(REDIRECT_URL_NAME)) {
                 redirectUrl =
