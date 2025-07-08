@@ -15,7 +15,12 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { TextFileWriter } from '@/lib/text-file-writer'
-import { cn, formatDecimalNumber, generateFileNameForExport } from '@/lib/utils'
+import {
+    cn,
+    exportData,
+    formatDecimalNumber,
+    generateFileNameForExport,
+} from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
 import {
     CLASSROOM_ROLE_TEACHER,
@@ -156,429 +161,6 @@ export default function ActivityGroups({
         }
     }
 
-    async function exportData(
-        fileType: 'csv' | 'xlsx',
-        mode: 'detailed' | 'final'
-    ) {
-        if (activity.scoring_type === null) return
-
-        if (
-            activity.scoring_type !== 'range' &&
-            activity.scoring_type !== 'rubric'
-        ) {
-            throw new Error('scoring type not supported')
-        }
-
-        if (mode == 'detailed') {
-            const response = await getScoresOfActivity(
-                activity.id,
-                activity.scoring_type
-            )
-
-            if (!response.success) {
-                toast.error(response.message)
-                return
-            }
-
-            const data = formatDetailedScore(
-                activity.scoring_type,
-                response.data!
-            )
-
-            const textFileWriter = new TextFileWriter(
-                data,
-                fileType,
-                generateFileNameForExport(activity.title + ' grades')
-            )
-
-            textFileWriter.write()
-            textFileWriter.download()
-        } else {
-            const data = formatFinalScore(activity.scoring_type)
-            const textFileWriter = new TextFileWriter(
-                data,
-                fileType,
-                generateFileNameForExport(activity.title + ' grades')
-            )
-
-            textFileWriter.write()
-            textFileWriter.download()
-        }
-    }
-
-    function formatDetailedScore(
-        scoringType: 'rubric' | 'range',
-        data: Prettify<
-            NonNullable<Awaited<ReturnType<typeof getScoresOfActivity>>['data']>
-        >
-    ) {
-        console.log(
-            `[formatDetailedScore] Starting with scoring type: ${scoringType}`
-        )
-        console.log(`[formatDetailedScore] Data received:`, data)
-
-        const allStudents = classroom.people.students
-        const students = allStudents.filter((s) => s.first_name)
-        console.log(
-            `[formatDetailedScore] Processing ${students.length} students`
-        )
-
-        if (!activity.students) {
-            console.error('[formatDetailedScore] Missing activity.students')
-            toast.error(
-                'Failed to get data to export. Please refresh and try again'
-            )
-            throw new Error(
-                'Failed to get data to export. Please refresh and try again'
-            )
-        }
-
-        let result = []
-
-        if (scoringType == 'rubric') {
-            console.log('[formatDetailedScore] Processing rubric scoring type')
-            if (activity.rubric_id == null || !activity.rubric) {
-                console.error(
-                    '[formatDetailedScore] Missing activity.rubric or rubric_id'
-                )
-                toast.error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-                throw new Error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-            }
-
-            const sections = activity.rubric.rubric_sections
-            console.log(
-                `[formatDetailedScore] Found ${sections.length} rubric sections`
-            )
-
-            for (const student of students) {
-                console.log(
-                    `[formatDetailedScore] Processing student: ${student.id} - ${student.first_name} ${student.last_name}`
-                )
-                const initalData: Record<string, any> = {
-                    'Student ID': student.id,
-                    'Student Name': `${student.first_name} ${student.last_name}`,
-                    Email: student.email,
-                }
-
-                let judges: UserEssentialDetail[] = []
-                if (activity.grouping_id != null && activity.groups) {
-                    const group = activity.groups.find((g) =>
-                        g.users.find((u) => u.id == student.id)
-                    )
-                    console.log(
-                        `[formatDetailedScore] Found group for student: ${group?.name || 'None'}`
-                    )
-
-                    judges = group ? group.judges : []
-                } else {
-                    judges =
-                        activity.students.find((s) => s.id == student.id)
-                            ?.judges ?? []
-                }
-                console.log(
-                    `[formatDetailedScore] Found ${judges.length} judges for student`
-                )
-
-                const tmp = data.find((d) => d.student.id == student.id)
-                const scores = tmp
-                    ? (tmp.score_data as GetRubricScoreFromJudge[])
-                    : []
-                console.log(
-                    `[formatDetailedScore] Found ${scores.length} score entries for student`
-                )
-
-                // since there will always at least one row, we will set the one row outside the loop
-                const firstRowData: Record<string, any> = {
-                    ...initalData,
-                    'Judge Name':
-                        judges && judges.length > 0
-                            ? `${judges[0].first_name} ${judges[0].last_name}`
-                            : '',
-                    'Judge Email':
-                        judges && judges.length > 0 ? judges[0].email : '',
-                    ...generateRubricScoreRow(
-                        sections,
-                        judges && judges.length > 0
-                            ? (scores.find((s) => s.judge.id == judges[0].id)
-                                  ?.scores ?? [])
-                            : []
-                    ),
-                }
-                console.log(
-                    `[formatDetailedScore] Adding first row data:`,
-                    firstRowData
-                )
-
-                result.push(firstRowData)
-
-                for (let i = 1; i < judges.length; i++) {
-                    console.log(
-                        `[formatDetailedScore] Processing judge ${i + 1} of ${judges.length}: ${judges[i].first_name} ${judges[i].last_name}`
-                    )
-                    const _data: Record<string, any> = {
-                        ...initalData,
-                        'Judge Name': `${judges[i].first_name} ${judges[i].last_name}`,
-                        'Judge Email': judges[i].email,
-                        ...generateRubricScoreRow(
-                            sections,
-                            scores.find((s) => s.judge.id == judges[i].id)
-                                ?.scores ?? []
-                        ),
-                    }
-                    console.log(
-                        `[formatDetailedScore] Adding additional row data for judge:`,
-                        _data
-                    )
-
-                    result.push(_data)
-                }
-            }
-        } else {
-            console.log('[formatDetailedScore] Processing range scoring type')
-            if (!activity.max_score) {
-                console.error(
-                    '[formatDetailedScore] Missing activity.max_score'
-                )
-                toast.error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-                throw new Error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-            }
-            console.log(
-                `[formatDetailedScore] Max score: ${activity.max_score}`
-            )
-
-            for (const student of students) {
-                console.log(
-                    `[formatDetailedScore] Processing student: ${student.id} - ${student.first_name} ${student.last_name}`
-                )
-                const initalData: Record<string, any> = {
-                    'Student ID': student.id,
-                    'Student Name': `${student.first_name} ${student.last_name}`,
-                    Email: student.email,
-                }
-
-                let judges: UserEssentialDetail[] = []
-                if (activity.grouping_id != null && activity.groups) {
-                    const group = activity.groups.find((g) =>
-                        g.users.find((u) => u.id == student.id)
-                    )
-                    console.log(
-                        `[formatDetailedScore] Found group for student: ${group?.name || 'None'}`
-                    )
-
-                    judges = group ? group.judges : []
-                } else {
-                    judges =
-                        activity.students.find((s) => s.id == student.id)
-                            ?.judges ?? []
-                }
-                console.log(
-                    `[formatDetailedScore] Found ${judges.length} judges for student`
-                )
-
-                const tmp = data.find((d) => d.student.id == student.id)
-                const scores = tmp
-                    ? (tmp.score_data as GetRangeScoreFromAJudge[])
-                    : []
-                console.log(
-                    `[formatDetailedScore] Found ${scores.length} score entries for student`
-                )
-
-                // since there will always at least one row, we will set the one row outside the loop
-                const firstRowData: Record<string, any> = {
-                    ...initalData,
-                    'Judge Name':
-                        judges && judges.length > 0
-                            ? `${judges[0].first_name} ${judges[0].last_name}`
-                            : '',
-                    'Judge Email':
-                        judges && judges.length > 0 ? judges[0].email : '',
-                    'Given Score':
-                        judges && judges.length > 0
-                            ? (scores.find((s) => s.judge.id == judges[0].id)
-                                  ?.score ?? '')
-                            : '',
-                    'Max Score': activity.max_score,
-                }
-                console.log(
-                    `[formatDetailedScore] Adding first row data:`,
-                    firstRowData
-                )
-
-                result.push(firstRowData)
-
-                for (let i = 1; i < judges.length; i++) {
-                    console.log(
-                        `[formatDetailedScore] Processing judge ${i + 1} of ${judges.length}: ${judges[i].first_name} ${judges[i].last_name}`
-                    )
-                    const _data: Record<string, any> = {
-                        ...initalData,
-                        'Judge Name': `${judges[i].first_name} ${judges[i].last_name}`,
-                        'Judge Email': judges[i].email,
-                        'Given Score':
-                            scores.find((s) => s.judge.id == judges[i].id)
-                                ?.score ?? '',
-                        'Max Score': activity.max_score,
-                    }
-                    console.log(
-                        `[formatDetailedScore] Adding additional row data for judge:`,
-                        _data
-                    )
-
-                    result.push(_data)
-                }
-            }
-        }
-        console.log(
-            `[formatDetailedScore] Completed with ${result.length} total rows`
-        )
-        return result
-    }
-
-    function formatFinalScore(scoringType: 'rubric' | 'range') {
-        const allStudents = classroom.people.students
-        const students = allStudents.filter((s) => s.first_name)
-
-        if (!activity.students) {
-            toast.error(
-                'Failed to get data to export. Please refresh and try again'
-            )
-            throw new Error(
-                'Failed to get data to export. Please refresh and try again'
-            )
-        }
-
-        let data = []
-
-        if (scoringType == 'rubric') {
-            if (activity.rubric_id == null || !activity.rubric) {
-                toast.error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-                throw new Error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-            }
-
-            for (const student of students) {
-                let judges: UserEssentialDetail[] = []
-                if (activity.grouping_id != null && activity.groups) {
-                    const group = activity.groups.find((g) =>
-                        g.users.find((u) => u.id == student.id)
-                    )
-
-                    judges = group ? group.judges : []
-                } else {
-                    judges =
-                        activity.students.find((s) => s.id == student.id)
-                            ?.judges ?? []
-                }
-
-                let scorePercentage: number | string = ''
-
-                if (activity.grouping_id != null && activity.groups) {
-                    const tmp = activity.groups
-                        .flatMap((g) => g.users)
-                        .find((u) => u.id == student.id)
-
-                    scorePercentage =
-                        tmp && tmp.score_percentage !== null
-                            ? tmp.score_percentage
-                            : ''
-                } else {
-                    const tmp = activity.students.find(
-                        (s) => s.id == student.id
-                    )
-
-                    scorePercentage =
-                        tmp && tmp.score_percentage !== null
-                            ? tmp.score_percentage
-                            : ''
-                }
-
-                const rowData: Record<string, any> = {
-                    'Student ID': student.id,
-                    'Student Name': `${student.first_name} ${student.last_name}`,
-                    Email: student.email,
-                    Percentage:
-                        typeof scorePercentage == 'number'
-                            ? formatDecimalNumber(scorePercentage) + '%'
-                            : '',
-                    Judges: judges
-                        .map((j) => `${j.first_name} ${j.last_name}`)
-                        .join(', '),
-                }
-                data.push(rowData)
-            }
-        } else {
-            if (!activity.max_score) {
-                toast.error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-                throw new Error(
-                    'Failed to get data to export. Please refresh and try again'
-                )
-            }
-            for (const student of students) {
-                let judges: UserEssentialDetail[] = []
-                if (activity.grouping_id != null && activity.groups) {
-                    const group = activity.groups.find((g) =>
-                        g.users.find((u) => u.id == student.id)
-                    )
-
-                    judges = group ? group.judges : []
-                } else {
-                    judges =
-                        activity.students.find((s) => s.id == student.id)
-                            ?.judges ?? []
-                }
-
-                let score: number | string = ''
-
-                if (activity.grouping_id != null && activity.groups) {
-                    const tmp = activity.groups
-                        .flatMap((g) => g.users)
-                        .find((u) => u.id == student.id)
-
-                    score = tmp && tmp.score !== null ? tmp.score : ''
-                } else {
-                    const tmp = activity.students.find(
-                        (s) => s.id == student.id
-                    )
-
-                    score = tmp && tmp.score !== null ? tmp.score : ''
-                }
-
-                const rowData: Record<string, any> = {
-                    'Student ID': student.id,
-                    'Student Name': `${student.first_name} ${student.last_name}`,
-                    Email: student.email,
-                    'Final Score': score,
-                    'Max Score': activity.max_score,
-                    Percentage:
-                        typeof score == 'number'
-                            ? formatDecimalNumber(
-                                  (score / activity.max_score) * 100
-                              ) + '%'
-                            : '',
-                    Judges: judges
-                        .map((j) => `${j.first_name} ${j.last_name}`)
-                        .join(', '),
-                }
-
-                data.push(rowData)
-            }
-        }
-        return data
-    }
-
     return (
         // <ScrollArea className="h-[calc(100vh-5rem)]">
         // <ScrollArea>
@@ -614,7 +196,12 @@ export default function ActivityGroups({
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportData('csv', 'final')
+                                            exportData(
+                                                classroom,
+                                                activity,
+                                                'csv',
+                                                'final'
+                                            )
                                         }
                                     >
                                         <FileText size={16} className="mr-2" />
@@ -622,7 +209,12 @@ export default function ActivityGroups({
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportData('xlsx', 'final')
+                                            exportData(
+                                                classroom,
+                                                activity,
+                                                'xlsx',
+                                                'final'
+                                            )
                                         }
                                     >
                                         <FileSpreadsheet
@@ -633,7 +225,12 @@ export default function ActivityGroups({
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportData('csv', 'detailed')
+                                            exportData(
+                                                classroom,
+                                                activity,
+                                                'csv',
+                                                'detailed'
+                                            )
                                         }
                                     >
                                         <FileText size={16} className="mr-2" />
@@ -641,7 +238,12 @@ export default function ActivityGroups({
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportData('xlsx', 'detailed')
+                                            exportData(
+                                                classroom,
+                                                activity,
+                                                'xlsx',
+                                                'detailed'
+                                            )
                                         }
                                     >
                                         <FileSpreadsheet
