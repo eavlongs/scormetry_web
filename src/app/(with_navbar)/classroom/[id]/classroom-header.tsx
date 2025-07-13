@@ -255,14 +255,7 @@ export default function ClassroomHeader({
 
             <Tabs value={tab}>
                 <TabsList
-                    className={cn(
-                        `grid mt-2`,
-                        classroom.role == CLASSROOM_ROLE_TEACHER &&
-                            'grid-cols-5',
-                        classroom.role == CLASSROOM_ROLE_JUDGE && 'grid-cols-2',
-                        classroom.role == CLASSROOM_ROLE_STUDENT &&
-                            'grid-cols-3'
-                    )}
+                    className={cn(`mt-2 flex flex-wrap gap-1 h-auto p-1`)}
                 >
                     {tabs.map((tab) => (
                         <TabsTrigger key={tab.value} value={tab.value} asChild>

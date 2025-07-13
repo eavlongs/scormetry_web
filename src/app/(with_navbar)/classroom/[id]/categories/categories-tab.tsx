@@ -27,6 +27,13 @@ export default function CategoriesTab({
 }) {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
+    // Calculate remaining score percentage
+    const totalScorePercentage = classroom.categories.reduce(
+        (sum, category) => sum + category.score_percentage,
+        0
+    )
+    const remainingScorePercentage = 100 - totalScorePercentage
+
     return (
         <>
             <div className="flex justify-between items-center mb-4">
@@ -46,6 +53,14 @@ export default function CategoriesTab({
                     classroom={classroom}
                 />
             </Card>
+
+            <div className="mt-4 ml-4 text-sm">
+                <div
+                    className={`font-medium ${remainingScorePercentage < 0 ? 'text-destructive' : remainingScorePercentage > 0 ? 'text-muted-foreground' : 'text-green-600'}`}
+                >
+                    Remaining Percentage: {remainingScorePercentage}%
+                </div>
+            </div>
         </>
     )
 }
@@ -131,7 +146,6 @@ export function CategoryList({
                 category={categoryToEdit}
                 setCategory={setCategoryToEdit}
             />
-
             <DeleteCategoryDialog
                 classroom={classroom}
                 category={categoryToDelete}
