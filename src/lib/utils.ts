@@ -843,12 +843,12 @@ function generateRubricScoreRow(
 
             let outputStr = ''
             if (scoreInCriteria !== undefined) {
-                outputStr = `${scoreInCriteria.score} / ${criteria.max_score}`
+                outputStr = `${scoreInCriteria.score}`
             } else {
-                outputStr = `-/${criteria.max_score}`
+                outputStr = `--`
             }
 
-            let fieldName = `${section.name} - ${criteria.name}`
+            let fieldName = `${section.name} - ${criteria.name} (/${criteria.max_score})`
             const timesFieldNameMentioned = fieldNameMentions[fieldName]
 
             if (timesFieldNameMentioned === undefined) {
