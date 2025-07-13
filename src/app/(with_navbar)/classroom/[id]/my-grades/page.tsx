@@ -19,7 +19,6 @@ export default async function Page({
         return notFound()
     }
 
-    activities.activities.reverse()
     activities.activities = activities.activities.filter(
         (a) => a.scoring_type !== null
     )
@@ -40,7 +39,7 @@ export default async function Page({
             </div>
             <section className="my-4">
                 <div className="flex items-center justify-between border-b pb-5">
-                    <div className="text-right">
+                    <div>
                         <p className="text-sm text-muted-foreground">
                             Overall grade
                         </p>
