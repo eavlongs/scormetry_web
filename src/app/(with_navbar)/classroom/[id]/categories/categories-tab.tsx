@@ -55,10 +55,10 @@ export default function CategoriesTab({
             </Card>
 
             <div className="mt-4 ml-4 text-sm">
-                <div
-                    className={`font-medium ${remainingScorePercentage < 0 ? 'text-destructive' : remainingScorePercentage > 0 ? 'text-muted-foreground' : 'text-green-600'}`}
-                >
-                    Remaining Percentage: {remainingScorePercentage}%
+                <div className="text-muted-foreground">
+                    {remainingScorePercentage > 0
+                        ? `Remaining Percentage: ${remainingScorePercentage}%`
+                        : 'Maximum percentage reached'}
                 </div>
             </div>
         </>

@@ -14,13 +14,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { TextFileWriter } from '@/lib/text-file-writer'
-import {
-    cn,
-    exportData,
-    formatDecimalNumber,
-    generateFileNameForExport,
-} from '@/lib/utils'
+import { cn, exportData, formatDecimalNumber } from '@/lib/utils'
 import { UserEssentialDetail } from '@/types/auth'
 import {
     CLASSROOM_ROLE_TEACHER,
@@ -30,7 +24,6 @@ import {
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
 } from '@/types/classroom'
-import { Prettify } from '@/types/general'
 import {
     AlertCircle,
     ChevronDown,
@@ -45,12 +38,10 @@ import { toast } from 'sonner'
 
 import { GetClassroomResponse } from '../../classroom/[id]/actions'
 import {
-    GetRangeScoreFromAJudge,
     GetRubricScoreFromJudge,
     assignJudgesToGroup,
     getRangeScoreDetail,
     getRubricScoreDetail,
-    getScoresOfActivity,
 } from './actions'
 import AssignJudgeAll from './assign-judge-all'
 import { AssignJudgeButton } from './assign-judge-button'
@@ -126,8 +117,21 @@ export default function ActivityGroups({
             if (groupId && activity.groups) {
                 const group = activity.groups.find((s) => s.id === groupId)
                 if (group) {
-                    toggleGroup(groupId)
+                    expandGroup(groupId)
                     setGroupToHighlight(groupId)
+                }
+            }
+            setTimeout(() => router.replace(pathname), 3000)
+        } else if (searchParams.get('sid')) {
+            const studentId = searchParams.get('sid')
+            if (studentId && activity.groups) {
+                const group = activity.groups.find((g) =>
+                    g.users.some((u) => u.id === studentId)
+                )
+
+                if (group) {
+                    expandGroup(group.id)
+                    setGroupToHighlight(group.id)
                 }
             }
             setTimeout(() => router.replace(pathname), 3000)
@@ -135,6 +139,12 @@ export default function ActivityGroups({
             setGroupToHighlight(null)
         }
     }, [searchParams])
+
+    function expandGroup(groupId: string) {
+        setOpenGroups((prev) =>
+            prev.includes(groupId) ? prev : [...prev, groupId]
+        )
+    }
 
     function toggleGroup(groupId: string) {
         setOpenGroups((prev) =>

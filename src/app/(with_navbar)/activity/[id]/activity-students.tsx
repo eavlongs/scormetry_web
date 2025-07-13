@@ -134,7 +134,7 @@ export default function ActivityStudents({
                     (s) => s.id === studentId
                 )
                 if (student) {
-                    toggleStudent(studentId)
+                    expandStudent(studentId)
                     setStudentToHighlight(studentId)
                 }
             }
@@ -143,6 +143,12 @@ export default function ActivityStudents({
             setStudentToHighlight(null)
         }
     }, [searchParams])
+
+    function expandStudent(studentId: string) {
+        setOpenStudents((prev) =>
+            prev.includes(studentId) ? prev : [...prev, studentId]
+        )
+    }
 
     async function handleAssignJudges(judgesId: string[]) {
         if (!studentToAssignJudges) return

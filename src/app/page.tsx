@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button'
-import useSession from '@/hooks/useSession'
 import { getServerSession } from '@/lib/server-session'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -12,9 +11,9 @@ export default async function HomePage() {
         <div className="flex flex-col min-h-screen">
             {/* Navigation Bar */}
             <header className="w-full py-4 px-6 flex justify-between items-center border-b">
-                <div className="flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2">
                     <span className="font-bold text-xl">Scormetry</span>
-                </div>
+                </Link>
 
                 <div>
                     {isLoggedIn ? (

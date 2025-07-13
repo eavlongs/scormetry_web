@@ -192,23 +192,23 @@ export default function GradesTab({
                                                         key={activity.id}
                                                         className="text-center text-base"
                                                     >
-                                                        <Link
-                                                            href={`/activity/${activity.id}/score?sid=${grade.student.id}`}
-                                                        >
-                                                            {score &&
-                                                            score.score ? (
+                                                        {score &&
+                                                        score.score ? (
+                                                            <Link
+                                                                href={`/activity/${activity.id}?sid=${grade.student.id}`}
+                                                            >
                                                                 <span className="font-medium">
                                                                     {formatDecimalNumber(
                                                                         score.score
                                                                     )}
                                                                     %
                                                                 </span>
-                                                            ) : (
-                                                                <span className="text-muted-foreground">
-                                                                    --
-                                                                </span>
-                                                            )}
-                                                        </Link>
+                                                            </Link>
+                                                        ) : (
+                                                            <span className="text-muted-foreground">
+                                                                --
+                                                            </span>
+                                                        )}
                                                     </TableCell>
                                                 )
                                             }
