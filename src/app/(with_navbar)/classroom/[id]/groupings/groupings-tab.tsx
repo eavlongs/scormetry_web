@@ -29,8 +29,10 @@ import { EditGroupingDialog } from './edit-grouping-dialog'
 
 export default function GroupingsTab({
     classroom,
+    groupings,
 }: {
     classroom: GetClassroomResponse
+    groupings: Grouping[]
 }) {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
     const isMobile = useIsMobile()
@@ -61,7 +63,7 @@ export default function GroupingsTab({
             </div>
             <Card className="py-4">
                 <CardContent>
-                    <GroupingList classroom={classroom} />
+                    <GroupingList classroom={classroom} groupings={groupings} />
                 </CardContent>
 
                 <CreateGroupingDialog
@@ -76,8 +78,10 @@ export default function GroupingsTab({
 
 export function GroupingList({
     classroom,
+    groupings,
 }: {
     classroom: GetClassroomResponse
+    groupings: Grouping[]
 }) {
     const [editGrouping, setEditGrouping] = useState<Grouping | null>(null)
     const [deleteGrouping, setDeleteGrouping] = useState<Grouping | null>(null)
@@ -104,7 +108,7 @@ export function GroupingList({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {classroom.groupings.map((grouping) => (
+                    {groupings.map((grouping) => (
                         <TableRow key={grouping.id}>
                             <TableCell>{grouping.name}</TableCell>
                             <TableCell className="overflow-hidden whitespace-nowrap overflow-ellipsis">

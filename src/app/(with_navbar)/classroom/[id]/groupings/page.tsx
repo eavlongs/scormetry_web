@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
+import { getClassroomGroupings } from './actions'
 import GroupingsTab from './groupings-tab'
 
 export default async function Page({
@@ -19,6 +20,10 @@ export default async function Page({
         return notFound()
     }
 
+    const groupings = await getClassroomGroupings(id)
+
+    console.log(groupings)
+
     return (
         <div className="pb-6 pt-4">
             <div className="mb-4">
@@ -31,7 +36,7 @@ export default async function Page({
                 />
             </div>
             <section className="my-4">
-                <GroupingsTab classroom={classroom} />
+                <GroupingsTab classroom={classroom} groupings={groupings} />
             </section>
         </div>
     )
