@@ -843,7 +843,7 @@ function generateRubricScoreRow(
 
             let outputStr = ''
             if (scoreInCriteria !== undefined) {
-                outputStr = `${scoreInCriteria.score}/${criteria.max_score}`
+                outputStr = `${scoreInCriteria.score} / ${criteria.max_score}`
             } else {
                 outputStr = `-/${criteria.max_score}`
             }
