@@ -43,7 +43,7 @@ export default function DeleteClassroomDialog({
         <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Class</AlertDialogTitle>
+                    <AlertDialogTitle>Delete Classroom</AlertDialogTitle>
                     <AlertDialogDescription>
                         Are you sure you want to delete the &quot;
                         {classroom.name}&quot; classroom?

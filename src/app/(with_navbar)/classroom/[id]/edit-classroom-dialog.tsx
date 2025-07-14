@@ -69,7 +69,7 @@ export default function EditClassroomDialog({
         <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Edit Class</AlertDialogTitle>
+                    <AlertDialogTitle>Edit Classroom</AlertDialogTitle>
                 </AlertDialogHeader>
                 <div className="w-full">
                     <div className="flex flex-col gap-y-2 mb-4">

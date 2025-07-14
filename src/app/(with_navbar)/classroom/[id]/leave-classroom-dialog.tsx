@@ -43,7 +43,7 @@ export default function DeleteClassroomDialog({
         <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Leave Class</AlertDialogTitle>
+                    <AlertDialogTitle>Leave Classroom</AlertDialogTitle>
                     <AlertDialogDescription>
                         Are you sure you want to leave &quot;
                         {classroom.name}&quot; classroom?
