@@ -422,6 +422,9 @@ export default function ActivityGroups({
                                                 <GiveScoreButton
                                                     activityId={activity.id}
                                                     groupId={group.id}
+                                                    hasBeenGivenScore={
+                                                        group.has_been_given_score
+                                                    }
                                                 />
                                             )}
                                             <ChevronDown

@@ -152,6 +152,7 @@ export type GetGroupWithJudgePermission = GetGroupWithScoreInfo & {
     activity_assignment_id: string
     permitted_to_judge: boolean
     all_judge_scored: boolean
+    has_been_given_score: boolean
 }
 
 export type GetActivity = Activity & {
@@ -167,6 +168,7 @@ export type GetActivity = Activity & {
                   score: number | null
                   score_percentage: number | null
                   all_judge_scored: boolean
+                  has_been_given_score: boolean
               }
           >[]
         | null

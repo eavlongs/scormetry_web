@@ -469,6 +469,7 @@ function ListStudentWithJudges({
                             <GiveScoreButton
                                 activityId={activity.id}
                                 studentId={student.id}
+                                hasBeenGivenScore={student.has_been_given_score}
                             />
                         )}
 
