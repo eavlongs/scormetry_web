@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
 import { Textarea } from '@/components/ui/textarea'
-import { useWarnIfUnsavedChanges } from '@/hooks/useWarnIfUnsavedChanges'
 import { calculateRubricScore, cn, formatDecimalNumber } from '@/lib/utils'
 import { CreateActivityScoreSchema } from '@/schema'
 import {
@@ -602,7 +601,9 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
 
                                         {itemsToHide.size == 0 ? (
                                             <SimpleToolTip text="Hide all scores">
-                                                <Eye
+                                                <Button
+                                                    size="icon"
+                                                    className="size-7"
                                                     onClick={() =>
                                                         setTriggerHideAll(
                                                             (prev) => {
@@ -616,11 +617,21 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
                                                             }
                                                         )
                                                     }
-                                                />
+                                                    variant="outline"
+                                                >
+                                                    <Eye />
+                                                </Button>
                                             </SimpleToolTip>
                                         ) : (
                                             <SimpleToolTip text="Show all scores">
-                                                <EyeOff onClick={showAll} />
+                                                <Button
+                                                    size="icon"
+                                                    className="size-7"
+                                                    onClick={showAll}
+                                                    variant="outline"
+                                                >
+                                                    <EyeOff />
+                                                </Button>
                                             </SimpleToolTip>
                                         )}
                                     </div>

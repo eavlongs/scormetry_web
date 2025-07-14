@@ -214,19 +214,29 @@ export default function RangeScoreInput({
                                     </span>
                                     {!scoreIsHidden ? (
                                         <SimpleToolTip text="Hide score">
-                                            <Eye
+                                            <Button
+                                                size="icon"
+                                                className="size-7 ml-1 align-bottom"
                                                 onClick={() =>
                                                     hideScore([student.id])
                                                 }
-                                            />
+                                                variant="outline"
+                                            >
+                                                <Eye />
+                                            </Button>
                                         </SimpleToolTip>
                                     ) : (
                                         <SimpleToolTip text="Show score">
-                                            <EyeOff
+                                            <Button
+                                                size="icon"
+                                                className="size-7 ml-1 align-bottom"
                                                 onClick={() => {
                                                     showScore([student.id])
                                                 }}
-                                            />
+                                                variant="outline"
+                                            >
+                                                <EyeOff />
+                                            </Button>
                                         </SimpleToolTip>
                                     )}
                                 </div>
