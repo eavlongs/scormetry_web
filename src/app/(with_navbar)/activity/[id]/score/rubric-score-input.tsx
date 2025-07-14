@@ -517,38 +517,66 @@ export function RubricCriteria({
                         onClick={() => showScore([criteria.id])}
                     >
                         {`${criteria.name} (${criteria.max_score})`}
-                    </p>
-                    <div className="absolute top-2 right-2">
                         {!scoreIsHidden ? (
                             <SimpleToolTip text="Hide score">
                                 <Button
                                     size="icon"
-                                    className="w-8 h-8 p-0 size-7"
+                                    className="size-7 ml-1 align-bottom"
                                     onClick={() =>
                                         hideScore([
                                             `${criteria.id}-${assignee_id}`,
                                         ])
                                     }
+                                    variant="outline"
                                 >
-                                    <Eye className="inline-block align-bottom" />
+                                    <Eye />
                                 </Button>
                             </SimpleToolTip>
                         ) : (
                             <SimpleToolTip text="Show score">
                                 <Button
                                     size="icon"
-                                    className="w-8 h-8 p-0 size-7"
+                                    className="size-7 ml-1 align-bottom"
                                     onClick={() => {
                                         showScore([
                                             `${criteria.id}-${assignee_id}`,
                                         ])
                                     }}
+                                    variant="outline"
                                 >
                                     <EyeOff className="inline-block align-bottom" />
                                 </Button>
                             </SimpleToolTip>
                         )}
-                    </div>
+                    </p>
+
+                    {/* <div className="absolute bottom-2 right-2"> */}
+                    {/* {!scoreIsHidden ? (
+                        <SimpleToolTip text="Hide score">
+                            <Button
+                                size="icon"
+                                className="w-8 h-8 p-0 size-7"
+                                onClick={() =>
+                                    hideScore([`${criteria.id}-${assignee_id}`])
+                                }
+                            >
+                                <Eye className="inline-block align-bottom" />
+                            </Button>
+                        </SimpleToolTip>
+                    ) : (
+                        <SimpleToolTip text="Show score">
+                            <Button
+                                size="icon"
+                                className="w-8 h-8 p-0 size-7"
+                                onClick={() => {
+                                    showScore([`${criteria.id}-${assignee_id}`])
+                                }}
+                            >
+                                <EyeOff className="inline-block align-bottom" />
+                            </Button>
+                        </SimpleToolTip>
+                    )} */}
+                    {/* </div> */}
                 </div>
                 <LabelWrapper
                     label={null}

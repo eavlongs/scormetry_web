@@ -198,7 +198,7 @@ export function SelectActivityInClassroomDialog({
                 <DialogHeader>
                     <DialogTitle>
                         {view === 'classrooms'
-                            ? 'Import Rubric'
+                            ? 'Select classroom'
                             : `Select an Activity from ${selectedClassroom?.name}`}
                     </DialogTitle>
                 </DialogHeader>
