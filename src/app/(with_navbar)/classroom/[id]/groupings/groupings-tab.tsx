@@ -86,7 +86,7 @@ export function GroupingList({
     const [editGrouping, setEditGrouping] = useState<Grouping | null>(null)
     const [deleteGrouping, setDeleteGrouping] = useState<Grouping | null>(null)
 
-    if (classroom.groupings.length === 0) {
+    if (groupings.length === 0) {
         return (
             <div className="text-center p-8">
                 <FileTextIcon className="h-12 w-12 mx-auto text-muted-foreground" />

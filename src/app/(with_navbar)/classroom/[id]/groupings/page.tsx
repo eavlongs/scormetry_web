@@ -22,8 +22,6 @@ export default async function Page({
 
     const groupings = await getClassroomGroupings(id)
 
-    console.log(groupings)
-
     return (
         <div className="pb-6 pt-4">
             <div className="mb-4">

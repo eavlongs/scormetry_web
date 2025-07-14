@@ -810,7 +810,7 @@ function formatFinalScore(
                 Email: student.email,
                 'Final Score': score,
                 'Max Score': activity.max_score,
-                Percentage:
+                'Score Percentage':
                     typeof score == 'number'
                         ? formatDecimalNumber(
                               (score / activity.max_score) * 100
