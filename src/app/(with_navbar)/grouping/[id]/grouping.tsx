@@ -53,7 +53,7 @@ export default function Grouping({
     const [hasDataChanged, setHasDataChanged] = useState(false)
     const searchParams = useSearchParams()
 
-    useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
+    // useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
 
     useEffect(() => {
         const changed = !ld.isEqual(originalData, {

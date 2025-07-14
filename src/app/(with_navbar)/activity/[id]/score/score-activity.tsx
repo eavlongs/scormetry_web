@@ -73,10 +73,10 @@ export default function ScoreActivity({ activity }: { activity: GetActivity }) {
 
     const [hasDataChanged, setHasDataChanged] = useState(false)
 
-    useWarnIfUnsavedChanges(
-        hasDataChanged,
-        `/activity/${activity.id}/score?${searchParams.toString()}`
-    )
+    // useWarnIfUnsavedChanges(
+    //     hasDataChanged,
+    //     `/activity/${activity.id}/score?${searchParams.toString()}`
+    // )
 
     useEffect(() => {
         if (!selectedEntity) return
