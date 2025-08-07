@@ -1,5 +1,5 @@
-import { getSession } from '@/lib/session'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { getSession } from '@/lib/session'
 
 export async function ProfilePicture() {
     const session = await getSession()

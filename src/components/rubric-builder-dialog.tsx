@@ -12,30 +12,36 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
     cn,
+    convertZodErrorToValidationError,
     convertZodErrorToValidationErrorWithNestedPath,
+    formatDecimalNumber,
     getErrorMessageFromNestedPathValidationError,
     getValidationErrorMessage,
 } from '@/lib/utils'
-import { RubricSchema } from '@/schema'
-import { Prettify } from '@/types/general'
+import { RubricSchema, RubricSectionSchema } from '@/schema'
+import { Classroom } from '@/types/classroom'
+import { Prettify, TinyEditorType } from '@/types/general'
 import { NestedPathValidationError } from '@/types/response'
 import assert from 'assert'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
-import { Delta } from 'quill'
 import {
-    createContext,
     SetStateAction,
+    createContext,
     useContext,
     useEffect,
     useRef,
     useState,
 } from 'react'
 import { toast } from 'sonner'
-import { z, ZodError } from 'zod'
-import QuillEditor from './quill-editor'
+import { v4 as uuidv4 } from 'uuid'
+import { ZodError, z } from 'zod'
+
+import { SelectActivityInClassroomDialog } from './select-activity-in-classroom-dialog'
+import TinyEditor from './tiny-editor'
 import { LabelWrapper } from './ui/label-wrapper'
 
 interface ScoreRange {
+    id: string
     name: string
     min_score: number
     max_score: number
@@ -43,11 +49,13 @@ interface ScoreRange {
 }
 
 interface Criteria {
+    id: string
     name: string
     criteria_score_ranges: ScoreRange[]
 }
 
 interface Section {
+    id: string
     name: string
     score_percentage: number
     is_group_score: boolean
@@ -57,6 +65,7 @@ interface Section {
 
 interface RubricBuilderDialogProps {
     open: boolean
+    classrooms: Classroom[]
     onOpenChange: (open: boolean) => void
     initialData: z.infer<typeof RubricSchema> | null
     isIndividual: boolean
@@ -113,15 +122,18 @@ type RubricBuilderContextType = {
 const rubricBuilderDefaultValue: RubricBuilderContextType = {
     rubric_sections: [
         {
+            id: uuidv4(),
             name: 'Section 1',
             score_percentage: 0,
             is_group_score: false,
             description: '',
             rubric_criterias: [
                 {
+                    id: uuidv4(),
                     name: '',
                     criteria_score_ranges: [
                         {
+                            id: uuidv4(),
                             name: '',
                             min_score: 1,
                             max_score: 5,
@@ -159,10 +171,25 @@ export function RubricBuilderDialog({
     onSave,
     isIndividual,
     initialData,
+    classrooms,
 }: RubricBuilderDialogProps) {
     const [sections, setSections] = useState<Section[]>(
         initialData
-            ? initialData.rubric_sections
+            ? initialData.rubric_sections.map((section) => ({
+                  id: uuidv4(),
+                  ...section,
+                  rubric_criterias: section.rubric_criterias.map(
+                      (criteria) => ({
+                          id: uuidv4(),
+                          ...criteria,
+                          criteria_score_ranges:
+                              criteria.criteria_score_ranges.map((range) => ({
+                                  id: uuidv4(),
+                                  ...range,
+                              })),
+                      })
+                  ),
+              }))
             : rubricBuilderDefaultValue.rubric_sections
     )
     const [sectionToEdit, setSectionToEdit] = useState<Prettify<
@@ -171,20 +198,31 @@ export function RubricBuilderDialog({
         }
     > | null>(null)
 
-    const [note, setNote] = useState<Delta>()
-    const [quill, setQuill] = useState()
+    const editorRef = useRef<TinyEditorType>(null)
+    const note = initialData ? initialData.note : ''
     const [errors, setErrors] = useState<NestedPathValidationError[]>([])
-
-    useEffect(() => {
-        if (open && quill && initialData?.note) {
-            // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-            quill.setContents(JSON.parse(initialData.note))
-        }
-    }, [quill, initialData?.note])
+    const [isImportRubricDialogOpen, setIsImportRubricDialogOpen] =
+        useState(false)
 
     useEffect(() => {
         if (initialData) {
-            setSections(initialData?.rubric_sections || [])
+            setSections(
+                initialData.rubric_sections.map((section) => ({
+                    id: uuidv4(),
+                    ...section,
+                    rubric_criterias: section.rubric_criterias.map(
+                        (criteria) => ({
+                            id: uuidv4(),
+                            ...criteria,
+                            criteria_score_ranges:
+                                criteria.criteria_score_ranges.map((range) => ({
+                                    id: uuidv4(),
+                                    ...range,
+                                })),
+                        })
+                    ),
+                })) || []
+            )
         }
     }, [initialData])
 
@@ -196,9 +234,11 @@ export function RubricBuilderDialog({
                 rubric_criterias: [
                     ...updatedSections[sectionIndex].rubric_criterias,
                     {
+                        id: uuidv4(),
                         name: '',
                         criteria_score_ranges: [
                             {
+                                id: uuidv4(),
                                 name: '',
                                 min_score: 1,
                                 max_score: 5,
@@ -224,9 +264,22 @@ export function RubricBuilderDialog({
     }
 
     const removeCriteria = (sectionIndex: number, criteriaIndex: number) => {
-        const updatedSections = [...sections]
-        updatedSections[sectionIndex].rubric_criterias.splice(criteriaIndex, 1)
-        setSections(updatedSections)
+        setSections((prev) => {
+            const updatedSections = [...prev]
+            updatedSections[sectionIndex] = {
+                ...updatedSections[sectionIndex],
+                rubric_criterias: [
+                    ...updatedSections[sectionIndex].rubric_criterias.slice(
+                        0,
+                        criteriaIndex
+                    ),
+                    ...updatedSections[sectionIndex].rubric_criterias.slice(
+                        criteriaIndex + 1
+                    ),
+                ],
+            }
+            return updatedSections
+        })
     }
 
     const updateSectionName = (sectionIndex: number, name: string) => {
@@ -316,6 +369,7 @@ export function RubricBuilderDialog({
         const diff = lastRange ? lastRange.max_score - lastRange.min_score : 0
 
         criteria.criteria_score_ranges.push({
+            id: uuidv4(),
             name: '',
             min_score: lastRange ? lastRange.max_score + 1 : 1,
             max_score: lastRange ? lastRange.max_score + 1 + diff : 5,
@@ -341,15 +395,18 @@ export function RubricBuilderDialog({
         setSections((prev) => [
             ...prev,
             {
+                id: uuidv4(),
                 name: `Section ${prev.length + 1}`,
                 score_percentage: 0,
                 is_group_score: false,
                 description: '',
                 rubric_criterias: [
                     {
+                        id: uuidv4(),
                         name: '',
                         criteria_score_ranges: [
                             {
+                                id: uuidv4(),
                                 name: '',
                                 min_score:
                                     prev[prev.length - 1].rubric_criterias[0]
@@ -420,10 +477,17 @@ export function RubricBuilderDialog({
                         </div>
                     </DialogHeader>
 
+                    <div className="flex ml-2">
+                        <Button
+                            onClick={() => setIsImportRubricDialogOpen(true)}
+                        >
+                            Import Rubric
+                        </Button>
+                    </div>
                     <div className="flex-1 overflow-auto p-4 px-0 pt-0 pb-20 flex flex-col gap-y-4">
                         {sections.map((section, sectionIndex) => (
                             <RubricSection
-                                key={sectionIndex}
+                                key={section.id}
                                 index={sectionIndex}
                                 isIndividual={isIndividual}
                                 section={section}
@@ -451,17 +515,16 @@ export function RubricBuilderDialog({
                             <h3 className="text-base underline font-bol mb-2">
                                 Note
                             </h3>
-                            <QuillEditor
-                                // placeholder="Add any additional information about this rubric..."
-                                className="min-h-[180px] w-full"
-                                onContentChange={setNote}
+
+                            <TinyEditor
                                 initialContent={note}
-                                setQuillObject={setQuill}
+                                onInit={(_evt, editor) =>
+                                    (editorRef.current = editor)
+                                }
                             />
                         </div>
                         {/*  */}
                     </div>
-
                     <div className="border-t p-2 fixed bottom-0 left-0 right-0 bg-background z-10 flex items-center justify-end gap-x-4">
                         <Button
                             variant="destructive"
@@ -474,7 +537,9 @@ export function RubricBuilderDialog({
                                 try {
                                     setErrors([])
                                     const data = RubricSchema.parse({
-                                        note: JSON.stringify(note || []),
+                                        note: editorRef.current
+                                            ? editorRef.current.getContent()
+                                            : '',
                                         rubric_sections: sections,
                                     })
                                     onSave(data)
@@ -503,6 +568,48 @@ export function RubricBuilderDialog({
                 section={sectionToEdit}
                 onClose={() => setSectionToEdit(null)}
                 onSubmit={updateSection}
+                currentPercentage={(() => {
+                    let sum = 0
+                    for (const section of sections) {
+                        sum += section.score_percentage
+                    }
+                    return sum
+                })()}
+            />
+            <SelectActivityInClassroomDialog
+                classrooms={classrooms}
+                open={isImportRubricDialogOpen}
+                onOpenChange={setIsImportRubricDialogOpen}
+                onSelect={(rubric) => {
+                    if (rubric) {
+                        try {
+                            const parsedData = RubricSchema.parse(rubric)
+                            setSections(
+                                parsedData.rubric_sections.map((section) => ({
+                                    id: uuidv4(),
+                                    ...section,
+                                    rubric_criterias:
+                                        section.rubric_criterias.map(
+                                            (criteria) => ({
+                                                id: uuidv4(),
+                                                ...criteria,
+                                                criteria_score_ranges:
+                                                    criteria.criteria_score_ranges.map(
+                                                        (range) => ({
+                                                            id: uuidv4(),
+                                                            ...range,
+                                                        })
+                                                    ),
+                                            })
+                                        ),
+                                }))
+                            )
+                            toast.success('Rubric loaded successfully')
+                        } catch (error) {
+                            toast.error('Failed to load rubric')
+                        }
+                    }
+                }}
             />
         </RubricBuilderContext.Provider>
     )
@@ -524,7 +631,7 @@ function RubricSection({
     return (
         <div className="mb-4">
             <div className="flex">
-                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white">
+                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white min-w-16">
                     <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
                         {/* <div className="flex-grow flex flex-col items-center justify-center gap-y-2 relative">
                                 <Input
@@ -557,7 +664,7 @@ function RubricSection({
                                     ref={sectionNameInputRef}
                                 />
                             </div> */}
-                        <div className="absolute flex flex-col items-center bottom-2 gap-y-1">
+                        <div className="flex flex-col items-center gap-y-1">
                             {ctx.rubric_sections.length > 1 && (
                                 <Trash2
                                     className="inline-block h-4 w-4 cursor-pointer"
@@ -570,7 +677,7 @@ function RubricSection({
                             />
                         </div>
 
-                        <div>
+                        <div className="flex-1">
                             {ctx.rubric_sections.findIndex(
                                 (s) => s.score_percentage !== 0
                             ) !== -1 && (
@@ -589,7 +696,7 @@ function RubricSection({
                     <div className="flex-none pl-2 ">
                         {!isIndividual && (
                             <>
-                                <div className="flex items-center gap-2 mb-2 text-sm">
+                                <div className="flex items-center gap-2 mb-2 text-sm ">
                                     {isIndividual}
                                     <span className="mr-2">Scoring Type:</span>
                                     <div className="flex bg-white rounded-full border">
@@ -632,7 +739,7 @@ function RubricSection({
                     </div>
                     {section.rubric_criterias.map((criteria, criteriaIndex) => (
                         <RubricCriteria
-                            key={criteriaIndex}
+                            key={criteria.id}
                             sectionIndex={index}
                             index={criteriaIndex}
                             criteria={criteria}
@@ -720,7 +827,7 @@ export function RubricCriteria({
                         {criteria.criteria_score_ranges.map(
                             (range, rangeIndex) => (
                                 <div
-                                    key={rangeIndex}
+                                    key={range.id}
                                     className="border p-3 flex-shrink-0 relative"
                                 >
                                     <div className="flex justify-between items-start mb-2">
@@ -918,6 +1025,7 @@ export function RubricCriteria({
 
 function EditSectionDialog({
     section,
+    currentPercentage,
     onClose,
     onSubmit,
 }: {
@@ -926,6 +1034,7 @@ function EditSectionDialog({
             index: number
         }
     > | null
+    currentPercentage: number
     onClose: () => void
     onSubmit: (
         index: number,
@@ -941,12 +1050,44 @@ function EditSectionDialog({
     function handleSubmit() {
         if (!section || !nameRef.current || !scorePercentRef.current) return
 
-        onSubmit(
-            section.index,
-            nameRef.current.value,
-            Number(scorePercentRef.current.value),
-            descriptionRef.current?.value || ''
-        )
+        try {
+            RubricSectionSchema.pick({
+                name: true,
+            }).parse({ name: nameRef.current.value })
+        } catch (e: any) {
+            if (e instanceof ZodError) {
+                const validationError = convertZodErrorToValidationError(e)
+                if (validationError) {
+                    toast.error(getValidationErrorMessage(validationError))
+                    return
+                }
+            }
+
+            toast.error('Invalid section name')
+            return
+        }
+
+        const scorePercentage = parseFloat(scorePercentRef.current.value || '0')
+        if (isNaN(scorePercentage)) {
+            toast.error('Score percentage must be a number')
+            return
+        }
+
+        if (currentPercentage + scorePercentage > 100) {
+            const best = 100 - currentPercentage
+            toast.error(
+                `The total score percentage cannot exceed 100%. The most you can put in this section is ${formatDecimalNumber(best)}%`
+            )
+            return
+        }
+
+        if (currentPercentage + scorePercentRef.current.value)
+            onSubmit(
+                section.index,
+                nameRef.current.value,
+                parseFloat(scorePercentRef.current.value || '0'),
+                descriptionRef.current?.value || ''
+            )
     }
     if (section === null) return null
     return (

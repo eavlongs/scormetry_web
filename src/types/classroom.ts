@@ -118,6 +118,7 @@ export type Activity = {
     max_score: number | null
     posted_by: string
     files: CustomFile[]
+    hide_score: boolean
     created_at: string
     updated_at: string
 }
@@ -127,6 +128,7 @@ export type CustomFile = {
     file_path: string
     file_name: string
     file_size: number
+    content_type: string
     created_at: string
 }
 
@@ -135,9 +137,22 @@ export type GetGroup = Pick<Group, 'id' | 'name' | 'grouping_id'> & {
     judges: UserEssentialDetail[]
 }
 
-export type GetGroupWithJudgePermission = GetGroup & {
+export type GetGroupWithScoreInfo = Prettify<
+    Pick<GetGroup, 'id' | 'name' | 'grouping_id' | 'judges'> & {
+        score: number | null
+        score_percentage: number | null
+        users: (UserEssentialDetail & {
+            score: number | null
+            score_percentage: number | null
+        })[]
+    }
+>
+
+export type GetGroupWithJudgePermission = GetGroupWithScoreInfo & {
     activity_assignment_id: string
     permitted_to_judge: boolean
+    all_judge_scored: boolean
+    has_been_given_score: boolean
 }
 
 export type GetActivity = Activity & {
@@ -150,16 +165,36 @@ export type GetActivity = Activity & {
                   activity_assignment_id: string
                   permitted_to_judge: boolean
                   judges: UserEssentialDetail[]
+                  score: number | null
+                  score_percentage: number | null
+                  all_judge_scored: boolean
+                  has_been_given_score: boolean
               }
           >[]
         | null
     judges: UserEssentialDetail[] | null
-    group: GetGroup | null
+    group:
+        | (GetGroupWithScoreInfo & {
+              activity_assignment_id: string
+          })
+        | null
+    student: StudentWithScoreDetail | null
+}
+
+export type StudentWithScoreDetail = UserEssentialDetail & {
+    judges: UserEssentialDetail[]
+    score: number | null
+    score_percentage: number | null
+    activity_assignment_id: string
+}
+
+export type GetRubricInClassroomResponse = GetRubric & {
+    activity_name: string
 }
 
 export type GetRubric = Rubric & {
     rubric_sections: (RubricSection & {
-        rubric_criterias: (CriteriaScoreRange & {
+        rubric_criterias: (RubricCriteria & {
             criteria_score_ranges: CriteriaScoreRange[]
         })[]
     })[]
@@ -198,6 +233,15 @@ export type RubricCriteria = {
     updated_at: string
 }
 
+export type GetActivitiesResponse = {
+    classroom: Classroom & {
+        role: ClassroomRole
+    }
+    activities: (Activity & {
+        posted_by_user: UserEssentialDetail
+    })[]
+}
+
 export type CriteriaScoreRange = {
     id: string
     rubric_criteria_id: string
@@ -225,3 +269,15 @@ export type ScoringEntity = {
 )
 
 export type IndividualOrGroup = 'individual' | 'group'
+
+export type GetStudentGradeResponse = {
+    activity_id: string
+    score: number
+}
+
+export type GetGradeResponse = {
+    student: UserEssentialDetail & {
+        grades: GetStudentGradeResponse[]
+        overall_score: number
+    }
+}

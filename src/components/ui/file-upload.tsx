@@ -12,6 +12,7 @@ import {
     FileVideoIcon,
 } from 'lucide-react'
 import * as React from 'react'
+import { toast } from 'sonner'
 
 const ROOT_NAME = 'FileUpload'
 const DROPZONE_NAME = 'FileUploadDropzone'
@@ -702,7 +703,6 @@ const FileUploadDropzone = React.forwardRef<
     const onDragEnter = React.useCallback(
         (event: React.DragEvent<HTMLDivElement>) => {
             propsRef.current?.onDragEnter?.(event)
-
             if (event.defaultPrevented) return
 
             event.preventDefault()
@@ -726,7 +726,6 @@ const FileUploadDropzone = React.forwardRef<
     const onDrop = React.useCallback(
         (event: React.DragEvent<HTMLDivElement>) => {
             propsRef.current?.onDrop?.(event)
-
             if (event.defaultPrevented) return
 
             event.preventDefault()
@@ -737,7 +736,14 @@ const FileUploadDropzone = React.forwardRef<
             if (!inputElement) return
 
             const dataTransfer = new DataTransfer()
+            let shouldToastWarning = false
             for (const file of files) {
+                if (file.size == 0) {
+                    toast.warning(
+                        `${file.name} is empty. They will not be uploaded.`
+                    )
+                    continue
+                }
                 dataTransfer.items.add(file)
             }
 
@@ -904,12 +910,13 @@ function useFileUploadItemContext(name: keyof typeof FILE_UPLOAD_ERRORS) {
 
 interface FileUploadItemProps extends React.ComponentPropsWithoutRef<'div'> {
     value: File
+    forcedPath?: string
     asChild?: boolean
 }
 
 const FileUploadItem = React.forwardRef<HTMLDivElement, FileUploadItemProps>(
     (props, forwardedRef) => {
-        const { value, asChild, className, ...itemProps } = props
+        const { value, asChild, className, forcedPath, ...itemProps } = props
 
         const id = React.useId()
         const statusId = `${id}-status`
@@ -968,6 +975,23 @@ const FileUploadItem = React.forwardRef<HTMLDivElement, FileUploadItemProps>(
                         'relative flex items-center gap-2.5 rounded-md border p-3 has-[_[data-slot=file-upload-progress]]:flex-col has-[_[data-slot=file-upload-progress]]:items-start',
                         className
                     )}
+                    onClick={() => {
+                        if (forcedPath) {
+                            // create anchor tag and click it
+                            const anchorTag = document.createElement('a')
+                            anchorTag.href = forcedPath
+                            anchorTag.target = '_blank'
+                            anchorTag.click()
+                            anchorTag.remove()
+                        }
+                        if (itemContext.fileState) {
+                            const url = URL.createObjectURL(
+                                itemContext.fileState.file
+                            )
+                            window.open(url, '_blank')
+                            URL.revokeObjectURL(url)
+                        }
+                    }}
                 >
                     {props.children}
                     <span id={statusId} className="sr-only">
@@ -987,9 +1011,9 @@ export function formatBytes(bytes: number) {
     return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${sizes[i]}`
 }
 
-function getFileIcon(file: File) {
-    const type = file.type
-    const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+export function getFileIcon(fileType: string, fileName: string) {
+    const type = fileType
+    const extension = fileName.split('.').pop()?.toLowerCase() ?? ''
 
     if (type.startsWith('video/')) {
         return <FileVideoIcon />
@@ -1046,13 +1070,15 @@ interface FileUploadItemPreviewProps
     extends React.ComponentPropsWithoutRef<'div'> {
     render?: (file: File) => React.ReactNode
     asChild?: boolean
+    forcedSrc?: string
 }
 
 const FileUploadItemPreview = React.forwardRef<
     HTMLDivElement,
     FileUploadItemPreviewProps
 >((props, forwardedRef) => {
-    const { render, asChild, children, className, ...previewProps } = props
+    const { render, asChild, children, className, forcedSrc, ...previewProps } =
+        props
 
     const itemContext = useFileUploadItemContext(ITEM_PREVIEW_NAME)
 
@@ -1065,11 +1091,14 @@ const FileUploadItemPreview = React.forwardRef<
             if (isImage) {
                 return (
                     <img
-                        src={URL.createObjectURL(file)}
+                        src={forcedSrc || URL.createObjectURL(file)}
                         alt={file.name}
                         className="size-full rounded object-cover"
                         onLoad={(event) => {
-                            if (!(event.target instanceof HTMLImageElement))
+                            if (
+                                !(event.target instanceof HTMLImageElement) ||
+                                forcedSrc
+                            )
                                 return
                             URL.revokeObjectURL(event.target.src)
                         }}
@@ -1077,7 +1106,7 @@ const FileUploadItemPreview = React.forwardRef<
                 )
             }
 
-            return getFileIcon(file)
+            return getFileIcon(file.type, file.name)
         },
         [isImage, render]
     )

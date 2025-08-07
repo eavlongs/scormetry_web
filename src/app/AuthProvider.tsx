@@ -11,7 +11,8 @@ import {
     Session,
     UnauthenticatedSession,
 } from '@/types/auth'
-import { createContext, ReactNode, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ReactNode, createContext, useEffect, useState } from 'react'
 
 export type AuthContextType = Session & {
     loading: boolean
@@ -35,6 +36,7 @@ export default function AuthProvider({
         authContextDefaultValue
     )
     const [sessionFetched, setSessionFetched] = useState(false)
+    const router = useRouter()
 
     useEffect(() => {
         async function fetchSession() {
@@ -84,7 +86,7 @@ export default function AuthProvider({
                 // if refresh is successful, update the session
                 setSessionFetched(false)
             } else if (!session.accessToken) {
-                await logout()
+                router.push('/logout')
                 window.location.href = '/login'
             }
         }

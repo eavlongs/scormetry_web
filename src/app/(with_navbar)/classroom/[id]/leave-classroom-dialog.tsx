@@ -12,6 +12,7 @@ import { Classroom } from '@/types/classroom'
 import { useRouter } from 'next/navigation'
 import { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
+
 import { deleteClassroom, leaveClassroom } from './actions'
 
 export default function DeleteClassroomDialog({
@@ -30,7 +31,7 @@ export default function DeleteClassroomDialog({
 
         if (response.success) {
             toast.success(response.message)
-            router.replace('/')
+            router.replace('/home')
             return
         }
 
@@ -42,7 +43,7 @@ export default function DeleteClassroomDialog({
         <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Class</AlertDialogTitle>
+                    <AlertDialogTitle>Leave Classroom</AlertDialogTitle>
                     <AlertDialogDescription>
                         Are you sure you want to leave &quot;
                         {classroom.name}&quot; classroom?

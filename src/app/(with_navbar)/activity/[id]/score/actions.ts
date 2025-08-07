@@ -10,7 +10,7 @@ import {
     ApiResponse,
     NestedPathValidationError,
 } from '@/types/response'
-import { z, ZodError } from 'zod'
+import { ZodError, z } from 'zod'
 
 export async function saveScoringData(
     activity_assignment_id: string,

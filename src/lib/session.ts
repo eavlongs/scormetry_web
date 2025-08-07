@@ -10,9 +10,10 @@ import {
     UnauthenticatedSession,
 } from '@/types/auth'
 import { ApiResponse } from '@/types/response'
-import { cookies } from 'next/headers'
-import { api } from './axios'
 import * as jose from 'jose'
+import { cookies } from 'next/headers'
+
+import { api } from './axios'
 
 export async function createSession(accessToken: string, refreshToken: string) {
     const accessTokenPayload = await getDataFromToken(accessToken)
@@ -75,7 +76,7 @@ export async function getSession(): Promise<Session> {
     const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE_NAME)
     const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)
 
-    if (!accessToken) {
+    if (!accessToken || !accessToken.value) {
         return {
             ...UnauthenticatedSession,
             refreshToken: refreshToken?.value ?? null,

@@ -1,5 +1,6 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -13,6 +14,7 @@ import {
 import { Category } from '@/types/classroom'
 import { EditIcon, FileTextIcon, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+
 import { GetClassroomResponse } from '../actions'
 import { CreateCategoryDialog } from './create-category-dialog'
 import { DeleteCategoryDialog } from './delete-category-dialog'
@@ -24,6 +26,13 @@ export default function CategoriesTab({
     classroom: GetClassroomResponse
 }) {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+
+    // Calculate remaining score percentage
+    const totalScorePercentage = classroom.categories.reduce(
+        (sum, category) => sum + category.score_percentage,
+        0
+    )
+    const remainingScorePercentage = 100 - totalScorePercentage
 
     return (
         <>
@@ -44,6 +53,14 @@ export default function CategoriesTab({
                     classroom={classroom}
                 />
             </Card>
+
+            <div className="mt-4 ml-4 text-sm">
+                <div className="text-muted-foreground">
+                    {remainingScorePercentage > 0
+                        ? `Remaining Percentage: ${remainingScorePercentage}%`
+                        : 'Maximum percentage reached'}
+                </div>
+            </div>
         </>
     )
 }
@@ -88,27 +105,35 @@ export function CategoryList({
                             <TableCell>{category.score_percentage}%</TableCell>
                             <TableCell className="flex justify-center">
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() =>
-                                            setCategoryToEdit(category)
-                                        }
-                                    >
-                                        <EditIcon className="h-4 w-4" />
-                                        <span className="sr-only">Edit</span>
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="text-destructive hover:text-destructive"
-                                        onClick={() =>
-                                            setCategoryToDelete(category)
-                                        }
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Delete</span>
-                                    </Button>
+                                    <SimpleToolTip text="Edit Category">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                                setCategoryToEdit(category)
+                                            }
+                                        >
+                                            <EditIcon className="h-4 w-4" />
+                                            <span className="sr-only">
+                                                Edit
+                                            </span>
+                                        </Button>
+                                    </SimpleToolTip>
+                                    <SimpleToolTip text="Delete Category">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={() =>
+                                                setCategoryToDelete(category)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">
+                                                Delete
+                                            </span>
+                                        </Button>
+                                    </SimpleToolTip>
                                 </div>
                             </TableCell>
                         </TableRow>
@@ -121,7 +146,6 @@ export function CategoryList({
                 category={categoryToEdit}
                 setCategory={setCategoryToEdit}
             />
-
             <DeleteCategoryDialog
                 classroom={classroom}
                 category={categoryToDelete}

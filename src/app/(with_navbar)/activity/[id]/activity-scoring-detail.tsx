@@ -26,6 +26,7 @@ export default function ActivityScoringDetail({
                         View Rubric
                     </Button>
                     <ViewRubricDialog
+                        isIndividualWork={activity.grouping_id === null}
                         open={showRubric}
                         onOpenChange={setShowRubric}
                         rubric={activity.rubric}

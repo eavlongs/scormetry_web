@@ -1,12 +1,19 @@
 'use client'
 
+import { SimpleToolTip } from '@/components/simple-tooltip'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWrapper } from '@/components/ui/label-wrapper'
-import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { Slider } from '@/components/ui/slider'
+import { cn, getErrorMessageFromValidationError } from '@/lib/utils'
 import { ScoringEntity } from '@/types/classroom'
 import { ValidationError } from '@/types/response'
+import { Copy, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
-import { ComponentProps, FocusEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+
+import { useScoreInputVisibilityContext } from './visibility-provider'
 
 export type RangeScore = {
     student_id: string
@@ -24,16 +31,39 @@ export default function RangeScoreInput({
     onScoreUpdate: (scores: RangeScore[]) => void
     maxScore: number
 }) {
-    const [scores, setScores] = useState<RangeScore[]>(initialScores ?? [])
+    const [scores, setScores] = useState<RangeScore[]>(
+        structuredClone(initialScores) ?? []
+    )
     const [errors, setErrors] = useState<ValidationError[]>([])
+    const {
+        triggerHideAll,
+        hide: hideScore,
+        show: showScore,
+    } = useScoreInputVisibilityContext()
+    useEffect(() => {
+        console.log('triggerHideAll', triggerHideAll)
+        if (triggerHideAll === null) return
+
+        const ids: string[] = []
+
+        if (entity.type === 'group') {
+            entity.entity.users.forEach((user) => {
+                ids.push(user.id)
+            })
+        } else {
+            ids.push(entity.entity.id)
+        }
+
+        if (ids.length > 0) hideScore(ids)
+    }, [triggerHideAll])
+
+    useEffect(() => {
+        setScores(initialScores ? structuredClone(initialScores) : [])
+    }, [initialScores])
 
     useEffect(() => {
         onScoreUpdate(scores)
     }, [scores])
-
-    useEffect(() => {
-        console.log('initialScores', initialScores)
-    }, [initialScores])
 
     function addOrReplaceScore(student_id: string, score: number) {
         const newScores = [...scores]
@@ -82,13 +112,16 @@ export default function RangeScoreInput({
         setErrors(filtered)
     }
 
-    function handleOnBlur(student_id: string, e: FocusEvent<HTMLInputElement>) {
-        if (e.target.value == '') {
+    function handleOnScoreChange(student_id: string, valueStr: string) {
+        console.log(valueStr)
+        if (valueStr == '') {
             removeScore(student_id)
             return
         }
-        const scoreNum = parseFloat(e.target.value)
+        const scoreNum = parseFloat(valueStr)
+        console.log(scoreNum)
         if (isNaN(scoreNum)) {
+            console.log('here')
             addOrReplaceError({
                 field: student_id,
                 message: 'Score must be a number',
@@ -110,26 +143,52 @@ export default function RangeScoreInput({
         }
     }
 
+    function handleApplyAll(studentId: string) {
+        if (entity.type !== 'group') return
+        const score = scores.find((s) => s.student_id === studentId)?.score
+
+        if (score === undefined) {
+            toast.error('Cannot apply empty score')
+            return
+        }
+
+        if (score >= 0 && score <= maxScore) {
+            for (const student of entity.entity.users) {
+                addOrReplaceScore(student.id, score)
+                removeError(student.id)
+            }
+        } else {
+            toast.error(
+                'Please make sure that the score is within a valid range.'
+            )
+        }
+    }
     return (
         <>
             {entity.type == 'individual' && (
                 <ScoreInput
+                    userId={entity.entity.id}
                     maxScore={maxScore}
-                    onBlur={(e) => handleOnBlur(entity.entity.id, e)}
+                    onScoreChange={(e) =>
+                        handleOnScoreChange(entity.entity.id, e)
+                    }
                     error={getErrorMessageFromValidationError(
                         errors,
                         entity.entity.id
                     )}
-                    defaultValue={
+                    value={
                         scores.find((s) => s.student_id === entity.entity.id)
                             ?.score
                     }
                 />
             )}
-
             {entity.type == 'group' && (
-                <div className="flex flex-col gap-y-4">
+                <div className="flex flex-col gap-y-8">
                     {entity.entity.users.map((student) => {
+                        const scoreIsHidden =
+                            useScoreInputVisibilityContext().itemsToHide.has(
+                                student.id
+                            )
                         return (
                             <div
                                 key={student.id}
@@ -148,26 +207,75 @@ export default function RangeScoreInput({
                                             className="rounded-full"
                                         />
                                     </div>
-                                    <span>
+                                    <span className="font-bold text-xl">
                                         {student.first_name +
                                             ' ' +
                                             student.last_name}
                                     </span>
-                                </div>
-
-                                <ScoreInput
-                                    maxScore={maxScore}
-                                    onBlur={(e) => handleOnBlur(student.id, e)}
-                                    error={getErrorMessageFromValidationError(
-                                        errors,
-                                        student.id
+                                    {!scoreIsHidden ? (
+                                        <SimpleToolTip text="Hide score">
+                                            <Button
+                                                size="icon"
+                                                className="size-7 ml-1 align-bottom"
+                                                onClick={() =>
+                                                    hideScore([student.id])
+                                                }
+                                                variant="outline"
+                                            >
+                                                <Eye />
+                                            </Button>
+                                        </SimpleToolTip>
+                                    ) : (
+                                        <SimpleToolTip text="Show score">
+                                            <Button
+                                                size="icon"
+                                                className="size-7 ml-1 align-bottom"
+                                                onClick={() => {
+                                                    showScore([student.id])
+                                                }}
+                                                variant="outline"
+                                            >
+                                                <EyeOff />
+                                            </Button>
+                                        </SimpleToolTip>
                                     )}
-                                    defaultValue={
-                                        scores.find(
-                                            (s) => s.student_id === student.id
-                                        )?.score
-                                    }
-                                />
+                                </div>
+                                <div className="flex items-start">
+                                    <ScoreInput
+                                        userId={student.id}
+                                        maxScore={maxScore}
+                                        onScoreChange={(e) =>
+                                            handleOnScoreChange(student.id, e)
+                                        }
+                                        error={getErrorMessageFromValidationError(
+                                            errors,
+                                            student.id
+                                        )}
+                                        value={
+                                            scores.find(
+                                                (s) =>
+                                                    s.student_id === student.id
+                                            )?.score
+                                        }
+                                    />
+                                    {scores.find(
+                                        (s) => s.student_id === student.id
+                                    )?.score !== undefined &&
+                                        !scoreIsHidden && (
+                                            <SimpleToolTip text="Apply to all students in group">
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        handleApplyAll(
+                                                            student.id
+                                                        )
+                                                    }
+                                                >
+                                                    <Copy />
+                                                </Button>
+                                            </SimpleToolTip>
+                                        )}
+                                </div>
                             </div>
                         )
                     })}
@@ -178,26 +286,59 @@ export default function RangeScoreInput({
 }
 
 function ScoreInput({
+    userId,
     maxScore,
-    onBlur,
+    onScoreChange,
     error,
-    defaultValue,
+    value,
 }: {
+    userId: string
     maxScore: number
-    onBlur: ComponentProps<'input'>['onBlur']
+    onScoreChange: (valueStr: string) => void
     error: string
-    defaultValue?: number | string
+    value?: number | string
 }) {
+    const { itemsToHide, show: showScore } = useScoreInputVisibilityContext()
+    const scoreIsHidden = itemsToHide.has(userId)
+
     return (
-        <LabelWrapper label={null} error={error} className="max-w-xs">
+        <LabelWrapper label={null} error={error} className="w-xs">
             <Input
-                id="score"
+                min={0}
+                max={maxScore}
+                value={value}
                 type="number"
+                onClick={() => showScore([userId])}
                 placeholder={`Enter score (0-${maxScore})`}
-                defaultValue={defaultValue} // TODO: to be implemented with initial score
-                onChange={(e) => {}}
-                className="hide-arrows"
-                onBlur={onBlur}
+                className={cn(
+                    'hide-arrows',
+                    scoreIsHidden && 'blur-xs border-black'
+                )}
+                onChange={(e) => {
+                    onScoreChange(e.target.value)
+                }}
+                onWheel={(e) => {
+                    // @ts-expect-error for some reason blur is not typed in target
+                    e.target.blur()
+                }}
+            />
+            <Slider
+                min={0}
+                max={maxScore}
+                step={0.1}
+                onValueChange={(val) => {
+                    if (val.length == 0) return
+                    const scoreNum = val[0]
+
+                    onScoreChange(scoreNum.toString())
+                }}
+                value={[
+                    value !== undefined && !isNaN(parseFloat(value.toString()))
+                        ? parseFloat(value.toString())
+                        : 0,
+                ]}
+                className={cn('w-full', scoreIsHidden && 'hidden')}
+                disabled={scoreIsHidden}
             />
         </LabelWrapper>
     )

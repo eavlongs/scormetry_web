@@ -3,9 +3,10 @@
 import { GetClassroomResponse } from '@/app/(with_navbar)/classroom/[id]/actions'
 import { CreateCategoryDialog } from '@/app/(with_navbar)/classroom/[id]/categories/create-category-dialog'
 import { CreateGroupingDialog } from '@/app/(with_navbar)/classroom/[id]/groupings/create-grouping-dialog'
-import QuillEditor from '@/components/quill-editor'
 import { RubricBuilderDialog } from '@/components/rubric-builder-dialog'
+import TinyEditor from '@/components/tiny-editor'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     FileUpload,
     FileUploadDropzone,
@@ -26,12 +27,13 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { getErrorMessageFromValidationError } from '@/lib/utils'
+import { formatFileUrl, getErrorMessageFromValidationError } from '@/lib/utils'
 import { RubricSchema } from '@/schema'
 import {
-    Activity,
     Category,
+    Classroom,
     GetActivity,
+    GetRubricInClassroomResponse,
     Grouping,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
@@ -41,23 +43,17 @@ import {
     NEW_ACTIVITY_DATA_KEY_PREFIX,
     SP_AFTER_SAVE_KEY,
     SP_DATA_KEY,
+    TinyEditorType,
 } from '@/types/general'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import { Pencil, Plus, Upload, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { v4 as uuidv4, validate as validateUUID } from 'uuid'
-import { editActivity } from './actions'
+import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
-import { set } from 'lodash'
 
-// Mock data for rubrics
-const mockRubrics = [
-    { id: 'rubric-1', name: 'Standard Assessment Rubric' },
-    { id: 'rubric-2', name: 'Project Evaluation Rubric' },
-    { id: 'rubric-3', name: 'Technical Skills Rubric' },
-]
+import { editActivity } from './actions'
 
 const scoringTypes = [
     { id: SCORING_TYPE_RANGE, name: 'Range Based' },
@@ -67,9 +63,11 @@ const scoringTypes = [
 export default function EditActivityForm({
     classroom,
     activity,
+    classrooms,
 }: {
     classroom: GetClassroomResponse
     activity: GetActivity
+    classrooms: Classroom[]
 }) {
     const [categories, setCategories] = useState<Category[]>(
         classroom.categories
@@ -82,7 +80,8 @@ export default function EditActivityForm({
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
         []
     )
-    const [description, setDescription] = useState({})
+    const [description, setDescription] = useState(activity.description)
+    const editorRef = useRef<TinyEditorType>(null)
 
     // Form fields
     const titleRef = useRef<HTMLInputElement>(null)
@@ -102,7 +101,7 @@ export default function EditActivityForm({
     // const [availableRubrics, setAvailableRubrics] = useState(mockRubrics)
 
     const [files, setFiles] = useState<
-        { id: string; file: File; forcedSize?: number }[]
+        { id: string; file: File; forcedSize?: number; forcedPath?: string }[]
     >([])
 
     const [isCreateCategoryDialogOpen, setCreateCategoryDialogOpen] =
@@ -111,7 +110,7 @@ export default function EditActivityForm({
     const [isCreateGroupingDialogOpen, setCreateGroupingDialogOpen] =
         useState(false)
 
-    const [quill, setQuill] = useState()
+    const [hideScore, setHideScore] = useState(activity.hide_score)
 
     function saveDataToSessionStorage(data: any): string {
         const sessionStorageKeys = Object.keys(sessionStorage)
@@ -148,14 +147,7 @@ export default function EditActivityForm({
         if (parseSessionStorageData) {
             titleRef.current!.value = parseSessionStorageData.title
 
-            if (quill) {
-                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-                quill.setContents(
-                    JSON.parse(parseSessionStorageData.description)
-                )
-                setDescription(JSON.parse(parseSessionStorageData.description))
-            }
+            setDescription(parseSessionStorageData.description)
 
             setCategoryId(parseSessionStorageData.category_id)
             setGroupingId(parseSessionStorageData.grouping_id)
@@ -172,12 +164,7 @@ export default function EditActivityForm({
                 }
             }
         } else {
-            if (quill) {
-                // i think quilljs has a bug that renders that it doesn't properly cleanup the component during useEffect strict mode, so we need to check whether it is blank first, to insert initial content
-                // @ts-expect-error quill is not typed, so it will show error when referencing .setContents
-                quill.setContents(JSON.parse(activity.description))
-                setDescription(JSON.parse(activity.description))
-            }
+            setDescription(activity.description)
 
             setCategoryId(activity.category_id || '')
             setGroupingId(activity.grouping_id || 'individual')
@@ -195,16 +182,18 @@ export default function EditActivityForm({
                 id: string
                 file: File
                 forcedSize?: number
+                forcedPath?: string
             }[] = []
 
             for (const _file of activity.files) {
                 const tmp = new File([], _file.file_name, {
-                    type: _file.id,
+                    type: _file.content_type,
                 })
                 files.push({
                     id: _file.id,
                     file: tmp,
                     forcedSize: _file.file_size,
+                    forcedPath: formatFileUrl(_file.file_path),
                 })
             }
 
@@ -212,7 +201,6 @@ export default function EditActivityForm({
         })
     }, [
         parseSessionStorageData,
-        quill,
         activity.category_id,
         activity.description,
         activity.grouping_id,
@@ -220,6 +208,18 @@ export default function EditActivityForm({
         // activity.rubric,
         activity.scoring_type,
     ])
+
+    useEffect(() => {
+        console.log(
+            'new files:',
+            files
+                .filter(
+                    (file) =>
+                        originalFiles.findIndex((f) => f.id == file.id) == -1
+                )
+                .map((file) => file.file)
+        )
+    }, [files])
 
     function onUpload(
         files: File[],
@@ -257,7 +257,7 @@ export default function EditActivityForm({
         formData.append('title', titleRef.current?.value || '')
         formData.append(
             'description',
-            description ? JSON.stringify(description) : '{}'
+            editorRef.current ? editorRef.current.getContent() : ''
         )
         formData.append('category_id', categoryId)
         formData.append(
@@ -268,6 +268,7 @@ export default function EditActivityForm({
             'scoring_type',
             scoringType !== 'none' ? scoringType : ''
         )
+        formData.append('hide_score', hideScore ? '1' : '0')
 
         // Handle different scoring types
         if (scoringType === SCORING_TYPE_RANGE && maxScoreRef.current?.value) {
@@ -291,8 +292,10 @@ export default function EditActivityForm({
         )
 
         files
+            .filter(
+                (file) => originalFiles.findIndex((f) => f.id == file.id) == -1
+            )
             .map((file) => file.file)
-            .filter((file) => !validateUUID(file.type))
             .forEach((file) => {
                 formData.append('files', file)
             })
@@ -302,7 +305,7 @@ export default function EditActivityForm({
         setIsSubmitting(false)
         if (response.success) {
             toast.success(response.message)
-            router.push(`/classroom/${classroom.classroom.id}`)
+            router.back()
             return
         }
 
@@ -479,12 +482,11 @@ export default function EditActivityForm({
                                     required: false,
                                 }}
                             >
-                                <QuillEditor
+                                <TinyEditor
                                     initialContent={description}
-                                    className="min-h-[200px]"
-                                    onContentChange={setDescription}
-                                    setQuillObject={setQuill}
-                                    // readOnly
+                                    onInit={(_evt, editor) =>
+                                        (editorRef.current = editor)
+                                    }
                                 />
                             </LabelWrapper>
                         </div>
@@ -505,27 +507,15 @@ export default function EditActivityForm({
                             >
                                 <FileUpload
                                     value={files.map((file) => file.file)}
-                                    onValueChange={(val) => {
+                                    onFileAccept={(file) => {
                                         setFiles((prev) => {
-                                            const updatedFiles = val
-                                                .map((file) => {
-                                                    if (
-                                                        validateUUID(file.type)
-                                                    ) {
-                                                        return prev.find(
-                                                            (prevFile) =>
-                                                                prevFile.id ===
-                                                                file.type
-                                                        )
-                                                    }
-                                                    return {
-                                                        id: uuidv4(),
-                                                        file: file,
-                                                    }
-                                                })
-                                                .filter((v) => v !== undefined)
-
-                                            return updatedFiles
+                                            return [
+                                                ...prev,
+                                                {
+                                                    id: uuidv4(),
+                                                    file,
+                                                },
+                                            ]
                                         })
                                     }}
                                     maxFiles={5}
@@ -564,9 +554,12 @@ export default function EditActivityForm({
                                             <FileUploadItem
                                                 key={file.id}
                                                 value={file.file}
+                                                forcedPath={file.forcedPath}
                                             >
                                                 {/* <div className="flex gap-x-2 items-center w-full"> */}
-                                                <FileUploadItemPreview />
+                                                <FileUploadItemPreview
+                                                    forcedSrc={file.forcedPath}
+                                                />
                                                 <FileUploadItemMetadata
                                                     forcedSize={file.forcedSize}
                                                     className="flex-grow"
@@ -576,6 +569,9 @@ export default function EditActivityForm({
                                                         variant="ghost"
                                                         size="icon"
                                                         className="size-7"
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
                                                     >
                                                         <X />
                                                     </Button>
@@ -614,6 +610,7 @@ export default function EditActivityForm({
                                 <Select
                                     value={categoryId}
                                     onValueChange={(val) => {
+                                        if (val == '') return
                                         if (val === 'new') {
                                             setCreateCategoryDialogOpen(true)
                                             return
@@ -653,7 +650,7 @@ export default function EditActivityForm({
                         <div>
                             <LabelWrapper
                                 label={{
-                                    text: 'Assignment',
+                                    text: 'Assign to',
                                     field: 'grouping_id',
                                 }}
                                 error={getErrorMessageFromValidationError(
@@ -664,6 +661,7 @@ export default function EditActivityForm({
                                 <Select
                                     value={groupingId}
                                     onValueChange={(val) => {
+                                        if (val == '') return
                                         if (val === 'new') {
                                             setCreateGroupingDialogOpen(true)
                                             return
@@ -733,8 +731,10 @@ export default function EditActivityForm({
                                 }}
                             >
                                 <Select
+                                    // defaultValue={scoringType}
                                     value={scoringType}
                                     onValueChange={(value) => {
+                                        if (value == '') return
                                         setScoringType(value)
                                     }}
                                 >
@@ -759,6 +759,35 @@ export default function EditActivityForm({
                         </div>
 
                         {renderScoringFields()}
+
+                        {scoringType !== 'none' && (
+                            <div>
+                                <LabelWrapper
+                                    label={{
+                                        text: 'Hide Score From Students',
+                                        field: 'hide_score',
+                                    }}
+                                    error={getErrorMessageFromValidationError(
+                                        validationErrors,
+                                        'hide_score'
+                                    )}
+                                    options={{
+                                        required: false,
+                                        label_placement: 'inline-end',
+                                    }}
+                                >
+                                    <Checkbox
+                                        checked={hideScore}
+                                        onCheckedChange={(val) =>
+                                            val !== 'indeterminate'
+                                                ? setHideScore(val)
+                                                : null
+                                        }
+                                        className="mr-2"
+                                    />
+                                </LabelWrapper>
+                            </div>
+                        )}
 
                         <div className="flex justify-end mt-auto gap-4 pt-4">
                             <Button
@@ -795,6 +824,7 @@ export default function EditActivityForm({
 
             <RubricBuilderDialog
                 open={isRubricDialogOpen}
+                classrooms={classrooms}
                 isIndividual={groupingId === 'individual'}
                 initialData={rubric}
                 onOpenChange={setIsRubricDialogOpen}
@@ -817,7 +847,7 @@ export default function EditActivityForm({
 
                             const dataKey = saveDataToSessionStorage({
                                 title: titleRef.current?.value || '',
-                                description: JSON.stringify(description),
+                                description: description,
                                 category_id: categoryId,
                                 grouping_id: grouping.id,
                                 scoring_type: scoringType,

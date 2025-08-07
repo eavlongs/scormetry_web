@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { toast } from 'sonner'
+
 import { GetGroupingDetailResponse, saveGroupingComposition } from './actions'
 import { CreateGroupDialog } from './create-group-dialog'
 import { DeleteGroupDialog } from './delete-group-dialog'
@@ -52,7 +53,7 @@ export default function Grouping({
     const [hasDataChanged, setHasDataChanged] = useState(false)
     const searchParams = useSearchParams()
 
-    useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
+    // useWarnIfUnsavedChanges(hasDataChanged, `/grouping/${grouping.id}`)
 
     useEffect(() => {
         const changed = !ld.isEqual(originalData, {
@@ -158,6 +159,7 @@ export default function Grouping({
 
         if (respones.success) {
             toast.success('Changes saved successfully')
+            setSaving(false)
             // this is to make sure that the "save change" button is disabled, and user can navigate to other pages
             _setOriginalData((prev) => {
                 return {

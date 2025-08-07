@@ -4,6 +4,7 @@ import { KEYOF_ERR_USER_ALREADY_IN_CLASSROOM } from '@/types/response'
 import { XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+
 import { joinClassroomByCode } from './actions'
 
 export default async function Page({
@@ -48,7 +49,7 @@ export default async function Page({
                 <p className="text-gray-600 mb-8">{response.message}</p>
 
                 <div>
-                    <Link href="/">
+                    <Link href="/home">
                         <Button className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
                             Return to Home
                         </Button>

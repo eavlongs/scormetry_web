@@ -2,12 +2,18 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { Activity, Classroom } from '@/types/classroom'
+import {
+    Activity,
+    CLASSROOM_ROLE_TEACHER,
+    Classroom,
+    ClassroomRole,
+} from '@/types/classroom'
 import { FileTextIcon, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
 import { deleteActivity, getActivities } from './actions'
 import { ActivityCard } from './activity-card'
 import DeleteActivityDialog from './delete-activity-dialog'
@@ -18,7 +24,9 @@ export default function ActivitiesTab({
     successMessage,
     errorMessage,
 }: {
-    classroom: Classroom
+    classroom: Classroom & {
+        role: ClassroomRole
+    }
     activities: NonNullable<
         Awaited<ReturnType<typeof getActivities>>
     >['activities']
@@ -63,11 +71,13 @@ export default function ActivitiesTab({
         <>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Activities</h2>
-                <Link href={`/classroom/${classroom.id}/activities/new`}>
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" /> New Activity
-                    </Button>
-                </Link>
+                {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                    <Link href={`/classroom/${classroom.id}/activities/new`}>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" /> New Activity
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             {activities.length > 0 ? (
@@ -89,15 +99,18 @@ export default function ActivitiesTab({
                             No activities yet
                         </h3>
                     </CardContent>
-                    <CardFooter className="justify-center pt-0">
-                        <Link
-                            href={`/classroom/${classroom.id}/activities/new`}
-                        >
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" /> New Activity
-                            </Button>
-                        </Link>
-                    </CardFooter>
+                    {classroom.role == CLASSROOM_ROLE_TEACHER && (
+                        <CardFooter className="justify-center pt-0">
+                            <Link
+                                href={`/classroom/${classroom.id}/activities/new`}
+                            >
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" /> New
+                                    Activity
+                                </Button>
+                            </Link>
+                        </CardFooter>
+                    )}
                 </Card>
             )}
 

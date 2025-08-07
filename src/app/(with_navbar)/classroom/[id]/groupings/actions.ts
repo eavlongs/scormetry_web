@@ -8,6 +8,23 @@ import { ActionResponse, ApiResponse } from '@/types/response'
 import { revalidatePath } from 'next/cache'
 import { ZodError } from 'zod'
 
+export async function getClassroomGroupings(
+    classroomId: string
+): Promise<Grouping[]> {
+    try {
+        const response = await apiWithAuth.get<
+            ApiResponse<{
+                groupings: Grouping[]
+            }>
+        >(`/classroom/${classroomId}/groupings`)
+
+        return response.data.data!.groupings
+    } catch (e: any) {
+        console.error(e.response.data)
+        return []
+    }
+}
+
 export async function createGrouping(
     classroom_id: string,
     name: string,

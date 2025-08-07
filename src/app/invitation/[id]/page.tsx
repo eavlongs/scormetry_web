@@ -7,6 +7,7 @@ import { XIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+
 import { acceptInvitation } from './actions'
 import ChangeAccountButton from './change-account-button'
 
@@ -74,7 +75,7 @@ export default async function Page({
                 </div>
 
                 <div>
-                    <Link href="/">
+                    <Link href="/home">
                         <Button className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
                             Return to Home
                         </Button>

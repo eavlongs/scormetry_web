@@ -1,6 +1,7 @@
-import Link from 'next/link'
-import { Button } from './ui/button'
 import { REDIRECT_URL_NAME } from '@/types/auth'
+import Link from 'next/link'
+
+import { Button } from './ui/button'
 
 export default function LoginWithGoogle({
     redirectUrl,
@@ -10,7 +11,7 @@ export default function LoginWithGoogle({
     const url = new URLSearchParams()
     url.append(REDIRECT_URL_NAME, redirectUrl)
     return (
-        <Link href={'/login/google?' + url}>
+        <Link href={'/login/google?' + url} prefetch={false}>
             <Button
                 className="w-full justify-center gap-3 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 shadow-sm hover:shadow transition-all duration-300 py-6 text-base cursor-pointer"
                 variant="outline"

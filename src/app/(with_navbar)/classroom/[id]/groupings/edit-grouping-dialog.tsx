@@ -17,9 +17,9 @@ import { Grouping } from '@/types/classroom'
 import { VALIDATION_ERROR_MESSAGE, ValidationError } from '@/types/response'
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
 import { GetClassroomResponse } from '../actions'
 import { updateGrouping } from './actions'
-import { useSearchParams } from 'next/navigation'
 
 interface EditGroupingDialogProps {
     grouping: Grouping | null
@@ -83,7 +83,7 @@ export function EditGroupingDialog({
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Create New Grouping</AlertDialogTitle>
+                    <AlertDialogTitle>Edit Grouping</AlertDialogTitle>
                 </AlertDialogHeader>
                 <form>
                     <div className="grid gap-4 py-4">

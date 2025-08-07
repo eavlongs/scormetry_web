@@ -1,5 +1,6 @@
 // lib/axios.js
 import axios, { InternalAxiosRequestConfig } from 'axios'
+
 import { getSession } from './session'
 
 const api = axios.create({
@@ -8,6 +9,13 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+})
+
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+    console.log(
+        `API Call - ${config.method?.toUpperCase()}: ${config.baseURL}${config.url}`
+    )
+    return config
 })
 
 const apiWithAuth = axios.create({
@@ -20,6 +28,9 @@ const apiWithAuth = axios.create({
 
 apiWithAuth.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
+        console.log(
+            `API Call - ${config.method?.toUpperCase()}: ${config.baseURL}${config.url}`
+        )
         const session = await getSession()
         if (session && session.isAuthenticated) {
             config.headers['Authorization'] = `Bearer ${session.accessToken}`

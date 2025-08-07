@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import React from 'react'
+
 import { GetGroupingDetailResponse } from './actions'
 
 export function DeleteGroupDialog({
@@ -31,7 +32,7 @@ export function DeleteGroupDialog({
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>Delete Group</AlertDialogTitle>
                     <AlertDialogDescription>
                         This will delete the group &quot;{group?.name}&quot; and
                         move all its members to the ungrouped students list.

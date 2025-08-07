@@ -16,6 +16,7 @@ import { Hash, LogOut, Plus } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+
 import { CreateClassroomDialog } from '../app/(with_navbar)/create-classroom-dialog'
 
 export function Navbar() {
@@ -29,7 +30,7 @@ export function Navbar() {
             <div className="flex h-16 items-center justify-between px-4 md:px-6">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="h-9 w-9 p-0" />
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/home" className="flex items-center gap-2">
                         <span className="text-xl font-bold">Scormetry</span>
                     </Link>
                 </div>
@@ -105,8 +106,7 @@ export function Navbar() {
                                 <DropdownMenuItem
                                     className="cursor-pointer p-2"
                                     onClick={async () => {
-                                        await logout()
-                                        window.location.href = '/login'
+                                        window.location.href = '/logout'
                                     }}
                                 >
                                     <LogOut

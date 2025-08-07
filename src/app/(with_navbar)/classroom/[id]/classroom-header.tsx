@@ -11,9 +11,15 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useSession from '@/hooks/useSession'
 import { cn, copyUrlToClipboard } from '@/lib/utils'
-import { Classroom, colorMap } from '@/types/classroom'
 import {
-    ArchiveIcon,
+    CLASSROOM_ROLE_JUDGE,
+    CLASSROOM_ROLE_STUDENT,
+    CLASSROOM_ROLE_TEACHER,
+    Classroom,
+    ClassroomRole,
+    colorMap,
+} from '@/types/classroom'
+import {
     Copy,
     Link2,
     LogOut,
@@ -25,6 +31,7 @@ import {
 import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
+
 import { regenerateClassroomCode } from './actions'
 import DeleteClassroomDialog from './delete-classroom-dialog'
 import EditClassroomDialog from './edit-classroom-dialog'
@@ -34,7 +41,7 @@ export default function ClassroomHeader({
     classroom,
     tab,
 }: {
-    classroom: Classroom
+    classroom: Classroom & { role: ClassroomRole }
     tab: 'activities' | 'people' | 'grades' | 'categories' | 'groupings'
 }) {
     const session = useSession()
@@ -43,7 +50,7 @@ export default function ClassroomHeader({
     const [isRegeneratingCode, setIsRegeneratingCode] = useState(false)
     const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false)
 
-    const tabs = [
+    const allTabs = [
         {
             name: 'Activities',
             value: 'activities',
@@ -57,7 +64,10 @@ export default function ClassroomHeader({
         {
             name: 'Grades',
             value: 'grades',
-            href: `/classroom/${classroom.id}/grades`,
+            href:
+                classroom.role == CLASSROOM_ROLE_STUDENT
+                    ? `/classroom/${classroom.id}/my-grades`
+                    : `/classroom/${classroom.id}/grades`,
         },
         {
             name: 'Categories',
@@ -70,6 +80,27 @@ export default function ClassroomHeader({
             href: `/classroom/${classroom.id}/groupings`,
         },
     ]
+
+    const tabs = (function () {
+        switch (classroom.role) {
+            case CLASSROOM_ROLE_TEACHER:
+                return allTabs
+            case CLASSROOM_ROLE_JUDGE:
+                return allTabs.filter(
+                    (t) => t.value == 'activities' || t.value == 'people'
+                )
+            case CLASSROOM_ROLE_STUDENT:
+                return allTabs.filter(
+                    (t) =>
+                        t.value == 'activities' ||
+                        t.value == 'people' ||
+                        t.value == 'grades'
+                )
+            default:
+                toast.error('Something went wrong. Please try again later.')
+                return []
+        }
+    })()
 
     async function copyCode() {
         try {
@@ -102,7 +133,7 @@ export default function ClassroomHeader({
 
     return (
         <>
-            <div className="flex items-center justify-center flex-col sm:flex-row gap-2">
+            <div className="flex items-center justify-between flex-col sm:flex-row gap-2 mb-4 sm:mb-0 my-1.5">
                 <div className="flex items-center gap-2">
                     <Avatar>
                         <AvatarFallback
@@ -127,16 +158,18 @@ export default function ClassroomHeader({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
-                            <DropdownMenuItem
-                                onClick={() => setIsEditDialogOpen(true)}
-                            >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                                <DropdownMenuItem
+                                    onClick={() => setIsEditDialogOpen(true)}
+                                >
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Edit
+                                </DropdownMenuItem>
+                            )}
+                            {/* <DropdownMenuItem>
                                 <ArchiveIcon className="h-4 w-4 mr-2" />
                                 <span>Archive</span>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             {classroom.owned_by !== session.user?.id ? (
                                 <DropdownMenuItem
                                     variant="destructive"
@@ -146,70 +179,84 @@ export default function ClassroomHeader({
                                     <span>Leave</span>
                                 </DropdownMenuItem>
                             ) : (
-                                <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => setIsDeleteDialogOpen(true)}
-                                >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    <span>Delete</span>
-                                </DropdownMenuItem>
+                                classroom.role === CLASSROOM_ROLE_TEACHER && (
+                                    <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() =>
+                                            setIsDeleteDialogOpen(true)
+                                        }
+                                    >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <span>Delete</span>
+                                    </DropdownMenuItem>
+                                )
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
 
-                <div className="flex items-center gap-3 text-sm ml-0 sm:ml-auto mb-4 sm:mb-0">
-                    <div className="flex items-center bg-muted/30 border rounded-md px-3 py-1.5 hover:bg-muted/50 transition-colors">
-                        <span className="text-muted-foreground mr-2">
-                            Code:
-                        </span>
-                        <span className="font-mono font-medium">
-                            {classroom.code}
-                        </span>
-                        <div className="flex items-center ml-3 border-l pl-3">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 rounded-full hover:bg-background"
-                                onClick={copyCode}
-                                title="Copy code"
-                            >
-                                <Copy className="h-3.5 w-3.5" />
-                                <span className="sr-only">Copy join code</span>
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 rounded-full hover:bg-background"
-                                onClick={copyLink}
-                                title="Copy link"
-                            >
-                                <Link2 className="h-3.5 w-3.5" />
-                                <span className="sr-only">Copy join link</span>
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 rounded-full hover:bg-background ml-1"
-                                onClick={handleRegenerateClassroomCode}
-                                disabled={isRegeneratingCode}
-                                title="Regenerate code"
-                            >
-                                <RefreshCw
-                                    className={cn(
-                                        'h-3.5 w-3.5',
-                                        isRegeneratingCode && 'animate-spin'
-                                    )}
-                                />
-                                <span className="sr-only">Regenerate code</span>
-                            </Button>
+                {classroom.role === CLASSROOM_ROLE_TEACHER && (
+                    <div className="flex items-center gap-3 text-sm ml-0 sm:ml-auto">
+                        <div className="flex items-center bg-muted/30 border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors">
+                            <span className="text-muted-foreground mr-2">
+                                Code:
+                            </span>
+                            <span className="font-mono font-medium">
+                                {classroom.code}
+                            </span>
+                            <div className="flex items-center ml-3 border-l pl-3">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 rounded-full hover:bg-background"
+                                    onClick={copyCode}
+                                    title="Copy code"
+                                >
+                                    <Copy className="h-3.5 w-3.5" />
+                                    <span className="sr-only">
+                                        Copy join code
+                                    </span>
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 rounded-full hover:bg-background"
+                                    onClick={copyLink}
+                                    title="Copy link"
+                                >
+                                    <Link2 className="h-3.5 w-3.5" />
+                                    <span className="sr-only">
+                                        Copy join link
+                                    </span>
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 rounded-full hover:bg-background ml-1"
+                                    onClick={handleRegenerateClassroomCode}
+                                    disabled={isRegeneratingCode}
+                                    title="Regenerate code"
+                                >
+                                    <RefreshCw
+                                        className={cn(
+                                            'h-3.5 w-3.5',
+                                            isRegeneratingCode && 'animate-spin'
+                                        )}
+                                    />
+                                    <span className="sr-only">
+                                        Regenerate code
+                                    </span>
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             <Tabs value={tab}>
-                <TabsList className="grid grid-cols-5 mt-2">
+                <TabsList
+                    className={cn(`mt-2 flex flex-wrap gap-1 h-auto p-1`)}
+                >
                     {tabs.map((tab) => (
                         <TabsTrigger key={tab.value} value={tab.value} asChild>
                             <Link href={tab.href} className="px-4">

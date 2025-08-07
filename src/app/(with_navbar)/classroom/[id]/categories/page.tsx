@@ -1,6 +1,8 @@
+import { CLASSROOM_ROLE_TEACHER } from '@/types/classroom'
+import { notFound } from 'next/navigation'
+
 import { getClassroom } from '../actions'
 import ClassroomHeader from '../classroom-header'
-import ClassroomNotFound from '../classroom-not-found'
 import CategoriesTab from './categories-tab'
 
 export default async function Page({
@@ -13,15 +15,18 @@ export default async function Page({
     const { id } = await params
     const classroom = await getClassroom(id)
 
-    if (!classroom) {
-        return <ClassroomNotFound />
+    if (!classroom || classroom.role !== CLASSROOM_ROLE_TEACHER) {
+        return notFound()
     }
 
     return (
-        <div className="py-6">
+        <div className="pb-6 pt-4">
             <div className="mb-4">
                 <ClassroomHeader
-                    classroom={classroom.classroom}
+                    classroom={{
+                        ...classroom.classroom,
+                        role: classroom.role,
+                    }}
                     tab="categories"
                 />
             </div>

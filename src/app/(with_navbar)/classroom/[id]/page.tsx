@@ -1,7 +1,8 @@
-import { getActivities, getClassroom } from './actions'
+import { notFound } from 'next/navigation'
+
+import { getActivities } from './actions'
 import ActivitiesTab from './activities-tab'
 import ClassroomHeader from './classroom-header'
-import ClassroomNotFound from './classroom-not-found'
 
 export default async function Page({
     params,
@@ -20,11 +21,11 @@ export default async function Page({
     const response = await getActivities(id)
 
     if (!response || !response.classroom) {
-        return <ClassroomNotFound />
+        return notFound()
     }
 
     return (
-        <div className="py-6">
+        <div className="pb-6 pt-4">
             <div className="mb-4">
                 <ClassroomHeader
                     classroom={response.classroom}

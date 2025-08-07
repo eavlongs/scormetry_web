@@ -6,6 +6,7 @@ import { UserEssentialDetail } from '@/types/auth'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+
 import { assignJudgesToEveryone } from './actions'
 import { AssignJudgeDialog } from './assign-jugde-dialog'
 
@@ -34,7 +35,7 @@ export default function AssignJudgeAll({
             <SimpleToolTip text="Assign judge to all groups">
                 <Button variant="outline" onClick={() => setOpen(true)}>
                     <Plus className="h-5 w-5" />
-                    Assign
+                    Assign All
                 </Button>
             </SimpleToolTip>
             <AssignJudgeDialog

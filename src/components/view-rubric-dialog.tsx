@@ -1,27 +1,32 @@
 'use client'
 
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { GetRubric } from '@/types/classroom'
-import { useEffect, useState } from 'react'
-import QuillEditor from './quill-editor'
-import { Badge } from './ui/badge'
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from './ui/tooltip'
-import { Textarea } from './ui/textarea'
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
+import { GetRubric } from '@/types/classroom'
+import { X } from 'lucide-react'
+import { useState } from 'react'
+
+import TinyEditor from './tiny-editor'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
 
 interface ViewRubricDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    isIndividualWork: boolean
     rubric: GetRubric
 }
 
 export function ViewRubricDialog({
     open,
     onOpenChange,
+    isIndividualWork,
     rubric,
 }: ViewRubricDialogProps) {
     const [sections] = useState<GetRubric['rubric_sections']>(
@@ -30,48 +35,60 @@ export function ViewRubricDialog({
     const [hasWeigtage] = useState<boolean>(rubric.has_weightage)
 
     return (
-        <>
-            <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="min-w-[900px] max-w-[70vw] max-h-[calc(100vh-2rem)] overflow-y-auto">
-                    <DialogTitle>Rubric</DialogTitle>
-                    <div className="flex-1 overflow-auto p-4 px-0 pt-0 flex flex-col gap-y-4">
-                        {sections.map((section) => (
-                            <RubricSection
-                                key={section.id}
-                                section={section}
-                                hasWeightage={hasWeigtage}
-                            />
-                        ))}
-
-                        <div>
-                            <h3 className="text-base underline font-bold mb-2">
-                                Note
-                            </h3>
-                            <QuillEditor
-                                className=" w-full"
-                                initialContent={JSON.parse(rubric.note)}
-                                readOnly
-                                placeholder="Not available"
-                            />
-                        </div>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="w-screen h-screen !max-w-none flex flex-col p-0 m-0 rounded-none overflow-y-auto">
+                <DialogHeader className="px-6 py-2 border-b sticky top-0 bg-background z-10">
+                    <div className="flex items-center">
+                        <DialogTitle>Rubric</DialogTitle>
+                        <Button
+                            className="ml-auto"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </div>
-                </DialogContent>
-            </Dialog>
-        </>
+                </DialogHeader>
+                <div className="flex-1 overflow-auto p-4 pt-0 flex flex-col gap-y-4">
+                    {sections.map((section) => (
+                        <RubricSection
+                            key={section.id}
+                            section={section}
+                            isIndividualWork={isIndividualWork}
+                            hasWeightage={hasWeigtage}
+                        />
+                    ))}
+
+                    <div>
+                        <h3 className="text-base underline font-bold mb-2">
+                            Note
+                        </h3>
+                        <TinyEditor
+                            initialContent={rubric.note}
+                            readOnly
+                            placeholder="Not available"
+                        />
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
     )
 }
 
 function RubricSection({
     section,
     hasWeightage,
+    isIndividualWork,
 }: {
     section: GetRubric['rubric_sections'][number]
     hasWeightage: boolean
+    isIndividualWork: boolean
 }) {
     return (
         <div>
             <div className="flex">
-                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white">
+                <div className="flex flex-col items-center justify-start p-3 rounded-none bg-paragon text-white min-w-16">
                     <div className="[writing-mode:vertical-rl] text-lg font-semibold flex-grow flex items-center justify-center gap-x-1 relative">
                         <div>
                             {hasWeightage && (
@@ -88,14 +105,16 @@ function RubricSection({
 
                 <div>
                     <div>
-                        <div className="flex items-center gap-2 ml-2 mb-2 text-sm">
-                            <Badge variant="paragon">
-                                {section.is_group_score
-                                    ? 'Group'
-                                    : 'Individual'}
-                                {' Score'}
-                            </Badge>
-                        </div>
+                        {!isIndividualWork && (
+                            <div className="flex items-center gap-2 ml-2 mb-2 text-sm">
+                                <Badge variant="paragon">
+                                    {section.is_group_score
+                                        ? 'Group'
+                                        : 'Individual'}
+                                    {' Score'}
+                                </Badge>
+                            </div>
+                        )}
                     </div>
                     {section.rubric_criterias.map((criteria) => (
                         <RubricCriteria key={criteria.id} criteria={criteria} />
@@ -111,6 +130,7 @@ interface RubricCriteriaProps {
 }
 
 export function RubricCriteria({ criteria }: RubricCriteriaProps) {
+    const isMobile = useIsMobile()
     return (
         <div>
             <div className="flex">
@@ -118,57 +138,51 @@ export function RubricCriteria({ criteria }: RubricCriteriaProps) {
                     {/* Criteria name */}
                     <div className="border p-3 bg-muted/10 flex items-center text-xs gap-y-1 relative">
                         <p className="text-base font-medium w-48 text-center">
-                            {criteria.name}
+                            {`${criteria.name} (${criteria.max_score})`}
                         </p>
                     </div>
 
                     {/* Score range blocks */}
-                    <div className="flex overflow-x-auto">
-                        {criteria.criteria_score_ranges.map((range) => (
-                            <div
-                                key={range.id}
-                                className="border p-3 flex-shrink-0 relative"
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <p className="border-0 p-1 h-auto max-w-[180px] focus-visible:ring-0 text-sm font-medium placeholder:text-gray-400">
-                                                        {range.name}
-                                                    </p>
-                                                </div>
+                    <div
+                        className={cn(
+                            'flex w-full',
+                            !isMobile && 'overflow-x-auto'
+                        )}
+                    >
+                        {criteria.criteria_score_ranges.map((range) => {
+                            return (
+                                <div
+                                    key={range.id}
+                                    className="border p-2 flex-shrink-0 w-[15rem] flex flex-col justify-start"
+                                >
+                                    <div>
+                                        <p className="border-0 p-1 focus-visible:ring-0 text-sm font-bold placeholder:text-gray-400 text-center line-clamp-1">
+                                            {range.name}
+                                        </p>
 
-                                                <div className="flex items-center mb-3 text-sm text-muted-foreground gap-x-1">
-                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm">
-                                                        {range.min_score}
-                                                    </p>
-                                                    -
-                                                    <p className="p-0 h-auto focus-visible:ring-0 text-center w-12 text-sm">
-                                                        {range.max_score}
-                                                    </p>
-                                                    <span className="ml-1">
-                                                        points
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </TooltipTrigger>
-                                        {range.description.length > 0 && (
-                                            <TooltipContent>
-                                                <p>{range.description}</p>
-                                            </TooltipContent>
+                                        <div className="flex items-center justify-center mb-1 text-sm text-muted-foreground gap-x-1">
+                                            <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                                {range.min_score}
+                                            </p>
+                                            -
+                                            <p className="p-0 h-auto focus-visible:ring-0 text-center w-6 text-sm">
+                                                {range.max_score}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-sm overflow-y-auto h-[120px]">
+                                        {range.description.length > 0 ? (
+                                            range.description
+                                        ) : (
+                                            <p className="text-gray-600 text-center mt-2">
+                                                (No Description)
+                                            </p>
                                         )}
-                                    </Tooltip>
-                                </TooltipProvider>
-
-                                <Textarea
-                                    value={range.description}
-                                    maxLength={255}
-                                    readOnly
-                                    className="min-h-[80px] field-sizing-fixed resize-none text-sm focus-visible:ring-0 focus-visible:border-input"
-                                />
-                            </div>
-                        ))}
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             </div>

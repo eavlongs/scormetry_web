@@ -1,0 +1,19 @@
+# robots.txt for Scormetry
+
+User-agent: *
+# Allow crawling of public pages
+Allow: /
+Allow: /login
+
+# Disallow crawling of private sections
+Disallow: /api/
+Disallow: /classroom/
+Disallow: /activities/
+Disallow: /grouping/
+Disallow: /invitation/
+
+# Crawl delay to avoid overloading the server
+Crawl-delay: 5
+
+# Sitemap location
+Sitemap: https://scormetry.paragoniu.app/sitemap.xml

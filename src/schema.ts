@@ -1,12 +1,13 @@
 import assert from 'assert'
 import { z } from 'zod'
+
 import {
     ALL_CLASSROOM_ROLES,
     CLASSROOM_COLORS,
     GetRubric,
+    SCORING_TYPES,
     SCORING_TYPE_RANGE,
     SCORING_TYPE_RUBRIC,
-    SCORING_TYPES,
 } from './types/classroom'
 import {
     ACCEPTED_IMPORT_FILE_TYPES,
@@ -35,7 +36,7 @@ export const CategorySchema = z.object({
     name: z.string().min(1, 'Name is required').max(50),
     score_percentage: z.coerce
         .number()
-        .gt(0, 'This value must be greater than 0')
+        .gte(0, 'This value must be at least 0')
         .lte(100, 'This value cannot exceed 100%'),
 })
 
@@ -162,6 +163,7 @@ export const ActivitySchema = z
     .object({
         title: z.string().min(1, 'Title is required').max(255),
         description: z.string().nullable(),
+
         files: z.any().superRefine((val, ctx) => {
             if (val === undefined) return
 
@@ -443,14 +445,13 @@ export const ImportGroupFileUploadSchema = z.object({
 export const RubricScoreSchema = z.object({
     assignee_id: z.string(),
     type: z.enum(['individual', 'group']),
-    scores: z
-        .array(
-            z.object({
-                rubric_criteria_id: z.string(),
-                score: z.coerce.number().nonnegative(),
-            })
-        )
-        .min(1, 'At least 1 score is required'),
+    scores: z.array(
+        z.object({
+            rubric_criteria_id: z.string(),
+            score: z.coerce.number().nonnegative(),
+        })
+    ),
+    // .min(1, 'At least 1 score is required'),
 })
 
 export const RangeScoreSchema = z.object({

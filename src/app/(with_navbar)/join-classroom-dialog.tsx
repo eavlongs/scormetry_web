@@ -22,6 +22,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
+
 import { joinClassroomByCode } from '../code/[code]/actions'
 
 interface JoinClassroomDialogProps {
@@ -59,7 +60,7 @@ export function JoinClassroomDialog({
         const response = await joinClassroomByCode(classCode)
 
         if (response.success) {
-            // await revalidateData('/')
+            // await revalidateData('/home')
             if (response.data)
                 router.push(
                     `/classroom/${response.data.classroom.id}?success_message=${response.message}`

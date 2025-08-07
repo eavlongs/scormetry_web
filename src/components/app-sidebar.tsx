@@ -15,9 +15,9 @@ import { cn } from '@/lib/utils'
 import {
     Classroom,
     ClassroomRelationJudge,
-    classroomRelations,
     ClassroomRelationStudent,
     ClassroomRelationTeacher,
+    classroomRelations,
     colorMap,
 } from '@/types/classroom'
 import Link from 'next/link'
@@ -36,7 +36,7 @@ export function AppSidebar({
         <Sidebar>
             <SidebarHeader>
                 <Link
-                    href="/"
+                    href="/home"
                     className="flex h-14 items-center px-4 font-semibold"
                 >
                     Scormetry

@@ -26,7 +26,7 @@ export default function DeleteActivityDialog({
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Class</AlertDialogTitle>
+                    <AlertDialogTitle>Delete Activity</AlertDialogTitle>
                     <AlertDialogDescription>
                         Are you sure you want to delete the activity &quot;
                         {activity?.title}&quot;?

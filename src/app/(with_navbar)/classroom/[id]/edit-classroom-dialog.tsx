@@ -19,9 +19,10 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { Classroom, colorMap, ColorType } from '@/types/classroom'
+import { Classroom, ColorType, colorMap } from '@/types/classroom'
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
 import { editClassroom } from './actions'
 
 export default function EditClassroomDialog({
@@ -68,7 +69,7 @@ export default function EditClassroomDialog({
         <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Edit Class</AlertDialogTitle>
+                    <AlertDialogTitle>Edit Classroom</AlertDialogTitle>
                 </AlertDialogHeader>
                 <div className="w-full">
                     <div className="flex flex-col gap-y-2 mb-4">

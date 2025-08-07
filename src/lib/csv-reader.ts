@@ -1,5 +1,6 @@
 import { CSV_MIME_TYPE } from '@/types/general'
 import Papa from 'papaparse'
+
 import { ITextFileReader } from './text-file-reader'
 
 export class CSVReader implements ITextFileReader {

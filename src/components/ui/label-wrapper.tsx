@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { CircleAlert } from 'lucide-react'
+
 import { Label } from './label'
 import {
     Tooltip,
@@ -14,7 +15,7 @@ export function LabelWrapper({
         required: true,
         // error_placement: 'bottom',
         label_placement: 'newline',
-        error_display: 'text',
+        error_display: 'under-label',
     },
     error,
     className,
@@ -27,18 +28,22 @@ export function LabelWrapper({
     options?: {
         required?: boolean
         // error_placement?: 'bottom'
-        label_placement?: 'newline' | 'inline'
+        label_placement?: 'newline' | 'inline' | 'inline-end'
         label_className?: string
-        error_display?: 'text' | 'tooltip'
+        error_display?: 'under-label' | 'over-label' | 'tooltip'
     }
     error?: string
     className?: string
     children: React.ReactNode
 }) {
-    const defaultOptions = {
+    const defaultOptions: {
+        required: NonNullable<typeof options.required>
+        label_placement: NonNullable<typeof options.label_placement>
+        error_display: NonNullable<typeof options.error_display>
+    } = {
         required: true,
         label_placement: 'newline',
-        error_display: 'text',
+        error_display: 'under-label',
     }
 
     const optionsWithDefaults = { ...defaultOptions, ...options }
@@ -54,10 +59,19 @@ export function LabelWrapper({
     )
     return (
         <div className={cn('space-y-2', className)}>
-            {optionsWithDefaults.error_display === 'text' && (
+            {['under-label', 'over-label'].includes(
+                optionsWithDefaults.error_display
+            ) && (
                 <>
+                    {error &&
+                        optionsWithDefaults.error_display == 'over-label' && (
+                            <ErrorMessage error={error} />
+                        )}
                     {label && (
                         <div className="flex items-center">
+                            {optionsWithDefaults.label_placement ==
+                                'inline-end' && children}
+
                             <Label
                                 htmlFor={label.field}
                                 className={labelClassName}
@@ -78,7 +92,10 @@ export function LabelWrapper({
                     {optionsWithDefaults.label_placement == 'newline' &&
                         children}
 
-                    {error && <ErrorMessage error={error} />}
+                    {error &&
+                        optionsWithDefaults.error_display == 'under-label' && (
+                            <ErrorMessage error={error} />
+                        )}
                 </>
             )}
 
@@ -120,7 +137,7 @@ export function LabelWrapper({
 
 function ErrorMessage({ error }: { error: string }) {
     return (
-        <div className="text-[13px] text-destructive mt-1 flex items-center gap-x-0.5">
+        <div className="text-[13px] text-destructive mt-1 flex items-start gap-x-0.5">
             <CircleAlert
                 color="red"
                 size={16}

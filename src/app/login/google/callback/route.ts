@@ -1,16 +1,16 @@
 import { google } from '@/lib/auth'
-import { decodeIdToken } from 'arctic'
-import { cookies } from 'next/headers'
-
 import { api } from '@/lib/axios'
 import { createSession } from '@/lib/session'
 import {
     GOOGLE_CODE_VERIFIER_COOKIE_NAME,
     GOOGLE_OAUTH_STATE_COOKIE_NAME,
     REDIRECT_URL_COOKIE_NAME,
+    REDIRECT_URL_NAME,
 } from '@/types/auth'
 import { ApiResponse } from '@/types/response'
+import { decodeIdToken } from 'arctic'
 import type { OAuth2Tokens } from 'arctic'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request): Promise<Response> {
     const url = new URL(request.url)
@@ -21,33 +21,52 @@ export async function GET(request: Request): Promise<Response> {
         cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE_NAME)?.value ?? null
     const codeVerifier =
         cookieStore.get(GOOGLE_CODE_VERIFIER_COOKIE_NAME)?.value ?? null
+    const redirectUrl =
+        cookieStore.get(REDIRECT_URL_COOKIE_NAME)?.value ?? '/home'
     if (
         code === null ||
         state === null ||
         storedState === null ||
         codeVerifier === null
     ) {
+        console.log({ code, state, storedState, codeVerifier })
+        const errorMessage = 'Failed to log in. Please try again.'
         return new Response(null, {
-            status: 400,
+            status: 302,
+            headers: {
+                Location: `/login?error=${errorMessage}&${REDIRECT_URL_NAME}=${redirectUrl}`,
+            },
         })
     }
     if (state !== storedState) {
+        console.log('state mismatch')
+        const errorMessage = 'Failed to log in. Please try again.'
         return new Response(null, {
-            status: 400,
+            status: 302,
+            headers: {
+                Location: `/login?error=${errorMessage}&${REDIRECT_URL_NAME}=${redirectUrl}`,
+            },
         })
     }
 
     let tokens: OAuth2Tokens
     try {
         tokens = await google.validateAuthorizationCode(code, codeVerifier)
-    } catch (e) {
-        // Invalid code or client credentials
+    } catch (e: any) {
+        cookieStore.delete('redirect_url')
+        cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
+        cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
+
+        console.log('failed to get token from google', e)
+        const errorMessage = e.message || 'ailed to log in. Please try again.'
         return new Response(null, {
-            status: 400,
+            status: 302,
+            headers: {
+                Location: `/login?error=${encodeURIComponent(errorMessage)}&${REDIRECT_URL_NAME}=${encodeURIComponent(redirectUrl)}`,
+            },
         })
     }
     const claims = decodeIdToken(tokens.idToken()) as GoogleUser
-    // console.log(claims);
     let response
 
     try {
@@ -66,13 +85,17 @@ export async function GET(request: Request): Promise<Response> {
             profile_picture: claims.picture,
         })
     } catch (e: any) {
-        const urlSearchParams = new URLSearchParams('/login')
-        urlSearchParams.append('error', e.response.message)
+        cookieStore.delete('redirect_url')
+        cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
+        cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
 
+        console.log('failed to login in backend')
+        const errorMessage =
+            e.response.data.message || 'Failed to log in. Please try again.'
         return new Response(null, {
-            status: 400,
+            status: 302,
             headers: {
-                Location: urlSearchParams.toString(),
+                Location: `/login?error=${errorMessage}&${REDIRECT_URL_NAME}=${redirectUrl}`,
             },
         })
     }
@@ -82,18 +105,21 @@ export async function GET(request: Request): Promise<Response> {
             response.data.data!.tokens.access_token,
             response.data.data!.tokens.refresh_token
         )
-    } catch (e) {
+    } catch (e: any) {
+        cookieStore.delete('redirect_url')
+        cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
+        cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)
+
+        console.log('failed to create session')
+        const errorMessage = 'Failed to log in. Please try again.'
         return new Response(null, {
-            status: 400,
+            status: 302,
             headers: {
-                Location: '/login',
+                Location: `/login?error=${errorMessage}&${REDIRECT_URL_NAME}=${redirectUrl}`,
             },
         })
     }
 
-    console.log({ cookieStore: cookieStore.getAll() })
-    const redirectUrl = cookieStore.get(REDIRECT_URL_COOKIE_NAME)?.value ?? '/'
-    console.log({ redirectUrl })
     cookieStore.delete('redirect_url')
     cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE_NAME)
     cookieStore.delete(GOOGLE_CODE_VERIFIER_COOKIE_NAME)

@@ -7,8 +7,9 @@ import {
     colorMap,
 } from '@/types/classroom'
 import Link from 'next/link'
-import { getClassrooms } from './actions'
-import CreateClassroomButton from './classroom/[id]/create-classroom-button'
+
+import { getClassrooms } from '../actions'
+import CreateClassroomButton from '../classroom/[id]/create-classroom-button'
 
 export default async function Page() {
     const classrooms = await getClassrooms()

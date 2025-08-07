@@ -15,8 +15,16 @@ export async function GET(request: NextRequest): Promise<Response> {
     const codeVerifier = generateCodeVerifier()
 
     console.log({ searchParams: request.nextUrl.searchParams })
-    const redirectUrl =
-        request.nextUrl.searchParams.get(REDIRECT_URL_NAME) ?? '/'
+    let redirectUrl =
+        request.nextUrl.searchParams.get(REDIRECT_URL_NAME) ?? '/home'
+
+    if (
+        !redirectUrl ||
+        redirectUrl.startsWith('/login') ||
+        redirectUrl.startsWith('/logout')
+    ) {
+        redirectUrl = '/home'
+    }
 
     console.log('here')
     console.log(redirectUrl)
